@@ -9,13 +9,13 @@
 *.class
 
 # Generated files
-bin/
+#bin/
 gen/
 out/
 
 # Gradle files
 .gradle/
-build/
+#build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -72,3 +72,11 @@ VrSamples/Native/CinemaSDK/Projects/Android/.idea/workspace.xml
 app/src/main/res/values/strings.xml
 VrSamples/Native/CinemaSDK/Projects/Android/.idea/workspace.xml
 VrSamples/Native/CinemaSDK/Projects/Android/android.debug.keystore
+
+
+VrAppFramework/Projects/Android/build
+VrAppSupport/VrGUI/Projects/Android/build
+VrAppSupport/VrLocale/Projects/Android/build
+VrAppSupport/VrSound/Projects/Android/build
+VrSamples/Native/CinemaSDK/Projects/Android/.idea/libraries
+/build/
