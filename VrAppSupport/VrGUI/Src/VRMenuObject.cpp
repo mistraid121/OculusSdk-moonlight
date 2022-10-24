@@ -661,13 +661,13 @@ void VRMenuSurface::CreateFromSurfaceParms( OvrGuiSys & guiSys, VRMenuSurfacePar
 		for ( int i = 0; i < VRMENUSURFACE_IMAGE_MAX; ++i )
 		{
 			if ( !parms.ImageNames[i].IsEmpty() &&
-				( parms.TextureTypes[i] >= 0 && parms.TextureTypes[i] < SURFACE_TEXTURE_MAX ) )
+				(  parms.TextureTypes[i] < SURFACE_TEXTURE_MAX ) )
 			{
 				isValid = true;
 				Textures[i].LoadTexture( guiSys, parms.TextureTypes[i], parms.ImageNames[i].ToCStr(), true );
 			}
 			else if ( ( parms.ImageTexId[i] != 0 ) &&
- 				( parms.TextureTypes[i] >= 0 && parms.TextureTypes[i] < SURFACE_TEXTURE_MAX ) )
+ 				(  parms.TextureTypes[i] < SURFACE_TEXTURE_MAX ) )
 			{
 				isValid = true;
 				Textures[i].LoadTexture( parms.TextureTypes[i], parms.ImageTexId[i], parms.ImageWidth[i], parms.ImageHeight[i] );
