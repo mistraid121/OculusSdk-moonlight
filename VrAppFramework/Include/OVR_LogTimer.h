@@ -5,14 +5,14 @@ Content     :
 Created     :   
 Authors     :   
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #if !defined( OVR_LogTimer )
 #define OVR_LogTimer
 
-#include "Kernel/OVR_LogUtils.h"
+#include "OVR_LogUtils.h"
 #include "SystemClock.h"
 
 // Declaring a variable with this class will report the time elapsed when it
@@ -36,7 +36,7 @@ public:
 	~LogCpuTime()
 	{
 		const double endTimeNanoSec = SystemClock::GetTimeInNanoSeconds();
-		LOG( "%s took %6.4f seconds", Label, ( endTimeNanoSec - StartTimeNanoSec ) * 1e-9 );
+		OVR_LOG( "%s took %6.4f seconds", Label, ( endTimeNanoSec - StartTimeNanoSec ) * 1e-9 );
 	}
 
 private:

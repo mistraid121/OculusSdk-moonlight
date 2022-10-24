@@ -5,7 +5,7 @@ Content     :   Generic collision class supporting ray / triangle intersection.
 Created     :   September 10, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -14,7 +14,7 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 
 #include "OVR_Geometry.h"
 #include "DebugLines.h"
-#include "Kernel/OVR_LogUtils.h"
+#include "OVR_LogUtils.h"
 
 namespace OVR {
 
@@ -67,8 +67,8 @@ OvrTriCollisionPrimitive::OvrTriCollisionPrimitive()
 
 //==============================
 // OvrTriCollisionPrimitive::OvrTriCollisionPrimitive
-OvrTriCollisionPrimitive::OvrTriCollisionPrimitive( Array< Vector3f > const & vertices, 
-		Array< TriangleIndex > const & indices, Array< Vector2f > const & uvs, ContentFlags_t const contents ) :
+OvrTriCollisionPrimitive::OvrTriCollisionPrimitive( std::vector< Vector3f > const & vertices, 
+		std::vector< TriangleIndex > const & indices, std::vector< Vector2f > const & uvs, ContentFlags_t const contents ) :
 	OvrCollisionPrimitive( contents )
 {
 	Init( vertices, indices, uvs, contents );
@@ -82,19 +82,16 @@ OvrTriCollisionPrimitive::~OvrTriCollisionPrimitive()
 
 //==============================
 // OvrTriCollisionPrimitive::Init
-void OvrTriCollisionPrimitive::Init( Array< Vector3f > const & vertices, Array< TriangleIndex > const & indices, 
-		Array< Vector2f > const & uvs, ContentFlags_t const contents )
+void OvrTriCollisionPrimitive::Init( std::vector< Vector3f > const & vertices, std::vector< TriangleIndex > const & indices, 
+		std::vector< Vector2f > const & uvs, ContentFlags_t const contents )
 {
 	Vertices = vertices;
 	Indices = indices;
 
-	if ( uvs.GetSizeI() != vertices.GetSizeI() )
+	if ( uvs.size() != vertices.size() )
 	{
-		UVs.Resize( vertices.GetSizeI() );
-		for ( int i = 0; i < vertices.GetSizeI(); ++i )
-		{
-			UVs[i] = Vector2f( 0.0f );
-		}
+		UVs.resize( vertices.size() );
+		UVs.assign( vertices.size(), Vector2f( 0.0f ) );
 	}
 	else
 	{
@@ -106,9 +103,9 @@ void OvrTriCollisionPrimitive::Init( Array< Vector3f > const & vertices, Array< 
 	// calculate the bounds
 	Bounds3f b;
 	b.Clear();
-	for ( int i = 0; i < vertices.GetSizeI(); ++i )
+	for ( const auto& v : vertices )
 	{
-		b.AddPoint( vertices[i] );
+		b.AddPoint( v );
 	}
 
 	SetBounds( b );
@@ -153,7 +150,7 @@ bool OvrTriCollisionPrimitive::IntersectRay( Vector3f const & localStart, Vector
 	}
 
 	result.TriIndex = -1;
-	for ( int i = 0; i < Indices.GetSizeI(); i += 3 )
+	for ( int i = 0; i < static_cast< int >( Indices.size() ); i += 3 )
 	{
 		float t_;
 		float u_;
@@ -166,7 +163,7 @@ bool OvrTriCollisionPrimitive::IntersectRay( Vector3f const & localStart, Vector
 		float diff = fabsf( localDir.LengthSq() - 1.0f );
 		if ( diff > Mathf::Tolerance() )
 		{
-			LOG( "!rayDir.IsNormalized() - ( %.4f, %.4f, %.4f ), len = %.8f, diff = %.8f", localDir.x, localDir.y, localDir.z , localDir.Length(), diff );
+			OVR_LOG( "!rayDir.IsNormalized() - ( %.4f, %.4f, %.4f ), len = %.8f, diff = %.8f", localDir.x, localDir.y, localDir.z , localDir.Length(), diff );
 			OVR_ASSERT( !"IsNormalized()" );
 		}
 
@@ -197,7 +194,7 @@ void OvrTriCollisionPrimitive::DebugRender( OvrDebugLines & debugLines, Posef & 
 	debugLines.AddBounds( pose, bounds, Vector4f( 1.0f, 0.5f, 0.0f, 1.0f ) );
 
 	Vector4f color( 1.0f, 0.0f, 1.0f, 1.0f );
-	for ( int i = 0; i < Indices.GetSizeI(); i += 3 )
+	for ( int i = 0; i < static_cast< int >( Indices.size() ); i += 3 )
 	{
 		int i1 = Indices[i + 0];
 		int i2 = Indices[i + 1];

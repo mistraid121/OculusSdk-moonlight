@@ -5,14 +5,14 @@ Content     :
 Created     :   
 Authors     :   
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #if !defined( OVR_SoundPool_h )
 #define OVR_SoundPool_h
 
-#include "Kernel/OVR_Types.h"
+#include "OVR_Types.h"
 
 namespace OVR {
 

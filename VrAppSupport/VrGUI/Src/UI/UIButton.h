@@ -5,7 +5,7 @@ Content     :
 Created     :	1/23/2015
 Authors     :   Jim Dose
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -16,7 +16,6 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "UI/UIObject.h"
 #include "VRMenuComponent.h"
 #include "UI/UITexture.h"
-
 
 namespace OVR {
 
@@ -30,7 +29,8 @@ class UIButtonComponent : public VRMenuComponent
 public:
 	static const int TYPE_ID = 159493;
 
-					UIButtonComponent( UIButton &button );
+					UIButtonComponent( UIButton & button );
+	virtual			~UIButtonComponent();
 
 	virtual int		GetTypeId() const { return TYPE_ID; }
 
@@ -39,8 +39,12 @@ public:
 	void			SetTouchDownSnd( const char * touchDownSnd );
 	void			SetTouchUpSnd( const char * touchUpSnd );
 
+	void			OwnerDeleted() { Button = nullptr; }
+
+	UIButton *		GetButton() const { return Button; }
+
 private:
-	UIButton &		Button;
+	UIButton *		Button;
 
     ovrSoundLimiter GazeOverSoundLimiter;
     ovrSoundLimiter DownSoundLimiter;
@@ -48,8 +52,8 @@ private:
 
     bool			TouchDown;
 
-	OVR::String		TouchDownSnd { "touch_down" };
-	OVR::String		TouchUpSnd { "touch_up" };
+	std::string		TouchDownSnd { "touch_down" };
+	std::string		TouchUpSnd { "touch_up" };
 
 private:
 	// private assignment operator to prevent copying
@@ -90,7 +94,6 @@ public:
 	//By default OnClick happens when button is released, but can be changed to happen on button down instead.
 	void								SetActionType( const eButtonActionType actionType ) { ActionType = actionType; }
 	void								SetText( const char * text );
-	const String & 						GetText() const;
 
 	void								SetOnClick( void ( *callback )( UIButton *, void * ), void *object );
 	void								SetOnFocusGained( void( *callback )( UIButton *, void * ), void *object );
@@ -102,8 +105,6 @@ public:
 
 	void								SetTouchDownSnd( const char * touchDownSnd );
 	void								SetTouchUpSnd( const char * touchUpSnd );
-
-	void 								SetIsSelected (bool (*callback)(UIButton *, void *), void *object );
 
 private:
 	UIButtonComponent *					ButtonComponent;
@@ -121,16 +122,10 @@ private:
 	bool								ToggleButton { false };
 	eButtonActionType					ActionType { ClickOnUp };
 
-
-
-	bool 								( *IsSelectedFunction )( UIButton *button, void *object );
-	void *								IsSelectedObject;
-
 	void 								( *OnClickFunction )( UIButton *button, void *object );
 	void *								OnClickObject;
 
 	void 								OnClick();
-    bool                                IsSelected();
 
 	void								( *OnFocusGainedFunction )( UIButton *button, void *object );
 	void *								OnFocusGainedObject;

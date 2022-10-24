@@ -5,13 +5,16 @@ Content     :   Thread communication by string commands
 Created     :   October 15, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 #ifndef OVR_MessageQueue_h
 #define OVR_MessageQueue_h
 
-#include <Kernel/OVR_Threads.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 namespace OVR
 {
@@ -88,12 +91,12 @@ private:
 	// PostMessage() fills in messages[tail%maxMessages], then increments tail
 	// If tail > head, GetNextMessage() will fetch messages[head%maxMessages],
 	// then increment head.
-	volatile int	head;
-	volatile int	tail;
-	bool			synced;
-	Mutex			mutex;
-	WaitCondition	posted;
-	WaitCondition	processed;
+	volatile int			head;
+	volatile int			tail;
+	std::atomic<bool>		synced;
+	std::mutex				message_mutex;
+	std::condition_variable	posted;
+	std::condition_variable	processed;
 
 	bool PostMessage( const char * msg, bool sync, bool abortIfFull );
 };

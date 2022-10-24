@@ -5,15 +5,17 @@ Content     :   Class that manages and renders debug lines.
 Created     :   April 22, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #if !defined( OVR_DebugLines_h )
 #define OVR_DebugLines_h
 
-#include "Kernel/OVR_Math.h"
+#include <vector>
+#include "OVR_Math.h"
 #include "SurfaceRender.h"
+
 
 namespace OVR {
 
@@ -31,7 +33,7 @@ public:
 	virtual	void		    Shutdown() = 0;
 
 	virtual	void		    BeginFrame( const long long frameNum ) = 0;
-	virtual void			AppendSurfaceList( Array< ovrDrawSurface > & surfaceList ) = 0;
+	virtual void			AppendSurfaceList( std::vector< ovrDrawSurface > & surfaceList ) = 0;
 
 	virtual	void		    AddLine( const Vector3f & start, const Vector3f & end, 
 						    		const Vector4f & startColor, const Vector4f & endColor,

@@ -5,14 +5,15 @@ Content     :   Ray tracer using a KD-Tree.
 Created     :   May, 2014
 Authors     :   J.M.P. van Waveren
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 #ifndef __MODELTRACE_H__
 #define __MODELTRACE_H__
 
-#include "Kernel/OVR_Math.h"
-#include "Kernel/OVR_Array.h"
+#include "OVR_Math.h"
+
+#include <vector>
 
 namespace OVR
 {
@@ -68,13 +69,13 @@ public:
 	void					PrintStatsToLog() const;
 
 public:
-	kdtree_header_t			header;
-	Array< Vector3f >		vertices;
-	Array< Vector2f >		uvs;
-	Array< int >			indices;
-	Array< kdtree_node_t >	nodes;
-	Array< kdtree_leaf_t >	leafs;
-	Array< int >			overflow;	// this is a flat array that stores extra triangle indices for leaves with > RT_KDTREE_MAX_LEAF_TRIANGLES
+	kdtree_header_t					header;
+	std::vector< Vector3f >			vertices;
+	std::vector< Vector2f >			uvs;
+	std::vector< int >				indices;
+	std::vector< kdtree_node_t >	nodes;
+	std::vector< kdtree_leaf_t >	leafs;
+	std::vector< int >				overflow;	// this is a flat array that stores extra triangle indices for leaves with > RT_KDTREE_MAX_LEAF_TRIANGLES
 };
 
 }	// namespace OVR

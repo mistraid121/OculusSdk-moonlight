@@ -5,7 +5,7 @@ Content     :   Menuing system for VR apps.
 Created     :   May 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -59,7 +59,7 @@ public:
 	virtual void				Finish( Matrix4f const & viewMatrix ) = 0;
 
 	virtual void 				AppendSurfaceList( Matrix4f const & centerViewMatrix, 
-										Array< ovrDrawSurface > & surfaceList ) const = 0;
+										std::vector< ovrDrawSurface > & surfaceList ) const = 0;
 
     virtual GlProgram const *   GetGUIGlProgram( eGUIProgramType const programType ) const = 0;
 

@@ -5,7 +5,7 @@ Content     :   Shader program compilation.
 Created     :   October 11, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -16,9 +16,9 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include <stdlib.h>
 
 #include "OVR_GlUtils.h"
-#include "Kernel/OVR_LogUtils.h"
-#include "Kernel/OVR_String.h"
-#include "Kernel/OVR_String_Utils.h"
+#include "OVR_LogUtils.h"
+
+#include <string>
 
 namespace OVR
 {
@@ -132,6 +132,16 @@ GlProgram BuildProgram( const char * vertexSrc, const char * fragmentSrc, const 
 	return BuildProgram( NULL, vertexSrc, NULL, fragmentSrc, programVersion );
 }
 
+GlProgram BuildProgramNoMultiview( const char * vertexDirectives, const char * vertexSrc,
+		const char * fragmentDirectives, const char * fragmentSrc )
+{
+	const bool useMultiview = UseMultiview;
+	GlProgram::SetUseMultiview( false );
+	GlProgram prog = BuildProgram( vertexDirectives, vertexSrc, fragmentDirectives, fragmentSrc );
+	GlProgram::SetUseMultiview( useMultiview );
+	return prog;
+}
+
 void DeleteProgram( GlProgram & prog )
 {
 	GlProgram::Free( prog );
@@ -197,10 +207,10 @@ static GLuint CompileShader( GLenum shaderType, const char * directives, const c
 	const char * postVersion = FindShaderVersionEnd( src );
 	if ( postVersion != src )
 	{
-		WARN( "GlProgram: #version in source is not supported. Specify at program build time." );
+		OVR_WARN( "GlProgram: #version in source is not supported. Specify at program build time." );
 	}
 
-	OVR::String srcString;
+	std::string srcString;
 
 #if defined( OVR_OS_ANDROID )
 	// Valid versions for GL ES:
@@ -211,27 +221,27 @@ static GLuint CompileShader( GLenum shaderType, const char * directives, const c
 #else
 	const char * versionModifier = "";
 #endif
-	srcString = StringUtils::Va( "#version %d %s\n", programVersion, versionModifier );
+	srcString = std::string("#version ") + std::to_string(programVersion) + std::string(" ") + versionModifier + std::string("\n");
 
 	if ( directives != NULL )
 	{
-		srcString.AppendString( directives );
+		srcString += directives;
 	}
 
-	srcString.AppendString( StringUtils::Va( "#define DISABLE_MULTIVIEW %d\n", ( UseMultiview ) ? 0 : 1 ) );
+	srcString += std::string("#define DISABLE_MULTIVIEW ") + std::to_string( UseMultiview  ? 0 : 1 ) + std::string("\n");
 
 	if ( shaderType == GL_VERTEX_SHADER )
 	{
-		srcString.AppendString( VertexHeader );
+		srcString += VertexHeader;
 	}
 	else if ( shaderType == GL_FRAGMENT_SHADER )
 	{
-		srcString.AppendString( FragmentHeader );
+		srcString += FragmentHeader;
 	}
 
-	srcString.AppendString( postVersion );
+	srcString += postVersion ;
 
-	src = srcString.ToCStr();
+	src = srcString.c_str();
 
 	GLuint shader = glCreateShader( shaderType );
 
@@ -246,7 +256,7 @@ static GLuint CompileShader( GLenum shaderType, const char * directives, const c
 	glGetShaderiv( shader, GL_COMPILE_STATUS, &r );
 	if ( r == GL_FALSE )
 	{
-		WARN( "Compiling %s shader: ****** failed ******\n", shaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" );
+		OVR_WARN( "Compiling %s shader: ****** failed ******\n", shaderType == GL_VERTEX_SHADER ? "vertex" : "fragment" );
 		GLchar msg[1024];
 		const char * sp = src;
 		int charCount = 0;
@@ -262,7 +272,7 @@ static GLuint CompileShader( GLenum shaderType, const char * directives, const c
 			{
 				charCount = 0;
 				line++;
-				WARN( "%03d  %s", line, msg );
+				OVR_WARN( "%03d  %s", line, msg );
 				msg[0] = 0;
 				if ( *sp != '\n' )
 				{
@@ -274,10 +284,10 @@ static GLuint CompileShader( GLenum shaderType, const char * directives, const c
 		if ( charCount != 0 )
 		{
 			line++;
-			WARN( "%03d  %s", line, msg );
+			OVR_WARN( "%03d  %s", line, msg );
 		}
 		glGetShaderInfoLog( shader, sizeof( msg ), 0, msg );
-		WARN( "%s\n", msg );
+		OVR_WARN( "%s\n", msg );
 		glDeleteShader( shader );
 		return 0;
 	}
@@ -310,7 +320,7 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 	int programVersion = requestedProgramVersion;
 	if ( programVersion < GLSL_PROGRAM_VERSION )
 	{
-		WARN( "GlProgram: Program GLSL version requested %d, but does not meet required minimum %d",
+		OVR_WARN( "GlProgram: Program GLSL version requested %d, but does not meet required minimum %d",
 			requestedProgramVersion, GLSL_PROGRAM_VERSION );
 		programVersion = GLSL_PROGRAM_VERSION;
 	}
@@ -324,8 +334,8 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 	// P0003: Warning: Extension 'GL_OES_EGL_image_external' not supported
 	// P0003: Warning: Extension 'GL_OES_EGL_image_external_essl3' not supported
 	// L0001: Expected token '{', found 'identifier' (samplerExternalOES)
-	// 
-	// Currently, it appears that drivers which fully support multiview also support 
+	//
+	// Currently, it appears that drivers which fully support multiview also support
 	// GL_OES_EGL_image_external_essl3 with v300. In the case where multiview is not
 	// fully supported, we force the shader version to v100 in order to maintain support
 	// for image_external with the Mali T760+Android-L drivers.
@@ -333,7 +343,7 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 			( fragmentDirectives != NULL && strstr( fragmentDirectives, "GL_OES_EGL_image_external" ) != NULL ) ||
 			( strstr( fragmentSrc, "GL_OES_EGL_image_external" ) != NULL ) ) )
 	{
-		LOG( "GlProgram: Program GLSL version v100 due to GL_OES_EGL_image_external use." );
+		OVR_LOG( "GlProgram: Program GLSL version v100 due to GL_OES_EGL_image_external use." );
 		programVersion = 100;
 	}
 	// ----IMAGE_EXTERNAL_WORKAROUND
@@ -344,7 +354,7 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 		Free( p );
 		if ( abortOnError )
 		{
-			FAIL( "Failed to compile vertex shader" );
+			OVR_FAIL( "Failed to compile vertex shader" );
 		}
 		return GlProgram();
 	}
@@ -355,7 +365,7 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 		Free( p );
 		if ( abortOnError )
 		{
-			FAIL( "Failed to compile fragment shader" );
+			OVR_FAIL( "Failed to compile fragment shader" );
 		}
 		return GlProgram();
 	}
@@ -392,10 +402,10 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 		GLchar msg[1024];
 		glGetProgramInfoLog( p.Program, sizeof( msg ), 0, msg );
 		Free( p );
-		LOG( "Linking program failed: %s\n", msg );
+		OVR_LOG( "Linking program failed: %s\n", msg );
 		if ( abortOnError )
 		{
-			FAIL( "Failed to link program" );
+			OVR_FAIL( "Failed to link program" );
 		}
 		return GlProgram();
 	}
@@ -482,7 +492,7 @@ GlProgram GlProgram::Build( const char * vertexDirectives, const char * vertexSr
 #ifdef OVR_BUILD_DEBUG
 		if ( p.Uniforms[i].Location < 0 || p.Uniforms[i].Binding < 0 )
 		{
-			LOG( "GlProgram::Build. Invalid shader parm: %s", parms[i].Name );
+			OVR_LOG( "GlProgram::Build. Invalid shader parm: %s", parms[i].Name );
 		}
 #endif
 

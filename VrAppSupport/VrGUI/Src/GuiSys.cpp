@@ -5,7 +5,7 @@ Content     :   Manager for native GUIs.
 Created     :   June 6, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -25,10 +25,8 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "FolderBrowser.h"
 #include "OVR_Input.h"
 #include "DefaultComponent.h"
-#include "VrApi.h"
-#include "Android/JniUtils.h"
-#include "Kernel/OVR_JSON.h"
-#include "Kernel/OVR_Lexer.h"
+#include "JniUtils.h"
+#include "OVR_JSON.h"
 #include "Reflection.h"
 #include "ReflectionData.h"
 #include "PointTracker.h"
@@ -43,14 +41,14 @@ namespace OVR {
 	int v;					\
 	lex.ParseInt( v, 1 );	\
 	var_name = v != 0;		\
-	LOG( #var_name "( '%s' ) = %i", parms, var_name )
+	OVR_LOG( #var_name "( '%s' ) = %i", parms, var_name )
 
 //==============================================================
 // ovrInfoText
 class ovrInfoText
 {
 public:
-	String				Text;				// informative text to show in front of the view
+	std::string			Text;				// informative text to show in front of the view
 	Vector4f			Color;				// color of info text
 	Vector3f			Offset;				// offset from center of screen in view space
 	long long			EndFrame;			// time to stop showing text
@@ -80,10 +78,10 @@ public:
 	virtual void			Frame( ovrFrameInput const & vrFrame,
 									Matrix4f const & viewMatrix, Matrix4f const & traceMat ) OVR_OVERRIDE;
 
-	virtual void 			AppendSurfaceList( Matrix4f const & centerViewMatrix, Array< ovrDrawSurface > * surfaceList ) const OVR_OVERRIDE;
+	virtual void 			AppendSurfaceList( Matrix4f const & centerViewMatrix, std::vector< ovrDrawSurface > * surfaceList ) const OVR_OVERRIDE;
 
-	virtual bool			OnKeyEvent( int const keyCode, 
-									const int repeatCount, 
+	virtual bool			OnKeyEvent( int const keyCode,
+									const int repeatCount,
 									KeyEventType const eventType ) OVR_OVERRIDE;
 
 	virtual void			ResetMenuOrientations( Matrix4f const & viewMatrix ) OVR_OVERRIDE;
@@ -92,11 +90,11 @@ public:
 
 	virtual void			AddMenu( VRMenu * menu ) OVR_OVERRIDE;
 	virtual VRMenu *		GetMenu( char const * menuName ) const OVR_OVERRIDE;
-	virtual Array< String > GetAllMenuNames() const OVR_OVERRIDE;
+	virtual std::vector< std::string > GetAllMenuNames() const OVR_OVERRIDE;
 	virtual void			DestroyMenu( VRMenu * menu ) OVR_OVERRIDE;
-	
+
 	virtual void			OpenMenu( char const * name ) OVR_OVERRIDE;
-	
+
 	virtual void			CloseMenu( char const * menuName, bool const closeInstantly ) OVR_OVERRIDE;
 	virtual void			CloseMenu( VRMenu * menu, bool const closeInstantly ) OVR_OVERRIDE;
 
@@ -131,8 +129,8 @@ private:
 	OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
 	ovrReflection *			Reflection;
 
-	Array< VRMenu* >		Menus;
-	Array< VRMenu* >		ActiveMenus;
+	std::vector< VRMenu* >	Menus;
+	std::vector< VRMenu* >	ActiveMenus;
 
 	ovrInfoText				InfoText;
 	long long				LastVrFrameNumber;
@@ -155,7 +153,7 @@ private:
 	virtual void			MakeActive( VRMenu * menu ) OVR_OVERRIDE;
 	void					MakeInactive( VRMenu * menu );
 
-	Array< VRMenuComponent* > GetDefaultComponents();
+	std::vector< VRMenuComponent* > GetDefaultComponents();
 
 	static void				GUISkipFrame( void * appPtr, char const * parms ) { IMPL_CONSOLE_FUNC_BOOL( SkipFrame ); }
 	static void				GUISkipRender( void * appPtr, char const * parms ) { IMPL_CONSOLE_FUNC_BOOL( SkipRender ); }
@@ -195,7 +193,7 @@ bool OvrGuiSysLocal::SkipCursor = false;
 
 //==============================
 // OvrGuiSysLocal::
-OvrGuiSysLocal::OvrGuiSysLocal() 
+OvrGuiSysLocal::OvrGuiSysLocal()
 	: app( nullptr )
 	, MenuMgr( nullptr )
 	, GazeCursor( nullptr )
@@ -219,10 +217,10 @@ OvrGuiSysLocal::~OvrGuiSysLocal()
 
 //==============================
 // OvrGuiSysLocal::Init
-void OvrGuiSysLocal::Init( App * app_, OvrGuiSys::SoundEffectPlayer & soundEffectPlayer, char const * fontName, 
+void OvrGuiSysLocal::Init( App * app_, OvrGuiSys::SoundEffectPlayer & soundEffectPlayer, char const * fontName,
 		BitmapFontSurface * fontSurface, OvrDebugLines * debugLines )
 {
-	LOG( "OvrGuiSysLocal::Init" );
+	OVR_LOG( "OvrGuiSysLocal::Init" );
 
 	Reflection = ovrReflection::Create();
 
@@ -242,7 +240,7 @@ void OvrGuiSysLocal::Init( App * app_, OvrGuiSys::SoundEffectPlayer & soundEffec
 
 	// choose a package to load the font from.
 	// select the System Activities package first
-	LOG( "GuiSys::Init - fontName is '%s'", fontName );
+	OVR_LOG( "GuiSys::Init - fontName is '%s'", fontName );
 
 	if ( OVR_strncmp( fontName, "apk:", 4 ) == 0 ) //if full apk path specified use that
 	{
@@ -298,19 +296,23 @@ void OvrGuiSysLocal::Shutdown()
 	IsInitialized = false;
 
 	// pointers in this list will always be in Menus list, too, so just clear it
-	ActiveMenus.Clear();
+	for ( int i = 0; i < static_cast< int >( ActiveMenus.size() ); ++i )
+	{
+		ActiveMenus[i] = nullptr;
+	}
+	ActiveMenus.clear();
 
-	// FIXME: we need to make sure we delete any child menus here -- it's not enough to just delete them
+	// We need to make sure we delete any child menus here -- it's not enough to just delete them
 	// in the destructor of the parent, because they'll be left in the menu list since the destructor has
 	// no way to call GuiSys->DestroyMenu() for them.
-	for ( int i = 0; i < Menus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( Menus.size() ); ++i )
 	{
 		VRMenu * menu = Menus[i];
+		Menus[i] = nullptr;
 		menu->Shutdown( *this );
 		delete menu;
-		Menus[i] = nullptr;
 	}
-	Menus.Clear();
+	Menus.clear();
 
 	BitmapFontSurface::Free( DefaultFontSurface );
 	BitmapFont::Free( DefaultFont );
@@ -325,7 +327,7 @@ void OvrGuiSysLocal::Shutdown()
 
 //==============================
 // OvrGuiSysLocal::RepositionMenus
-// Reposition any open menus 
+// Reposition any open menus
 void OvrGuiSysLocal::ResetMenuOrientations( Matrix4f const & centerViewMatrix )
 {
 	if ( !IsInitialized )
@@ -334,11 +336,11 @@ void OvrGuiSysLocal::ResetMenuOrientations( Matrix4f const & centerViewMatrix )
 		return;
 	}
 
-	for ( int i = 0; i < Menus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( Menus.size() ); ++i )
 	{
-		if ( VRMenu* menu = Menus.At( i ) )
+		if ( VRMenu* menu = Menus.at( i ) )
 		{
-			LOG( "ResetMenuOrientation -> '%s'", menu->GetName() );
+			OVR_LOG( "ResetMenuOrientation -> '%s'", menu->GetName() );
 			menu->ResetMenuOrientation( centerViewMatrix );
 		}
 	}
@@ -350,7 +352,7 @@ void OvrGuiSysLocal::AddMenu( VRMenu * menu )
 {
 	if ( menu == nullptr )
 	{
-		WARN( "Attempted to add null menu!" );
+		OVR_WARN( "Attempted to add null menu!" );
 		return;
 	}
 	if ( !IsInitialized )
@@ -362,10 +364,10 @@ void OvrGuiSysLocal::AddMenu( VRMenu * menu )
 	int menuIndex = FindMenuIndex( menu->GetName() );
 	if ( menuIndex >= 0 )
 	{
-		WARN( "Duplicate menu name '%s'", menu->GetName() );
+		OVR_WARN( "Duplicate menu name '%s'", menu->GetName() );
 		OVR_ASSERT( menuIndex < 0 );
 	}
-	Menus.PushBack( menu );
+	Menus.push_back( menu );
 }
 
 //==============================
@@ -382,12 +384,12 @@ VRMenu * OvrGuiSysLocal::GetMenu( char const * menuName ) const
 
 //==============================
 // OvrGuiSysLocal::GetAllMenuNames
-Array< String > OvrGuiSysLocal::GetAllMenuNames() const
+std::vector< std::string > OvrGuiSysLocal::GetAllMenuNames() const
 {
-	Array< String > allMenuNames;
-	for ( int i = 0; i < Menus.GetSizeI(); ++i )
+	std::vector< std::string > allMenuNames;
+	for ( int i = 0; i < static_cast< int >( Menus.size() ); ++i )
 	{
-		allMenuNames.PushBack( String( Menus[ i ]->GetName() ) );
+		allMenuNames.push_back( std::string( Menus[ i ]->GetName() ) );
 	}
 	return allMenuNames;
 }
@@ -415,7 +417,7 @@ void OvrGuiSysLocal::DestroyMenu( VRMenu * menu )
 	int idx = FindMenuIndex( menu );
 	if ( idx >= 0 )
 	{
-		Menus.RemoveAt( idx );
+		Menus.erase( Menus.cbegin() + idx );
 	}
 }
 
@@ -429,7 +431,7 @@ int OvrGuiSysLocal::FindMenuIndex( char const * menuName ) const
 		return -1;
 	}
 
-	for ( int i = 0; i < Menus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( Menus.size() ); ++i )
 	{
 		if ( OVR_stricmp( Menus[i]->GetName(), menuName ) == 0 )
 		{
@@ -449,9 +451,9 @@ int OvrGuiSysLocal::FindMenuIndex( VRMenu const * menu ) const
 		return -1;
 	}
 
-	for ( int i = 0; i < Menus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( Menus.size() ); ++i )
 	{
-		if ( Menus[i] == menu ) 
+		if ( Menus[i] == menu )
 		{
 			return i;
 		}
@@ -469,9 +471,9 @@ int OvrGuiSysLocal::FindActiveMenuIndex( VRMenu const * menu ) const
 		return -1;
 	}
 
-	for ( int i = 0; i < ActiveMenus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( ActiveMenus.size() ); ++i )
 	{
-		if ( ActiveMenus[i] == menu ) 
+		if ( ActiveMenus[i] == menu )
 		{
 			return i;
 		}
@@ -489,7 +491,7 @@ int OvrGuiSysLocal::FindActiveMenuIndex( char const * menuName ) const
 		return -1;
 	}
 
-	for ( int i = 0; i < ActiveMenus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( ActiveMenus.size() ); ++i )
 	{
 		if ( OVR_stricmp( ActiveMenus[i]->GetName(), menuName ) == 0 )
 		{
@@ -512,7 +514,7 @@ void OvrGuiSysLocal::MakeActive( VRMenu * menu )
 	int idx = FindActiveMenuIndex( menu );
 	if ( idx < 0 )
 	{
-		ActiveMenus.PushBack( menu );
+		ActiveMenus.push_back( menu );
 	}
 }
 
@@ -529,7 +531,7 @@ void OvrGuiSysLocal::MakeInactive( VRMenu * menu )
 	int idx = FindActiveMenuIndex( menu );
 	if ( idx >= 0 )
 	{
-		ActiveMenus.RemoveAtUnordered( idx );
+		ActiveMenus.erase( ActiveMenus.cbegin() + idx );
 	}
 }
 
@@ -546,8 +548,8 @@ void OvrGuiSysLocal::OpenMenu( char const * menuName )
 	int menuIndex = FindMenuIndex( menuName );
 	if ( menuIndex < 0 )
 	{
-		WARN( "No menu named '%s'", menuName );
-		OVR_ASSERT( menuIndex >= 0 && menuIndex < Menus.GetSizeI() );
+		OVR_WARN( "No menu named '%s'", menuName );
+		OVR_ASSERT( menuIndex >= 0 && menuIndex < static_cast< int >( Menus.size() ) );
 		return;
 	}
 	VRMenu * menu = Menus[menuIndex];
@@ -573,7 +575,7 @@ void OvrGuiSysLocal::CloseMenu( VRMenu * menu, bool const closeInstantly )
 
 //==============================
 // OvrGuiSysLocal::CloseMenu
-void OvrGuiSysLocal::CloseMenu( char const * menuName, bool const closeInstantly ) 
+void OvrGuiSysLocal::CloseMenu( char const * menuName, bool const closeInstantly )
 {
 	if ( !IsInitialized )
 	{
@@ -584,8 +586,8 @@ void OvrGuiSysLocal::CloseMenu( char const * menuName, bool const closeInstantly
 	int menuIndex = FindMenuIndex( menuName );
 	if ( menuIndex < 0 )
 	{
-		WARN( "No menu named '%s'", menuName );
-		OVR_ASSERT( menuIndex >= 0 && menuIndex < Menus.GetSizeI() );
+		OVR_WARN( "No menu named '%s'", menuName );
+		OVR_ASSERT( menuIndex >= 0 && menuIndex < static_cast< int >( Menus.size() ) );
 		return;
 	}
 	VRMenu * menu = Menus[menuIndex];
@@ -609,7 +611,7 @@ bool OvrGuiSysLocal::IsMenuActive( char const * menuName ) const
 
 //==============================
 // OvrGuiSysLocal::IsAnyMenuOpen
-bool OvrGuiSysLocal::IsAnyMenuActive() const 
+bool OvrGuiSysLocal::IsAnyMenuActive() const
 {
 	if ( !IsInitialized )
 	{
@@ -617,7 +619,7 @@ bool OvrGuiSysLocal::IsAnyMenuActive() const
 		return false;
 	}
 
-	return ActiveMenus.GetSizeI() > 0;
+	return ActiveMenus.size() > 0;
 }
 
 //==============================
@@ -630,7 +632,7 @@ bool OvrGuiSysLocal::IsAnyMenuOpen() const
 		return false;
 	}
 
-	for ( int i = 0; i < ActiveMenus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( ActiveMenus.size() ); ++i )
 	{
 		if ( ActiveMenus[i]->IsOpenOrOpening() )
 		{
@@ -661,10 +663,10 @@ void OvrGuiSysLocal::Frame( const ovrFrameInput & vrFrame, Matrix4f const & cent
 		return;
 	}
 
-	const int currentRecenterCount = app->GetSystemStatus( VRAPI_SYS_STATUS_RECENTER_COUNT );
+	const int currentRecenterCount = vrFrame.DeviceStatus.RecenterCount;
 	if ( currentRecenterCount != RecenterCount )
 	{
-		//LOG( "OvrGuiSysLocal::Frame - reorienting menus" );
+		//OVR_LOG( "OvrGuiSysLocal::Frame - reorienting menus" );
 		app->RecenterLastViewMatrix();
 		ResetMenuOrientations( app->GetLastViewMatrix() );
 		RecenterCount = currentRecenterCount;
@@ -686,13 +688,13 @@ void OvrGuiSysLocal::Frame( const ovrFrameInput & vrFrame, Matrix4f const & cent
 		fp.Billboard = true;
 		fp.TrackRoll = false;
 		DefaultFontSurface->DrawTextBillboarded3Df( *DefaultFont, fp, InfoText.PointTracker.GetCurPosition(), 
-				1.0f, InfoText.Color, InfoText.Text.ToCStr() );
+				1.0f, InfoText.Color, InfoText.Text.c_str() );
 	}
 
 	{
 		OVR_PERF_TIMER( OvrGuiSys_Frame_Menus_Frame );
 		// go backwards through the list so we can use unordered remove when a menu finishes closing
-		for ( int i = ActiveMenus.GetSizeI() - 1; i >= 0; --i )
+		for ( int i = static_cast< int >( ActiveMenus.size() ) - 1; i >= 0; --i )
 		{
 			VRMenu * curMenu = ActiveMenus[i];
 			OVR_ASSERT( curMenu != nullptr );
@@ -702,7 +704,8 @@ void OvrGuiSysLocal::Frame( const ovrFrameInput & vrFrame, Matrix4f const & cent
 			if ( curMenu->GetCurMenuState() == VRMenu::MENUSTATE_CLOSED )
 			{
 				// remove from the active list
-				ActiveMenus.RemoveAtUnordered( i );
+				ActiveMenus[i] = ActiveMenus.back();
+				ActiveMenus.pop_back();
 				continue;
 			}
 		}
@@ -728,7 +731,7 @@ void OvrGuiSysLocal::Frame( const ovrFrameInput & vrFrame, Matrix4f const & cent
 
 //==============================
 // OvrGuiSysLocal::AppendSurfaceList
-void OvrGuiSysLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array< ovrDrawSurface > * surfaceList ) const
+void OvrGuiSysLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, std::vector< ovrDrawSurface > * surfaceList ) const
 {
 	if ( !IsInitialized || SkipRender )
 	{
@@ -740,7 +743,7 @@ void OvrGuiSysLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array
 	{
 		MenuMgr->AppendSurfaceList( centerViewMatrix, *surfaceList );
 	}
-	
+
 	if ( !SkipFont )
 	{
 		DefaultFontSurface->AppendSurfaceList( *DefaultFont, *surfaceList );
@@ -754,7 +757,7 @@ void OvrGuiSysLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array
 
 //==============================
 // OvrGuiSysLocal::OnKeyEvent
-bool OvrGuiSysLocal::OnKeyEvent( int const keyCode, const int repeatCount, KeyEventType const eventType ) 
+bool OvrGuiSysLocal::OnKeyEvent( int const keyCode, const int repeatCount, KeyEventType const eventType )
 {
 	if ( !IsInitialized )
 	{
@@ -768,19 +771,19 @@ bool OvrGuiSysLocal::OnKeyEvent( int const keyCode, const int repeatCount, KeyEv
 		return false;
 	}
 
-	for ( int i = 0; i < ActiveMenus.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( ActiveMenus.size() ); ++i )
 	{
 		VRMenu * curMenu = ActiveMenus[i];
 		OVR_ASSERT( curMenu != nullptr );
 
-		if ( keyCode == OVR_KEY_BACK ) 
+		if ( keyCode == OVR_KEY_BACK )
 		{
-			LOG( "OvrGuiSysLocal back key event '%s' for menu '%s'", KeyEventNames[eventType], curMenu->GetName() );
+			OVR_LOG( "OvrGuiSysLocal back key event '%s' for menu '%s'", KeyEventNames[eventType], curMenu->GetName() );
 		}
 
 		if ( curMenu->OnKeyEvent( *this, keyCode, repeatCount, eventType ) )
 		{
-			LOG( "VRMenu '%s' consumed key event", curMenu->GetName() );
+			OVR_LOG( "VRMenu '%s' consumed key event", curMenu->GetName() );
 			return true;
 		}
 	}
@@ -821,23 +824,23 @@ void OvrGuiSysLocal::ShowInfoText( float const duration, Vector3f const & offset
 
 bool OvrGuiSys::ovrDummySoundEffectPlayer::Has( const char* name ) const
 {
-	LOG( "ovrDummySoundEffectPlayer::Has( %s )", name );
+	OVR_LOG( "ovrDummySoundEffectPlayer::Has( %s )", name );
 	return false;
 }
 
 void OvrGuiSys::ovrDummySoundEffectPlayer::Play( const char* name )
 {
-	LOG( "ovrDummySoundEffectPlayer::Play( %s )", name );
+	OVR_LOG( "ovrDummySoundEffectPlayer::Play( %s )", name );
 }
 
 void OvrGuiSys::ovrDummySoundEffectPlayer::Stop( const char* name )
 {
-	LOG( "ovrDummySoundEffectPlayer::Stop( %s )", name );
+	OVR_LOG( "ovrDummySoundEffectPlayer::Stop( %s )", name );
 }
 
 void OvrGuiSys::ovrDummySoundEffectPlayer::LoadSoundAsset( const char* name )
 {
-	LOG( "ovrDummySoundEffectPlayer::LoadSoundAsset( %s )", name );
+	OVR_LOG( "ovrDummySoundEffectPlayer::LoadSoundAsset( %s )", name );
 }
 
 //==============================
@@ -846,7 +849,7 @@ HitTestResult OvrGuiSysLocal::TestRayIntersection( const Vector3f & start, const
 {
 	HitTestResult result;
 
-	for ( int i = ActiveMenus.GetSizeI() - 1; i >= 0; --i )
+	for ( int i = static_cast< int >( ActiveMenus.size() ) - 1; i >= 0; --i )
 	{
 		VRMenu * curMenu = ActiveMenus[i];
 		if ( curMenu == nullptr )

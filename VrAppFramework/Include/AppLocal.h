@@ -5,7 +5,7 @@ Content     :   Native counterpart to VrActivity
 Created     :   September 30, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 #ifndef OVR_AppLocal_h
@@ -15,7 +15,8 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "GlSetup.h"
 #include "PointTracker.h"
 #include "VrFrameBuilder.h"
-#include "Kernel/OVR_Threads.h"
+
+#include <thread>
 
 namespace OVR {
 
@@ -46,7 +47,7 @@ public:
 
 	virtual void				FinishActivity( const ovrAppFinishType type );
 
-	virtual bool				ShowSystemUI( const ovrSystemUIType type );
+	virtual bool				ShowConfirmQuitSystemUI();
 	virtual void				FatalError( const ovrAppFatalError error, const char * fileName, const unsigned int lineNumber,
 											const char * messageFormat, ... );
 	virtual void				ShowDependencyError();
@@ -71,6 +72,7 @@ public:
 	//-----------------------------------------------------------------
 
 	virtual	const ovrEyeBufferParms &	GetEyeBufferParms() const;
+	// Re-creates the eye buffers if the parms have changed.
 	virtual void						SetEyeBufferParms( const ovrEyeBufferParms & parms );
 
 	virtual int							GetSwapInterval() const;
@@ -156,20 +158,16 @@ private:
 	// configurations for CPU warping, etc.
 	ovrEyeBuffers *		EyeBuffers;
 
-	static const int MAX_FENCES = 4;
-	ovrFence *			CompletionFences;
-	int					CompletionFenceIndex;
-
 	ovrJava				Java;
 	jclass				VrActivityClass;
 
 	jmethodID			finishActivityMethodId;
 
-	String				IntentURI;					// URI app was launched with
-	String				IntentJSON;					// extra JSON data app was launched with
-	String				IntentFromPackage;			// package that sent us the launch intent
+	std::string			IntentURI;					// URI app was launched with
+	std::string			IntentJSON;					// extra JSON data app was launched with
+	std::string			IntentFromPackage;			// package that sent us the launch intent
 
-	String				PackageName;				// package name 
+	std::string			PackageName;				// package name 
 
 	Matrix4f			LastViewMatrix;
 
@@ -184,7 +182,7 @@ private:
 
 	ovrSurfaceRender	SurfaceRender;
 
-	Thread				VrThread;					// thread
+	std::thread			VrThread;					// thread
 	int32_t				ExitCode;					// returned from JoinVrThread
 
 #if defined( OVR_OS_ANDROID )
@@ -226,12 +224,7 @@ private:
 	void				DrawBlackFrame( const int frameFlags = 0 );
 	void				DrawLoadingIcon( ovrTextureSwapChain * swapChain, const float spinSpeed = 1.0f, const float spinScale = 16.0f );
 
-	void				CreateFence( ovrFence * fence );
-	void				DestroyFence( ovrFence * fence );
-	void				InsertFence( ovrFence * fence );
-
-	static threadReturn_t ThreadStarter( Thread *, void * parm );
-	void *				VrThreadFunction();
+	void				VrThreadFunction();
 
 	// Process commands forwarded from other threads.
 	// Commands can be processed even when the window surfaces

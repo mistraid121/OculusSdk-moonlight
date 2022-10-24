@@ -5,20 +5,17 @@ Content     :   Global gaze cursor.
 Created     :   June 6, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
 
 #include "GazeCursor.h"
 
-#include "Kernel/OVR_Types.h"
-#include "Kernel/OVR_Array.h"
-#include "Kernel/OVR_String_Utils.h"
-#include "Kernel/OVR_LogUtils.h"
+#include "OVR_Types.h"
+#include "OVR_LogUtils.h"
 #include "OVR_GlUtils.h"
 
-#include "VrApi.h"
 #include "GlTexture.h"
 #include "GlProgram.h"
 #include "GlGeometry.h"
@@ -85,7 +82,7 @@ public:
 	virtual	void				Frame( Matrix4f const & viewMatrix, Matrix4f const & traceMatrix, float const deltaTime );
 
 	// Generates the gaze cursor surfaces and appends to the surface render list.
-	virtual void				AppendSurfaceList( Array< ovrDrawSurface > & surfaceList ) const;
+	virtual void				AppendSurfaceList( std::vector< ovrDrawSurface > & surfaceList ) const;
 
 	// Returns the current info about the gaze cursor.
 	virtual OvrGazeCursorInfo	GetInfo() const;
@@ -176,12 +173,12 @@ OvrGazeCursorLocal::~OvrGazeCursorLocal()
 // OvrGazeCursorLocal::
 void OvrGazeCursorLocal::Init( ovrFileSys & fileSys )
 {
-	LOG( "OvrGazeCursorLocal::Init" );
-	ASSERT_WITH_TAG( Initialized == false, "GazeCursor" );
+	OVR_LOG( "OvrGazeCursorLocal::Init" );
+	OVR_ASSERT_WITH_TAG( Initialized == false, "GazeCursor" );
 
 	if ( Initialized )
 	{
-		LOG( "OvrGazeCursorLocal::Init - already initialized!" );
+		OVR_LOG( "OvrGazeCursorLocal::Init - already initialized!" );
 		return;
 	}
 
@@ -254,8 +251,8 @@ void OvrGazeCursorLocal::Init( ovrFileSys & fileSys )
 // OvrGazeCursorLocal::
 void OvrGazeCursorLocal::Shutdown()
 {
-	LOG( "OvrGazeCursorLocal::Shutdown" );
-	ASSERT_WITH_TAG( Initialized == true, "GazeCursor" );
+	OVR_LOG( "OvrGazeCursorLocal::Shutdown" );
+	OVR_ASSERT_WITH_TAG( Initialized == true, "GazeCursor" );
 
 	ZPassCursorSurface.geo.Free();
 	ZFailCursorSurface.geo.Free();
@@ -271,10 +268,10 @@ void OvrGazeCursorLocal::Shutdown()
 // OvrGazeCursorLocal::UpdateDistance
 void OvrGazeCursorLocal::UpdateDistance( float const d, eGazeCursorStateType const state )
 {
-	//LOG( "OvrGazeCursorLocal::UpdateDistance %.4f", d );
+	//OVR_LOG( "OvrGazeCursorLocal::UpdateDistance %.4f", d );
 	if ( d < Info.Distance )
 	{
-		//LOG( "OvrGazeCursorLocal::UpdateDistance - new closest distace %.2f", d );
+		//OVR_LOG( "OvrGazeCursorLocal::UpdateDistance - new closest distace %.2f", d );
 		Info.Distance = d;
 		Info.State = state;
 	}
@@ -303,7 +300,7 @@ static float frand()
 // OvrGazeCursorLocal::Frame
 void OvrGazeCursorLocal::Frame( Matrix4f const & viewMatrix, Matrix4f const & traceMatrix, float const deltaTime )
 {
-	//LOG( "OvrGazeCursorLocal::Frame" );
+	//OVR_LOG( "OvrGazeCursorLocal::Frame" );
 	HiddenFrames -= 1;
 
 	if ( RotationRateRadians != 0.0f )	// comparison to exactly 0 is intentional
@@ -397,9 +394,9 @@ void OvrGazeCursorLocal::Frame( Matrix4f const & viewMatrix, Matrix4f const & tr
 
 //==============================
 // OvrGazeCursorLocal::AppendSurfaceList
-void OvrGazeCursorLocal::AppendSurfaceList( Array< ovrDrawSurface > & surfaceList ) const
+void OvrGazeCursorLocal::AppendSurfaceList( std::vector< ovrDrawSurface > & surfaceList ) const
 {
-	//LOG( "OvrGazeCursorLocal::AppendSurfaceList" );
+	//OVR_LOG( "OvrGazeCursorLocal::AppendSurfaceList" );
 
 	if ( HiddenFrames >= 0 )
 	{
@@ -413,14 +410,14 @@ void OvrGazeCursorLocal::AppendSurfaceList( Array< ovrDrawSurface > & surfaceLis
 
 	if ( CursorScale <= 0.0f )
 	{
-		LOG( "OvrGazeCursorLocal::AppendSurfaceList - scale 0" );
+		OVR_LOG( "OvrGazeCursorLocal::AppendSurfaceList - scale 0" );
 		return;
 	}
 
-	surfaceList.PushBack( ovrDrawSurface( &ZPassCursorSurface ) );
+	surfaceList.push_back( ovrDrawSurface( &ZPassCursorSurface ) );
 	ZPassCursorSurface.graphicsCommand.UniformData[1].Data = (void *)&CursorTexture;
 
-	surfaceList.PushBack( ovrDrawSurface( &ZFailCursorSurface ) );
+	surfaceList.push_back( ovrDrawSurface( &ZFailCursorSurface ) );
 	ZFailCursorSurface.graphicsCommand.UniformData[1].Data = (void *)&CursorTexture;
 }
 
@@ -491,14 +488,14 @@ GlGeometry CreateCursorGeometry( VertexAttribs & attr, int const numTrails, int 
 		const float alpha = 1.0f - ( ghost / (float)maxTrails );
 		for ( int vertexIndex = 0; vertexIndex < 4; vertexIndex++ )
 		{
-			attr.position.PushBack( Vector3f( 0.0f, 0.0f, 0.0f ) );
-			attr.uv0.PushBack( GazeCursorUV0s[ vertexIndex ] );
-			attr.color.PushBack( Vector4f( 1.0f, 1.0f, 1.0f, alpha ) );
+			attr.position.push_back( Vector3f( 0.0f, 0.0f, 0.0f ) );
+			attr.uv0.push_back( GazeCursorUV0s[ vertexIndex ] );
+			attr.color.push_back( Vector4f( 1.0f, 1.0f, 1.0f, alpha ) );
 		}
 	}
 
-	Array< TriangleIndex > indices;
-	indices.Resize( numTrails * 6 );
+	std::vector< TriangleIndex > indices;
+	indices.resize( numTrails * 6 );
 	for ( int ghost = 0; ghost < numTrails; ++ghost )
 	{
 		// push 6 indices for each quad "ghost"

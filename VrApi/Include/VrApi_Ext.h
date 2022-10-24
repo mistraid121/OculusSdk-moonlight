@@ -6,7 +6,7 @@ Created     :   February 3, 2016
 Authors     :   Cass Everitt
 Language    :   C99
 
-Copyright   :   Copyright 2016 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -14,45 +14,10 @@ Copyright   :   Copyright 2016 Oculus VR, LLC. All Rights reserved.
 #define OVR_VrApi_Ext_h
 
 #include "VrApi_Types.h"
-#include "VrApi_Helpers.h"
 #include "string.h"				// for memset()
 
-//-----------------------------------------------------------------
-// Basic Ext Types
-//-----------------------------------------------------------------
-
-/// This type is just to make parm chain traversal simple
-typedef struct ovrFrameParmsExtBase
-{
-	ovrStructureType Type;
-	OVR_VRAPI_PADDING_64_BIT( 4 );
-	struct ovrFrameParmsExtBase * Next;
-} ovrFrameParmsExtBase;
-
-
-/* ovrStructureType allocations */
-
-static inline ovrFrameParms * vrapi_GetFrameParms( ovrFrameParmsExtBase * frameParmsChain )
-{
-	while ( frameParmsChain != NULL && frameParmsChain->Type != VRAPI_STRUCTURE_TYPE_FRAME_PARMS )
-	{
-		frameParmsChain = frameParmsChain->Next;
-	}
-
-	return 	(ovrFrameParms *)frameParmsChain;
-}
-
-static inline const ovrFrameParms * vrapi_GetFrameParmsConst( const ovrFrameParmsExtBase * frameParmsChain )
-{
-	while ( frameParmsChain != NULL && frameParmsChain->Type != VRAPI_STRUCTURE_TYPE_FRAME_PARMS )
-	{
-		frameParmsChain = frameParmsChain->Next;
-	}
-
-	return 	(const ovrFrameParms *)frameParmsChain;
-}
-
-
+/// Extended FrameParms have been deprecated and removed. vrapi_SubmitFrame2 with flexible
+/// layer lists should be used instead.
 
 
 #endif // OVR_VrApi_Ext_h

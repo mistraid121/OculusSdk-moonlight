@@ -5,7 +5,7 @@ Content     :   Menuing system for VR apps.
 Created     :   May 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -18,7 +18,7 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "BitmapFont.h"
 #include "VRMenuObject.h"
 #include "GuiSys.h"
-#include "Kernel/OVR_Lexer.h"
+#include "OVR_Lexer2.h"
 
 //#define OVR_USE_PERF_TIMER
 #include "OVR_PerfTimer.h"
@@ -295,7 +295,7 @@ public:
 	virtual void				Finish( Matrix4f const & viewMatrix );
 
 	virtual void 				AppendSurfaceList( Matrix4f const & centerViewMatrix,
-										Array< ovrDrawSurface > & surfaceList ) const;
+										std::vector< ovrDrawSurface > & surfaceList ) const;
 
     virtual GlProgram const *   GetGUIGlProgram( eGUIProgramType const programType ) const;
 
@@ -325,15 +325,15 @@ private:
 	//--------------------------------------------------------------
 	OvrGuiSys &				GuiSys;			// reference to the GUI sys that owns this menu manager
 	UInt32					CurrentId;		// ever-incrementing object ID (well... up to 4 billion or so :)
-	Array< VRMenuObject* >	ObjectList;		// list of all menu objects
-	Array< int >			FreeList;		// list of free slots in the array
+	std::vector< VRMenuObject* >	ObjectList;		// list of all menu objects
+	std::vector< int >			FreeList;		// list of free slots in the array
 	
-	Array< ovrComponentList >	PendingDeletions;	// list of components (and owning objects) that are pending deletion
+	std::vector< ovrComponentList >	PendingDeletions;	// list of components (and owning objects) that are pending deletion
 
 	bool					Initialized;	// true if Init has been called
 
 	SubmittedMenuObject		Submitted[MAX_SUBMITTED];	// all objects that have been submitted for rendering on the current frame
-	Array< SurfSort >		SortKeys;					// sort key consisting of distance from view and submission index
+	std::vector< SurfSort >	SortKeys;					// sort key consisting of distance from view and submission index
 	int						NumSubmitted;				// number of currently submitted menu objects
 	mutable int				NumToRender;				// number of submitted objects to render
 
@@ -375,7 +375,7 @@ void VRMenuMgrLocal::DebugCollision( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowCollision = show != 0;
-	LOG( "DebugCollision( '%s' ): show = %i", parms, show );
+	OVR_LOG( "DebugCollision( '%s' ): show = %i", parms, show );
 }
 
 void VRMenuMgrLocal::DebugMenuBounds( void * appPtr, const char * parms )
@@ -384,7 +384,7 @@ void VRMenuMgrLocal::DebugMenuBounds( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowDebugBounds = show != 0;
-	LOG( "DebugMenuBounds( '%s' ): show = %i", parms, show );
+	OVR_LOG( "DebugMenuBounds( '%s' ): show = %i", parms, show );
 }
 
 void VRMenuMgrLocal::DebugMenuHierarchy( void * appPtr, const char * parms )
@@ -393,7 +393,7 @@ void VRMenuMgrLocal::DebugMenuHierarchy( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowDebugHierarchy = show != 0;
-	LOG( "DebugMenuHierarchy( '%s' ): show = %i", parms, show );
+	OVR_LOG( "DebugMenuHierarchy( '%s' ): show = %i", parms, show );
 }
 
 void VRMenuMgrLocal::DebugMenuPoses( void * appPtr, const char * parms )
@@ -402,7 +402,7 @@ void VRMenuMgrLocal::DebugMenuPoses( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowPoses = show != 0;
-	LOG( "DebugMenuPoses( '%s' ): show = %i", parms, show );
+	OVR_LOG( "DebugMenuPoses( '%s' ): show = %i", parms, show );
 }
 
 void VRMenuMgrLocal::DebugShowStats( void * appPtr, const char * parms )
@@ -411,7 +411,7 @@ void VRMenuMgrLocal::DebugShowStats( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowStats = show != 0;
-	LOG( "ShowStats( '%s' ): show = %i", parms, show );
+	OVR_LOG( "ShowStats( '%s' ): show = %i", parms, show );
 }
 
 void VRMenuMgrLocal::DebugWordWrap( void * appPtr, const char * parms )
@@ -420,7 +420,7 @@ void VRMenuMgrLocal::DebugWordWrap( void * appPtr, const char * parms )
 	int show;
 	lex.ParseInt( show, 0 );
 	ShowWrapWidths = show != 0;
-	LOG( "ShowWrapWidths( '%s' ): show = %i", parms, show );
+	OVR_LOG( "ShowWrapWidths( '%s' ): show = %i", parms, show );
 }
 
 //==================================
@@ -446,7 +446,7 @@ VRMenuMgrLocal::~VRMenuMgrLocal()
 // Initialize the VRMenu system
 void VRMenuMgrLocal::Init( OvrGuiSys & guiSys )
 {
-	LOG( "VRMenuMgrLocal::Init" );
+	OVR_LOG( "VRMenuMgrLocal::Init" );
 	if ( Initialized )
 	{
         return;
@@ -527,47 +527,47 @@ menuHandle_t VRMenuMgrLocal::CreateObject( VRMenuObjectParms const & parms )
 
 	if ( !Initialized )
 	{
-		WARN( "VRMenuMgrLocal::CreateObject - manager has not been initialized!" );
+		OVR_WARN( "VRMenuMgrLocal::CreateObject - manager has not been initialized!" );
 		return menuHandle_t();
 	}
 
 	// validate parameters
 	if ( parms.Type >= VRMENU_MAX )
 	{
-		WARN( "VRMenuMgrLocal::CreateObject - Invalid menu object type: %i", parms.Type );
+		OVR_WARN( "VRMenuMgrLocal::CreateObject - Invalid menu object type: %i", parms.Type );
 		return menuHandle_t();
 	}
 
 	// create the handle first so we can enforce setting it be requiring it to be passed to the constructor
 	int index = -1;
-	if ( FreeList.GetSizeI() > 0 )
+	if ( FreeList.size() > 0 )
 	{
-		index = FreeList.Back();
-		FreeList.PopBack();
+		index = FreeList.back();
+		FreeList.pop_back();
 	}
 	else
 	{
-		index = ObjectList.GetSizeI();
+		index = static_cast< int >( ObjectList.size() );
 	}
 
 	UInt32 id = ++CurrentId;
 	menuHandle_t handle = ComposeHandle( index, id );
-	//LOG( "VRMenuMgrLocal::CreateObject - handle is %llu", handle.Get() );
+	//OVR_LOG( "VRMenuMgrLocal::CreateObject - handle is %llu", handle.Get() );
 
 	VRMenuObject * obj = new VRMenuObject( parms, handle );
 	if ( obj == NULL )
 	{
-		WARN( "VRMenuMgrLocal::CreateObject - failed to allocate menu object!" );
+		OVR_WARN( "VRMenuMgrLocal::CreateObject - failed to allocate menu object!" );
 		OVR_ASSERT( obj != NULL );	// this would be bad -- but we're likely just going to explode elsewhere
 		return menuHandle_t();
 	}
 
 	obj->Init( GuiSys, parms );
 
-	if ( index == ObjectList.GetSizeI() )
+	if ( index == static_cast< int >( ObjectList.size() ) )
 	{
 		// we have to grow the array
-		ObjectList.PushBack( obj );
+		ObjectList.push_back( obj );
 	}
 	else
 	{
@@ -617,7 +617,7 @@ void VRMenuMgrLocal::FreeObject( menuHandle_t const handle )
 	// empty the slot
 	ObjectList[index] = NULL;
 	// add the index to the free list
-	FreeList.PushBack( index );
+	FreeList.push_back( index );
 
 	CondenseList();
 }
@@ -632,21 +632,21 @@ void VRMenuMgrLocal::CondenseList()
 	// would invalidate any existing references to it).
 	// This is the difference between the current size and the array capacity.
 	int const MIN_FREE = 64;	// very arbitray number
-	if ( ObjectList.GetCapacityI() - ObjectList.GetSizeI() < MIN_FREE )
+	if ( ObjectList.capacity() - ObjectList.size() < MIN_FREE )
 	{
 		return;
 	}
 
 	// shrink to current size
-	ObjectList.Resize( ObjectList.GetSizeI() );
+	ObjectList.resize( ObjectList.size() );
 
 	// create a new free list of just indices < the new size
-	Array< int > newFreeList;
-	for ( int i = 0; i < FreeList.GetSizeI(); ++i )
+	std::vector< int > newFreeList;
+	for ( int i = 0; i < static_cast< int >( FreeList.size() ); ++i )
 	{
-		if ( FreeList[i] <= ObjectList.GetSizeI() )
+		if ( FreeList[i] <= static_cast< int >( ObjectList.size() ) )
 		{
-			newFreeList.PushBack( FreeList[i] );
+			newFreeList.push_back( FreeList[i] );
 		}
 	}
 	FreeList = newFreeList;
@@ -676,25 +676,25 @@ VRMenuObject * VRMenuMgrLocal::ToObject( menuHandle_t const handle ) const
 	}
 	if ( !HandleComponentsAreValid( index, id ) )
 	{
-		WARN( "VRMenuMgrLocal::ToObject - invalid handle." );
+		OVR_WARN( "VRMenuMgrLocal::ToObject - invalid handle." );
 		return NULL;
 	}
-	if ( index >= ObjectList.GetSizeI() )
+	if ( index >= static_cast< int >( ObjectList.size() ) )
 	{
-		WARN( "VRMenuMgrLocal::ToObject - index out of range." );
+		OVR_WARN( "VRMenuMgrLocal::ToObject - index out of range." );
 		return NULL;
 	}
 	VRMenuObject * object = ObjectList[index];
 	if ( object == NULL )
 	{
-		WARN( "VRMenuMgrLocal::ToObject - slot empty." );
+		OVR_WARN( "VRMenuMgrLocal::ToObject - slot empty." );
 		return NULL;	// this can happen if someone is holding onto the handle of an object that's been freed
 	}
 	if ( object->GetHandle() != handle )
 	{
 		// if the handle of the object in the slot does not match, then the object the handle refers to was deleted
 		// and a new object is in the slot
-		WARN( "VRMenuMgrLocal::ToObject - slot mismatch." );
+		OVR_WARN( "VRMenuMgrLocal::ToObject - slot mismatch." );
 		return NULL;
 	}
 	return object;
@@ -703,7 +703,7 @@ VRMenuObject * VRMenuMgrLocal::ToObject( menuHandle_t const handle ) const
 /*
 static void LogBounds( const char * name, char const * prefix, Bounds3f const & bounds )
 {
-	LOG_WITH_TAG( "Spam", "'%s' %s: min( %.2f, %.2f, %.2f ) - max( %.2f, %.2f, %.2f )",
+	OVR_LOG_WITH_TAG( "Spam", "'%s' %s: min( %.2f, %.2f, %.2f ) - max( %.2f, %.2f, %.2f )",
 		name, prefix,
 		bounds.GetMins().x, bounds.GetMins().y, bounds.GetMins().z,
 		bounds.GetMaxs().x, bounds.GetMaxs().y, bounds.GetMaxs().z );
@@ -724,8 +724,8 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 	{
 		// If this happens we're probably not correctly clearing the submitted surfaces each frame
 		// OR we've got a LOT of surfaces.
-		LOG( "maxIndices = %i, curIndex = %i", maxIndices, curIndex );
-		ASSERT_WITH_TAG( curIndex < maxIndices, "VrMenu" );
+		OVR_LOG( "maxIndices = %i, curIndex = %i", maxIndices, curIndex );
+		OVR_ASSERT_WITH_TAG( curIndex < maxIndices, "VrMenu" );
 		return;
 	}
 
@@ -797,8 +797,8 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 			// the menu object may have zero or more renderable surfaces (if 0, it may draw only text)
 			OVR_PERF_ACCUMULATE( SubmitForRenderingRecursive_submit );
 			submissionIndex = curIndex;
-			Array< VRMenuSurface > const & surfaces = obj->GetSurfaces();
-			for ( int i = 0; i < surfaces.GetSizeI(); ++i )
+			std::vector< VRMenuSurface > const & surfaces = obj->GetSurfaces();
+			for ( int i = 0; i < static_cast< int >( surfaces.size() ); ++i )
 			{
 				VRMenuSurface const & surf = surfaces[i];
 				if ( surf.IsRenderable() )
@@ -828,8 +828,8 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 			OVR_PERF_TIMER_STOP( SubmitForRenderingRecursive_submit );
 		}		
 
-		OVR::String const & text = obj->GetText();
-		if ( ( oFlags & VRMENUOBJECT_DONT_RENDER_TEXT ) == 0 && text.GetLengthI() > 0 )
+		std::string const & text = obj->GetText();
+		if ( ( oFlags & VRMENUOBJECT_DONT_RENDER_TEXT ) == 0 && text.length() > 0 )
 		{
             Posef const & textLocalPose = obj->GetTextLocalPose();
             Posef curTextPose;
@@ -885,7 +885,7 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 			{
 				OVR_PERF_ACCUMULATE( SubmitForRenderingRecursive_DrawText3D );
 				guiSys.GetDefaultFontSurface().DrawText3D( guiSys.GetDefaultFont(), fontParms, 
-						position, textNormal, textUp, textScale.x * fp.Scale, textColor, text.ToCStr() );
+						position, textNormal, textUp, textScale.x * fp.Scale, textColor, text.c_str() );
 			}
 
 			if ( ShowWrapWidths )
@@ -904,12 +904,12 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 					Vector4f( 0.0f, 1.0f, 0.0f, 1.0f ), Vector4f( 1.0f, 0.0f, 0.0f, 1.0f ), 0, false );
 			}
 		}
-        //LOG_WITH_TAG( "Spam", "AddPoint for '%s'", text.ToCStr() );
+        //OVR_LOG_WITH_TAG( "Spam", "AddPoint for '%s'", text.c_str() );
 		//GetDebugLines().AddPoint( curModelPose.Position, 0.05f, 1, true );
 	}
 
 	// submit all children
-    if ( obj->Children.GetSizeI() > 0 )
+    if ( obj->Children.size() > 0 )
     {
 		// If this object has the render hierarchy order flag, then it and all its children should
 		// be depth sorted based on this object's distance + the inverse of the submission index.
@@ -919,7 +919,8 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 		{
 			di = submissionIndex;
 		}
-	    for ( int i = 0; i < obj->Children.GetSizeI(); ++i )
+
+	    for ( int i = 0; i < static_cast< int >( obj->Children.size() ); ++i )
 	    {
 		    menuHandle_t childHandle = obj->Children[i];
 		    VRMenuObject const * child = static_cast< VRMenuObject const * >( ToObject( childHandle ) );
@@ -952,8 +953,8 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 		}
 		//if ( obj->GetId() == debugId )
 		{
-			Array< VRMenuSurface > const & surfaces = obj->GetSurfaces();
-			for ( int i = 0; i < surfaces.GetSizeI(); ++i )
+			std::vector< VRMenuSurface > const & surfaces = obj->GetSurfaces();
+			for ( int i = 0; i < static_cast< int >( surfaces.size() ); ++i )
 			{
 				VRMenuSurface const & surf = surfaces[i];
 				surf.GetTris().DebugRender( guiSys.GetDebugLines(), curModelPose, scale, ShowDebugNormals );
@@ -965,12 +966,12 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 
 		{
 			// for debug drawing, put the cull bounds in world space
-			//LogBounds( obj->GetText().ToCStr(), "Transformed CullBounds", myCullBounds );
+			//LogBounds( obj->GetText().c_str(), "Transformed CullBounds", myCullBounds );
 			guiSys.GetDebugLines().AddBounds( curModelPose, cullBounds, Vector4f( 0.0f, 1.0f, 1.0f, 1.0f ) );
 		}
 		{
 			Bounds3f localBounds = obj->GetLocalBounds( guiSys.GetDefaultFont() ) * parentScale;
-			//LogBounds( obj->GetText().ToCStr(), "localBounds", localBounds );
+			//LogBounds( obj->GetText().c_str(), "localBounds", localBounds );
     		guiSys.GetDebugLines().AddBounds( curModelPose, localBounds, Vector4f( 1.0f, 0.0f, 0.0f, 1.0f ) );
 			Bounds3f textLocalBounds = obj->GetTextLocalBounds( guiSys.GetDefaultFont() );
 			Posef hilightPose = obj->GetHilightPose();
@@ -993,15 +994,15 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 			Vector3f itemUp = curModelPose.Rotation * Vector3f( 0.0f, 1.0f, 0.0f );
 			Vector3f itemNormal = curModelPose.Rotation * Vector3f( 0.0f, 0.0f, 1.0f );
 			fontSurface.DrawTextBillboarded3D( font, fp, curModelPose.Translation, itemNormal, itemUp,
-					0.5f, Vector4f( 1.0f, 0.0f, 1.0f, 1.0f ), obj->GetSurfaces()[0] ); //parent->GetText().ToCStr() );
+					0.5f, Vector4f( 1.0f, 0.0f, 1.0f, 1.0f ), obj->GetSurfaces()[0] ); //parent->GetText().c_str() );
 		}
 #endif
 		guiSys.GetDebugLines().AddLine( parentModelPose.Translation, curModelPose.Translation, Vector4f( 1.0f, 0.0f, 0.0f, 1.0f ), Vector4f( 0.0f, 0.0f, 1.0f, 1.0f ), 5, false );
-		if ( obj->GetSurfaces().GetSizeI() > 0 )
+		if ( obj->GetSurfaces().size() > 0 )
 		{
 			guiSys.GetDefaultFontSurface().DrawTextBillboarded3D( guiSys.GetDefaultFont(), fp,
 					curModelPose.Translation, 0.5f, Vector4f( 0.8f, 0.8f, 0.8f, 1.0f ),
-					obj->GetSurfaces()[0].GetName().ToCStr() );
+					obj->GetSurfaces()[0].GetName().c_str() );
 		}
 	}
 }
@@ -1012,10 +1013,10 @@ void VRMenuMgrLocal::SubmitForRenderingRecursive( OvrGuiSys & guiSys, Matrix4f c
 void VRMenuMgrLocal::SubmitForRendering( OvrGuiSys & guiSys, Matrix4f const & centerViewMatrix,
 		menuHandle_t const handle, Posef const & worldPose, VRMenuRenderFlags_t const & flags )
 {
-	//LOG( "VRMenuMgrLocal::SubmitForRendering" );
+	//OVR_LOG( "VRMenuMgrLocal::SubmitForRendering" );
 	if ( NumSubmitted >= MAX_SUBMITTED )
 	{
-		WARN( "Too many menu objects submitted!" );
+		OVR_WARN( "Too many menu objects submitted!" );
 		return;
 	}
 	VRMenuObject * obj = static_cast< VRMenuObject* >( ToObject( handle ) );
@@ -1049,7 +1050,7 @@ void VRMenuMgrLocal::Finish( Matrix4f const & viewMatrix )
 	Vector3f viewPos = invViewMatrix.GetTranslation();
 
 	// sort surfaces
-	SortKeys.Resize( NumSubmitted );
+	SortKeys.resize( NumSubmitted );
 	for ( int i = 0; i < NumSubmitted; ++i )
 	{
 		// The sort key is a combination of the distance squared, reinterpreted as an integer, and the submission index.
@@ -1062,7 +1063,7 @@ void VRMenuMgrLocal::Finish( Matrix4f const & viewMatrix )
 		SortKeys[i].Key = ( sortKey << 32ULL ) | ( NumSubmitted - i );	// invert i because we want items submitted sooner to be considered "further away"
 	}
 
-	Alg::QuickSort( SortKeys );
+	std::sort( SortKeys.begin(), SortKeys.end() );
 
 	NumToRender = NumSubmitted;
 	NumSubmitted = 0;
@@ -1070,7 +1071,7 @@ void VRMenuMgrLocal::Finish( Matrix4f const & viewMatrix )
 
 //==============================
 // VRMenuMgrLocal::AppendSurfaceList
-void VRMenuMgrLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array< ovrDrawSurface > & surfaceList ) const
+void VRMenuMgrLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, std::vector< ovrDrawSurface > & surfaceList ) const
 {
 	if ( NumToRender == 0 )
 	{
@@ -1120,7 +1121,7 @@ void VRMenuMgrLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array
 
 			obj->BuildDrawSurface( *this,
 					transform,
-					cur.SurfaceName.ToCStr(),
+					cur.SurfaceName.c_str(),
 					cur.SurfaceIndex,
 					cur.Color,
 					cur.FadeDirection,
@@ -1138,7 +1139,7 @@ void VRMenuMgrLocal::AppendSurfaceList( Matrix4f const & centerViewMatrix, Array
 
 	if ( ShowStats )
 	{
-		LOG( "VRMenuMgr: submitted %i surfaces", NumToRender );
+		OVR_LOG( "VRMenuMgr: submitted %i surfaces", NumToRender );
 	}
 }
 
@@ -1165,7 +1166,7 @@ GlProgram const * VRMenuMgrLocal::GetGUIGlProgram( eGUIProgramType const program
 		case PROGRAM_ALPHA_DIFFUSE:
 			return &GUIProgramAlphaDiffuse;
         default:
-            ASSERT_WITH_TAG( !"Invalid gui program type", "VrMenu" );
+            OVR_ASSERT_WITH_TAG( !"Invalid gui program type", "VrMenu" );
             break;
     }
     return NULL;
@@ -1176,7 +1177,7 @@ GlProgram const * VRMenuMgrLocal::GetGUIGlProgram( eGUIProgramType const program
 void VRMenuMgrLocal::AddComponentToDeletionList( menuHandle_t const ownerHandle, VRMenuComponent * component )
 {
 	int index = -1;
-	for ( int i = 0; i < PendingDeletions.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( PendingDeletions.size() ); ++i )
 	{
 		if ( PendingDeletions[i].GetOwnerHandle() == ownerHandle )
 		{
@@ -1187,8 +1188,8 @@ void VRMenuMgrLocal::AddComponentToDeletionList( menuHandle_t const ownerHandle,
 
 	if ( index < 0 )
 	{
-		index = PendingDeletions.GetSizeI();
-		PendingDeletions.PushBack( ovrComponentList( ownerHandle ) );
+		index = static_cast< int >( PendingDeletions.size() );
+		PendingDeletions.push_back( ovrComponentList( ownerHandle ) );
 	}
 
 	PendingDeletions[index].AddComponent( component );
@@ -1198,7 +1199,7 @@ void VRMenuMgrLocal::AddComponentToDeletionList( menuHandle_t const ownerHandle,
 // VRMenuMgrLocal::ExecutePendingComponentDeletions
 void VRMenuMgrLocal::ExecutePendingComponentDeletions()
 {
-	for ( int i = PendingDeletions.GetSizeI() - 1; i >= 0; --i )
+	for ( int i = static_cast< int >( PendingDeletions.size() ) - 1; i >= 0; --i )
 	{
 		ovrComponentList & list = PendingDeletions[i];
 		VRMenuObject * object = ToObject( list.GetOwnerHandle() );
@@ -1207,7 +1208,7 @@ void VRMenuMgrLocal::ExecutePendingComponentDeletions()
 			object->FreeComponents( list );
 		}
 	}
-	PendingDeletions.Clear();
+	PendingDeletions.clear();
 }
 
 //==============================

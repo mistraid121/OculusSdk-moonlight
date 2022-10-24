@@ -5,7 +5,7 @@ Content     :   Shader program compilation.
 Created     :   October 11, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 #ifndef OVR_GlProgram_h
@@ -14,7 +14,7 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "GpuState.h"
 #include "GlTexture.h"
 #include "GlBuffer.h"
-#include "Kernel/OVR_Math.h"
+#include "OVR_Math.h"
 
 namespace OVR
 {
@@ -238,6 +238,9 @@ GlProgram	BuildProgram( const char * vertexSrc, const char * fragmentSrc, const 
 GlProgram	BuildProgram( const char * vertexDirectives, const char * vertexSrc,
 						  const char * fragmentDirectives, const char * fragmentSrc,
 						  const int programVersion = GlProgram::GLSL_PROGRAM_VERSION );
+
+GlProgram	BuildProgramNoMultiview( const char * vertexDirectives, const char * vertexSrc,
+						  const char * fragmentDirectives, const char * fragmentSrc );
 
 void		DeleteProgram( GlProgram & prog );
 // ----DEPRECATED_GLPROGRAM

@@ -5,7 +5,7 @@ Content     :   Ray tracer using a KD-Tree.
 Created     :   May, 2014
 Authors     :   J.M.P. van Waveren
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -13,11 +13,11 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 
 #include <math.h>
 #include <algorithm>
+#include <vector>
 
 #include "OVR_Geometry.h"
 
-#include "Kernel/OVR_Array.h"
-#include "Kernel/OVR_LogUtils.h"
+#include "OVR_LogUtils.h"
 
 namespace OVR
 {
@@ -36,27 +36,27 @@ bool ModelTrace::Validate( const bool fullVerify ) const
 {
 	bool invalid = false;
 
-	invalid |= header.numVertices != vertices.GetSizeI();
-	invalid |= header.numUvs != uvs.GetSizeI();
-	invalid |= header.numIndices != indices.GetSizeI();
-	invalid |= header.numNodes != nodes.GetSizeI();
-	invalid |= header.numLeafs != leafs.GetSizeI();
-	invalid |= header.numOverflow != overflow.GetSizeI();
+	invalid |= header.numVertices != static_cast< int >( vertices.size() );
+	invalid |= header.numUvs != static_cast< int >( uvs.size() );
+	invalid |= header.numIndices != static_cast< int >( indices.size() );
+	invalid |= header.numNodes != static_cast< int >( nodes.size() );
+	invalid |= header.numLeafs != static_cast< int >( leafs.size() );
+	invalid |= header.numOverflow != static_cast< int >( overflow.size() );
 	if ( !invalid )
 	{
-		LOG( "ModelTrace::Verify - invalid header" );
+		OVR_LOG( "ModelTrace::Verify - invalid header" );
 		return false;
 	}
 	// the number of uvs must be either equal to the number of vertices, or 0
-	if ( uvs.GetSizeI() != 0 && uvs.GetSizeI() != vertices.GetSizeI() )
+	if ( static_cast< int >( uvs.size() ) != 0 && static_cast< int >( uvs.size() ) != static_cast< int >( vertices.size() ) )
 	{
-		LOG( "ModelTrace::Verify - model must have no uvs, or the same number of uvs as vertices" );
+		OVR_LOG( "ModelTrace::Verify - model must have no uvs, or the same number of uvs as vertices" );
 		return false;
 	}
 	if ( fullVerify )
 	{
 		// verify that all child indices are valid in each node
-		for ( int i = 0; i < nodes.GetSizeI(); ++i )
+		for ( int i = 0; i < static_cast< int >( nodes.size() ); ++i )
 		{
 			const kdtree_node_t & node = nodes[i];
 			const bool isLeaf = ( node.data & 1 ) != 0;
@@ -67,25 +67,25 @@ bool ModelTrace::Validate( const bool fullVerify ) const
 			}
 			int const leftChildIndex = node.data >> 3;
 			int const rightChildIndex = leftChildIndex + 1;
-			if ( leftChildIndex < 0 || leftChildIndex >= nodes.GetSizeI() )
+			if ( leftChildIndex < 0 || leftChildIndex >= static_cast< int >( nodes.size() ) )
 			{
-				LOG( "ModelTrace::Verify - leftChildIndex of %i for node %i is out of range, max %i", leftChildIndex, i, nodes.GetSizeI() - 1 );
+				OVR_LOG( "ModelTrace::Verify - leftChildIndex of %i for node %i is out of range, max %i", leftChildIndex, i, static_cast< int >( nodes.size() ) - 1 );
 				return false;
 			}
-			if ( rightChildIndex < 0 || rightChildIndex >= nodes.GetSizeI() )
+			if ( rightChildIndex < 0 || rightChildIndex >= static_cast< int >( nodes.size() ) )
 			{
-				LOG( "ModelTrace::Verify - rightChildIndex of %i for node %i is out of range, max %i", leftChildIndex, i, nodes.GetSizeI() - 1 );
+				OVR_LOG( "ModelTrace::Verify - rightChildIndex of %i for node %i is out of range, max %i", leftChildIndex, i, static_cast< int >( nodes.size() ) - 1 );
 				return false;
 			}
 		}
-		const int numTris = indices.GetSizeI() / 3;
-		if ( numTris * 3 != indices.GetSizeI() * 3 )
+		const int numTris = static_cast< int >( indices.size() ) / 3;
+		if ( numTris * 3 != static_cast< int >( indices.size() ) * 3 )
 		{
-			LOG( "ModelTrace::Verify - Orphaned indices" );
+			OVR_LOG( "ModelTrace::Verify - Orphaned indices" );
 			return false;
 		}
 		// verify leaves don't point to any out-of-range triangles
-		for ( int i = 0; i < leafs.GetSizeI(); ++i )
+		for ( int i = 0; i < static_cast< int >( leafs.size() ); ++i )
 		{
 			const kdtree_leaf_t & leaf = leafs[i];
 			for ( int j = 0; j < RT_KDTREE_MAX_LEAF_TRIANGLES; ++j )
@@ -101,9 +101,9 @@ bool ModelTrace::Validate( const bool fullVerify ) const
 					}
 					// this is an index into the overflow -- verify it is in range
 					const int overflowIndex = triIndex & 0x7FFFFFFF;
-					if ( overflowIndex < 0 || overflowIndex >= overflow.GetSizeI() )
+					if ( overflowIndex < 0 || overflowIndex >= static_cast< int >( overflow.size() ) )
 					{
-						LOG( "ModelTrace::Verify - Leaf %i has an out of range overflow index %i at index %i, max %i", i, overflowIndex, j, numTris - 1 );
+						OVR_LOG( "ModelTrace::Verify - Leaf %i has an out of range overflow index %i at index %i, max %i", i, overflowIndex, j, numTris - 1 );
 						return false;
 					}
 					// we don't verify the overflow indices are in range of the triangle list here here because 
@@ -111,26 +111,26 @@ bool ModelTrace::Validate( const bool fullVerify ) const
 				}
 				else if ( triIndex >= numTris )
 				{
-					LOG( "ModelTrace::Verify - Leaf %i has an out of range triangle of index %i at index %i, max %i", i, triIndex, j, numTris - 1 );
+					OVR_LOG( "ModelTrace::Verify - Leaf %i has an out of range triangle of index %i at index %i, max %i", i, triIndex, j, numTris - 1 );
 					return false;
 				}
 			}
 		}
 		// verify overflow list doesn't point to any out-of-range triangles
-		for ( int i = 0; i < overflow.GetSizeI(); ++i )
+		for ( int i = 0; i < static_cast< int >( overflow.size() ); ++i )
 		{
 			if ( overflow[i] < 0 || overflow[i] >= numTris )
 			{
-				LOG( "ModelTrace::Verify - overflow index %i value %i is out of range, max %i", i, overflow[i], numTris - 1 );
+				OVR_LOG( "ModelTrace::Verify - overflow index %i value %i is out of range, max %i", i, overflow[i], numTris - 1 );
 				return false;
 			}
 		}
 		// verify indices do not point to any out-of-range vertices
-		for ( int i = 0; i < indices.GetSizeI(); ++i )
+		for ( int i = 0; i < static_cast< int >( indices.size() ); ++i )
 		{
-			if ( indices[i] < 0 || indices[i] >= vertices.GetSizeI() )
+			if ( indices[i] < 0 || indices[i] >= static_cast< int >( vertices.size() ) )
 			{
-				LOG( "Index %i value %i is out of range, max %i", i, indices[i], vertices.GetSizeI() - 1 );
+				OVR_LOG( "Index %i value %i is out of range, max %i", i, indices[i], static_cast< int >( vertices.size() ) - 1 );
 				return false;
 			}
 		}
@@ -287,7 +287,7 @@ traceResult_t ModelTrace::Trace( const Vector3f & start, const Vector3f & end ) 
 	{
 		result.fraction = bestDistance * rayLengthRcp;
 		// return default uvs if the model has no uvs
-		if ( uvs.GetSizeI() == 0 )
+		if ( static_cast< int >( uvs.size() ) == 0 )
 		{
 			result.uv = Vector2f( 0.0f, 0.0f );
 		}
@@ -353,7 +353,7 @@ traceResult_t ModelTrace::Trace_Exhaustive( const Vector3f & start, const Vector
 	{
 		result.fraction = bestDistance * rayLengthRcp;
 		// return default uvs if the model has no uvs
-		if ( uvs.GetSizeI() == 0 )
+		if ( static_cast< int >( uvs.size() ) == 0 )
 		{
 			result.uv = Vector2f( 0.0f, 0.0f );
 		}
@@ -373,13 +373,13 @@ traceResult_t ModelTrace::Trace_Exhaustive( const Vector3f & start, const Vector
 
 void ModelTrace::PrintStatsToLog() const
 {
-	LOG( "ModelTrace Stats:");
-	LOG( "  Vertices: %i", vertices.GetSizeI() );
-	LOG( "  UVs     : %i", uvs.GetSizeI() );
-	LOG( "  Indices : %i", indices.GetSizeI() );
-	LOG( "  Nodes   : %i", nodes.GetSizeI() );
-	LOG( "  Leaves  : %i", leafs.GetSizeI() );
-	LOG( "  Overflow: %i", overflow.GetSizeI() );
+	OVR_LOG( "ModelTrace Stats:");
+	OVR_LOG( "  Vertices: %i", static_cast< int >( vertices.size() ) );
+	OVR_LOG( "  UVs     : %i", static_cast< int >( uvs.size() ) );
+	OVR_LOG( "  Indices : %i", static_cast< int >( indices.size() ) );
+	OVR_LOG( "  Nodes   : %i", static_cast< int >( nodes.size() ) );
+	OVR_LOG( "  Leaves  : %i", static_cast< int >( leafs.size() ) );
+	OVR_LOG( "  Overflow: %i", static_cast< int >( overflow.size() ) );
 }
 
 } // namespace OVR

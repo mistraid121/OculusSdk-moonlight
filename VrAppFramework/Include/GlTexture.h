@@ -5,18 +5,17 @@ Content     :   OpenGL texture loading.
 Created     :   September 30, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 #ifndef OVRGLTEXTURE_H
 #define OVRGLTEXTURE_H
 
-#include "Kernel/OVR_Types.h"
-#include "Kernel/OVR_BitFlags.h"
-#include "Kernel/OVR_MemBuffer.h"
+#include "OVR_Types.h"
+#include "OVR_BitFlags.h"
 #include "OVR_GlUtils.h"
 
-#include "VrApi_Types.h"
+#include <vector>
 
 // Explicitly using unsigned instead of GLUint / GLenum to avoid including GL headers
 
@@ -46,7 +45,6 @@ enum eTextureFlags
 
 typedef BitFlagsT< eTextureFlags > TextureFlags_t;
 
-// From LibOVRKernel/CommonSrc/Render/Render_Device.h
 enum eTextureFormat
 {
 	Texture_None			= 0x00000,
@@ -185,8 +183,14 @@ void FreeRGBABuffer( const unsigned char * buffer );
 // Otherwise a default square texture will be created on any failure.
 //
 // Uncompressed image formats will have mipmaps generated and trilinear filtering set.
-GlTexture	LoadTextureFromBuffer( const char * fileName, const MemBuffer & buffer,
+GlTexture	LoadTextureFromBuffer( const char * fileName, const uint8_t * buffer, size_t bufferSize,
 				const TextureFlags_t & flags, int & width, int & height );
+
+inline GlTexture 	LoadTextureFromBuffer( const char * fileName, const std::vector< uint8_t > & buffer,
+						const TextureFlags_t & flags, int & width, int & height )
+{
+	return LoadTextureFromBuffer( fileName, buffer.data(), buffer.size(), flags, width, height );
+}
 
 // Returns 0 if the file is not found.
 // For a file placed in the project assets folder, nameInZip would be

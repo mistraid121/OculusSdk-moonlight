@@ -5,7 +5,7 @@ Content     :   A reusable component implementing a slider bar.
 Created     :   Sept 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, Inc. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -50,7 +50,7 @@ public:
 								VRMenuId_t const scrubberId, VRMenuId_t const bubbleId, VRMenuId_t const fillId,
 								float const sliderFrac, float const minValue, float const maxValue, 
 								float const sensitvityScale, 
-								Array< VRMenuObjectParms const* > & parms );
+								std::vector< VRMenuObjectParms const* > & parms );
 
 	virtual char const *GetTypeName() const { return TYPE_NAME; }
 	virtual int			GetTypeId() const { return TYPE_ID; }

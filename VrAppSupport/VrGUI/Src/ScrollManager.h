@@ -5,7 +5,7 @@ Content     :
 Created     :   December 12, 2014
 Authors     :   Jonathan E. Wright, Warsam Osman, Madhu Kalva
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -13,7 +13,7 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #if !defined( OVR_ScrollManager_h )
 #define OVR_ScrollManager_h
 
-#include "Kernel/OVR_Math.h"
+#include "OVR_Math.h"
 
 namespace OVR {
 
@@ -139,7 +139,7 @@ public:
 
 	void 	TouchDown();
 	void 	TouchUp();
-	void 	TouchRelative( Vector3f touchPos );
+	void 	TouchRelative( Vector3f touchPos, const double timeInSeconds );
 
 	bool 	IsOutOfBounds() 		const;
 	bool 	IsScrolling() 			const 			{ return TouchIsDown || AutoScrollInFwdDir || AutoScrollBkwdDir; }

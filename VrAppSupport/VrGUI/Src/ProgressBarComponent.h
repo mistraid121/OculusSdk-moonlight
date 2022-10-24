@@ -5,7 +5,7 @@ Content     :   A reusable component implementing a progress bar.
 Created     :   Mar 30, 2015
 Authors     :   Warsam Osman
 
-Copyright   :   Copyright 2015 Oculus VR, Inc. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -46,7 +46,7 @@ public:
 									const VRMenuId_t thumbId, const VRMenuId_t animId,
 									const Posef & rootLocalPose, const Posef & xformPose,
 									const char * baseImage, const char * barImage, const char * animImage,
-									Array< const VRMenuObjectParms* > & outParms );
+									std::vector< const VRMenuObjectParms* > & outParms );
 
 	void				SetProgressFrac( OvrVRMenuMgr & menuMgr, VRMenuObject * self, const float frac );
 	void				SetProgressbarState( VRMenuObject * self, const eProgressBarState state );

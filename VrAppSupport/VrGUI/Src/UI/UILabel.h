@@ -5,7 +5,7 @@ Content     :
 Created     :	1/5/2015
 Authors     :   Jim Dose
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -34,9 +34,9 @@ public:
 	VerticalJustification				GetVerticalAlign() const;
 
 	void								SetText( const char *text );
-	void								SetText( const String &text );
+	void								SetText( const std::string &text );
 	void								SetTextWordWrapped( char const * text, class BitmapFont const & font, float const widthInMeters );
-	const String & 						GetText() const;
+	const std::string & 				GetText() const;
 
 	void 								CalculateTextDimensions();
 

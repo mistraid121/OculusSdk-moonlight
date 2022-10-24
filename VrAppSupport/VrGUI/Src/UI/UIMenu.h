@@ -5,7 +5,7 @@ Content     :
 Created     :	1/5/2015
 Authors     :   Jim Dose
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -14,6 +14,8 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 
 #include "VRMenu.h"
 #include "GuiSys.h"
+
+#include <string>
 
 namespace OVR {
 
@@ -49,7 +51,7 @@ public:
 	void								SetOnKeyEventFunction( OnKeyEventFunctionT onKeyEventFunction, void * usrPtr = nullptr );
 private:
 	OvrGuiSys &							GuiSys;
-    String								MenuName;
+    std::string							MenuName;
 	VRMenu *							Menu;
 
 	bool								MenuOpen;

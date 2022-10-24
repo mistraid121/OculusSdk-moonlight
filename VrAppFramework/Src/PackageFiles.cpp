@@ -5,16 +5,14 @@ Content     :   Read files from the application package zip
 Created     :   August 18, 2014
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
 
 #include "PackageFiles.h"
 
-#include "Kernel/OVR_LogUtils.h"
-#include "Kernel/OVR_String.h"
-#include "Kernel/OVR_Threads.h"
+#include "OVR_LogUtils.h"
 
 #include "unzip.h"
 
@@ -24,7 +22,10 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #if defined( OVR_OS_ANDROID )
 #include <unistd.h>
 #endif
-#include "ScopedMutex.h"
+
+#include <thread>
+#include <mutex>
+#include <functional>
 
 namespace OVR
 {
@@ -87,23 +88,23 @@ void ovr_CloseOtherApplicationPackage( void * & zipFile )
 	zipFile = 0;
 }
 
-static OVR::Mutex PackageFileMutex;
+static std::mutex PackageFileMutex;
 
 bool ovr_OtherPackageFileExists( void* zipFile, const char * nameInZip )
 {
-	ovrScopedMutex mutex( PackageFileMutex );
+	std::lock_guard<std::mutex> mutex( PackageFileMutex );
 
 	const int locateRet = unzLocateFile( zipFile, nameInZip, 2 /* case insensitive */ );
 	if ( locateRet != UNZ_OK )
 	{
-		LOG( "File '%s' not found in apk!", nameInZip );
+		OVR_LOG( "File '%s' not found in apk!", nameInZip );
 		return false;
 	}
 
 	const int openRet = unzOpenCurrentFile( zipFile );
 	if ( openRet != UNZ_OK )
 	{
-		WARN( "Error opening file '%s' from apk!", nameInZip );
+		OVR_WARN( "Error opening file '%s' from apk!", nameInZip );
 		return false;
 	}
 
@@ -112,29 +113,9 @@ bool ovr_OtherPackageFileExists( void* zipFile, const char * nameInZip )
 	return true;
 }
 
-static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, const char * nameInZip, int & length, void * & buffer, const bool useMalloc )
+static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, const char * nameInZip, int & length, void * & buffer, 
+		std::function< void* ( const size_t size ) > allocBuffer, std::function< void ( void * buffer ) > freeBuffer )
 {
-	auto allocBuffer = [] ( const size_t size, const bool useMalloc )
-	{
-		if ( useMalloc )
-		{
-			return malloc( size );
-		}
-		return (void*)( new unsigned char [size] );
-	};
-
-	auto freeBuffer = [] ( void * buffer, const bool useMalloc )
-	{
-		if ( useMalloc )
-		{
-			free( buffer );
-		}
-		else
-		{
-			delete [] (unsigned char*)buffer;
-		}
-	};
-
 	length = 0;
 	buffer = NULL;
 	if ( zipFile == 0 )
@@ -142,13 +123,13 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 		return false;
 	}
 
-	ovrScopedMutex mutex( PackageFileMutex );
+	std::lock_guard<std::mutex> mutex( PackageFileMutex );
 
 	const int locateRet = unzLocateFile( zipFile, nameInZip, 2 /* case insensitive */ );
 
 	if ( locateRet != UNZ_OK )
 	{
-		LOG( "File '%s' not found in apk!", nameInZip );
+		OVR_LOG( "File '%s' not found in apk!", nameInZip );
 		return false;
 	}
 
@@ -157,7 +138,7 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 
 	if ( getRet != UNZ_OK )
 	{
-		WARN( "File info error reading '%s' from apk!", nameInZip );
+		OVR_WARN( "File info error reading '%s' from apk!", nameInZip );
 		return false;
 	}
 
@@ -179,20 +160,20 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 				length = s.st_size;
 				if ( length != (int)info.uncompressed_size )
 				{
-					LOG( "Cached file for %s has length %i != %lu", nameInZip,
+					OVR_LOG( "Cached file for %s has length %i != %lu", nameInZip,
 							length, info.uncompressed_size );
 					// Fall through to normal load.
 				}
 				else
 				{
-					buffer = allocBuffer( length, useMalloc );
+					buffer = allocBuffer( length );
 					const int r = read( fd, buffer, length );
 					close( fd );
 					if ( r != length )
 					{
-						LOG( "Cached file for %s only read %i != %i", nameInZip,
+						OVR_LOG( "Cached file for %s only read %i != %i", nameInZip,
 								r, length );
-						freeBuffer( buffer, useMalloc );
+						freeBuffer( buffer );
 						// Fall through to normal load.
 					}
 					else
@@ -213,18 +194,18 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 	const int openRet = unzOpenCurrentFile( zipFile );
 	if ( openRet != UNZ_OK )
 	{
-		WARN( "Error opening file '%s' from apk!", nameInZip );
+		OVR_WARN( "Error opening file '%s' from apk!", nameInZip );
 		return false;
 	}
 
 	length = info.uncompressed_size;
-	buffer = allocBuffer( length, useMalloc );
+	buffer = allocBuffer( length );
 
 	const int readRet = unzReadCurrentFile( zipFile, buffer, length );
 	if ( readRet != length )
 	{
-		WARN( "Error reading file '%s' from apk!", nameInZip );
-		freeBuffer( buffer, useMalloc );
+		OVR_WARN( "Error reading file '%s' from apk!", nameInZip );
+		freeBuffer( buffer );
 		length = 0;
 		buffer = NULL;
 		return false;
@@ -250,21 +231,21 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 			{
 				if ( rename( tempName, cacheName ) == -1 )
 				{
-					LOG( "Failed to rename cache file for %s", nameInZip );
+					OVR_LOG( "Failed to rename cache file for %s", nameInZip );
 				}
 				else
 				{
-					LOG( "Cache file generated for %s", nameInZip );
+					OVR_LOG( "Cache file generated for %s", nameInZip );
 				}
 			}
 			else
 			{
-				LOG( "Only wrote %i of %i for cached %s", r, length, nameInZip );
+				OVR_LOG( "Only wrote %i of %i for cached %s", r, length, nameInZip );
 			}
 		}
 		else
 		{
-			LOG( "Failed to open new cache file for %s: %s", nameInZip, tempName );
+			OVR_LOG( "Failed to open new cache file for %s: %s", nameInZip, tempName );
 		}
 #endif
 	}
@@ -272,21 +253,41 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal( void * zipFile, con
 	return true;
 }
 
-bool ovr_ReadFileFromOtherApplicationPackage( void * zipFile, const char * nameInZip, MemBufferT< uint8_t > & outBuffer )
+bool ovr_ReadFileFromOtherApplicationPackage( void * zipFile, const char * nameInZip, std::vector< uint8_t > & outBuffer )
 {
+	// Dummy parameters
 	int length = 0;
-	void * buffer = NULL;
-	// allocate using new / delete
-	bool const success = ovr_ReadFileFromOtherApplicationPackageInternal( zipFile, nameInZip, length, buffer, false );
+	void * buffer = nullptr;
 
-	outBuffer.TakeOwnershipOfBuffer( buffer, length );
-	return success;
+	// allocate using buffer resize
+	auto allocBuffer = [&] ( const size_t size )
+	{
+		outBuffer.resize(size);
+		return outBuffer.data();
+	};
+
+	auto freeBuffer = [&] ( void * buffer )
+	{
+		outBuffer.resize(0);
+	};
+
+	return ovr_ReadFileFromOtherApplicationPackageInternal( zipFile, nameInZip, length, buffer, allocBuffer, freeBuffer );
 }
 
 bool ovr_ReadFileFromOtherApplicationPackage( void * zipFile, const char * nameInZip, int & length, void * & buffer )
 {
 	// allocate using malloc / free
-	return ovr_ReadFileFromOtherApplicationPackageInternal( zipFile, nameInZip, length, buffer, true );
+	auto allocBuffer = [] ( const size_t size )
+	{
+		return malloc( size );
+	};
+
+	auto freeBuffer = [] ( void * buffer )
+	{
+		free( buffer );
+	};
+
+	return ovr_ReadFileFromOtherApplicationPackageInternal( zipFile, nameInZip, length, buffer, allocBuffer, freeBuffer );
 }
 
 //--------------------------------------------------------------
@@ -323,22 +324,10 @@ bool ovr_ReadFileFromApplicationPackage( const char * nameInZip, int & length, v
 	return ovr_ReadFileFromOtherApplicationPackage( packageZipFile, nameInZip, length, buffer );
 }
 
-bool ovr_ReadFileFromApplicationPackage( const char * nameInZip, MemBufferFile & memBufferFile )
+bool ovr_ReadFileFromApplicationPackage( const char * nameInZip, std::vector< uint8_t > & buffer )
 {
-	memBufferFile.FreeData();
 
-	int length = 0;
-	void * buffer = NULL;
-
-	if ( !ovr_ReadFileFromOtherApplicationPackage( packageZipFile, nameInZip, length, buffer ) )
-	{
-		return false;
-	}
-
-	memBufferFile.Buffer = buffer;
-	memBufferFile.Length = length;
-
-	return true;
+	return ovr_ReadFileFromOtherApplicationPackage( packageZipFile, nameInZip, buffer );
 }
 
 } // namespace OVR

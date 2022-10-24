@@ -5,7 +5,7 @@ Content     :   Model file loading glTF elements.
 Created     :   December 2013
 Authors     :   John Carmack, J.M.P. van Waveren
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -83,7 +83,7 @@ static void ParseIntArray( int * elements, const int count, const JsonReader arr
 	{
 		while ( !arrayNode.IsEndOfArray() && i < count )
 		{
-			const JSON * node = arrayNode.GetNextArrayElement();
+			auto node = arrayNode.GetNextArrayElement();
 			elements[i] = node->GetInt32Value();
 			i++;
 		}
@@ -102,7 +102,7 @@ static void ParseFloatArray( float * elements, const int count, JsonReader array
 	{
 		while ( !arrayNode.IsEndOfArray() && i < count )
 		{
-			const JSON * node = arrayNode.GetNextArrayElement();
+			auto node = arrayNode.GetNextArrayElement();
 			elements[i] = node->GetFloatValue();
 			i++;
 		}
@@ -115,14 +115,14 @@ static void ParseFloatArray( float * elements, const int count, JsonReader array
 }
 
 template< typename _type_ >
-bool ReadSurfaceDataFromAccessor( Array< _type_ > & out, ModelFile & modelFile, const int index, const ModelAccessorType type, const int componentType, const int count )
+bool ReadSurfaceDataFromAccessor( std::vector< _type_ > & out, ModelFile & modelFile, const int index, const ModelAccessorType type, const int componentType, const int count )
 {
 	bool loaded = true;
 	if ( index >= 0 )
 	{
-		if ( index >= modelFile.Accessors.GetSizeI() )
+		if ( index >= static_cast< int >( modelFile.Accessors.size() ) )
 		{
-			WARN( "Error: Invalid index on gltfPrimitive accessor %d %d", index, modelFile.Accessors.GetSizeI() );
+			OVR_WARN( "Error: Invalid index on gltfPrimitive accessor %d %d", index, static_cast< int >( modelFile.Accessors.size() ) );
 			loaded = false;
 		}
 
@@ -130,18 +130,18 @@ bool ReadSurfaceDataFromAccessor( Array< _type_ > & out, ModelFile & modelFile, 
 
 		if ( count >= 0 && accessor->count != count )
 		{
-			WARN( "Error: Invalid count on gltfPrimitive accessor %d %d %d", index, count, accessor->count );
+			OVR_WARN( "Error: Invalid count on gltfPrimitive accessor %d %d %d", index, count, accessor->count );
 			loaded = false;
 		}
 		if ( accessor->type != type )
 		{
-			WARN( "Error: Invalid type on gltfPrimitive accessor %d %d %d", index, type, accessor->type );
+			OVR_WARN( "Error: Invalid type on gltfPrimitive accessor %d %d %d", index, type, accessor->type );
 			loaded = false;
 		}
 
 		if ( accessor->componentType != componentType )
 		{
-			WARN( "Error: Invalid componentType on gltfPrimitive accessor %d %d %d", index, componentType, accessor->componentType );
+			OVR_WARN( "Error: Invalid componentType on gltfPrimitive accessor %d %d %d", index, componentType, accessor->componentType );
 			loaded = false;
 		}
 
@@ -152,7 +152,7 @@ bool ReadSurfaceDataFromAccessor( Array< _type_ > & out, ModelFile & modelFile, 
 			{
 				if ( (int)sizeof( out[0] ) > accessor->bufferView->byteStride )
 				{
-					WARN( "Error: bytestride is %d, thats smaller thn %d", accessor->bufferView->byteStride, ( int )sizeof( out[0] ) );
+					OVR_WARN( "Error: bytestride is %d, thats smaller thn %d", accessor->bufferView->byteStride, ( int )sizeof( out[0] ) );
 					loaded = false;
 				}
 				else
@@ -167,13 +167,13 @@ bool ReadSurfaceDataFromAccessor( Array< _type_ > & out, ModelFile & modelFile, 
 
 		if ( accessor->bufferView->buffer->byteLength < ( offset + copySize ) || accessor->bufferView->byteLength < ( copySize ) )
 		{
-			WARN( "Error: accessor requesting too much data in gltfPrimitive %d %d %d", index, ( int )accessor->bufferView->byteLength, ( int )( offset + copySize ) );
+			OVR_WARN( "Error: accessor requesting too much data in gltfPrimitive %d %d %d", index, ( int )accessor->bufferView->byteLength, ( int )( offset + copySize ) );
 			loaded = false;
 		}
 
 		if ( loaded )
 		{
-			out.Resize( accessor->count );
+			out.resize( accessor->count );
 
 			// #TODO this doesn't seem to be working, figure out why.
 			if ( false && readStride > 0 )
@@ -198,17 +198,17 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 	const ModelGlPrograms & programs, const MaterialParms & materialParms,
 	ModelGeo * outModelGeo )
 {
-	LOG( "LoadModelFile_glTF_Json parsing %s", modelFile.FileName.ToCStr() );
+	OVR_LOG( "LoadModelFile_glTF_Json parsing %s", modelFile.FileName.c_str() );
 
 	LOGCPUTIME( "LoadModelFile_glTF_Json" );
 
 	bool loaded = true;
 
 	const char * error = nullptr;
-	JSON * json = JSON::Parse( modelsJson, &error );
+	auto json = JSON::Parse( modelsJson, &error );
 	if ( json == nullptr )
 	{
-		WARN( "LoadModelFile_glTF_Json: Error loading %s : %s", modelFile.FileName.ToCStr(), error );
+		OVR_WARN( "LoadModelFile_glTF_Json: Error loading %s : %s", modelFile.FileName.c_str(), error );
 		loaded = false;
 	}
 	else
@@ -221,14 +221,14 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 				const JsonReader asset( models.GetChildByName( "asset" ) );
 				if ( !asset.IsObject() )
 				{
-					WARN( "Error: No asset on gltfSceneFile" );
+					OVR_WARN( "Error: No asset on gltfSceneFile" );
 					loaded = false;
 				}
-				String versionString = asset.GetChildStringByName( "version" );
-				String minVersion = asset.GetChildStringByName( "minVersion" );
-				if ( OVR_stricmp( versionString.ToCStr(), "2.0" ) != 0 && OVR_stricmp( minVersion.ToCStr(), "2.0" ) != 0 )
+				std::string versionString = asset.GetChildStringByName( "version" );
+				std::string minVersion = asset.GetChildStringByName( "minVersion" );
+				if ( OVR_stricmp( versionString.c_str(), "2.0" ) != 0 && OVR_stricmp( minVersion.c_str(), "2.0" ) != 0 )
 				{
-					WARN( "Error: Invalid version number '%s' on gltfFile, currently only version 2.0 supported", versionString.ToCStr() );
+					OVR_WARN( "Error: Invalid version number '%s' on gltfFile, currently only version 2.0 supported", versionString.c_str() );
 					loaded = false;
 				}
 			} // END ASSET
@@ -253,31 +253,31 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							newGltfAccessor.byteOffset = accessor.GetChildInt32ByName( "byteOffset" );
 							newGltfAccessor.componentType = accessor.GetChildInt32ByName( "componentType" );
 							newGltfAccessor.count = accessor.GetChildInt32ByName( "count" );
-							const String type = accessor.GetChildStringByName( "type" );
+							const std::string type = accessor.GetChildStringByName( "type" );
 							newGltfAccessor.normalized = accessor.GetChildBoolByName( "normalized" );
 
-							if ( bufferView < 0 || bufferView >= ( const int )modelFile.BufferViews.GetSize() )
+							if ( bufferView < 0 || bufferView >= ( const int )modelFile.BufferViews.size() )
 							{
-								WARN( "Error: Invalid bufferView Index in gltfAccessor" );
+								OVR_WARN( "Error: Invalid bufferView Index in gltfAccessor" );
 								loaded = false;
 							}
 
 							int componentCount = 0;
-							if ( OVR_stricmp( type.ToCStr(), "SCALAR" ) == 0 ) { newGltfAccessor.type = ACCESSOR_SCALAR; componentCount = 1; }
-							else if ( OVR_stricmp( type.ToCStr(), "VEC2" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC2; componentCount = 2; }
-							else if ( OVR_stricmp( type.ToCStr(), "VEC3" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC3; componentCount = 3; }
-							else if ( OVR_stricmp( type.ToCStr(), "VEC4" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC4; componentCount = 4; }
-							else if ( OVR_stricmp( type.ToCStr(), "MAT2" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT2; componentCount = 4; }
-							else if ( OVR_stricmp( type.ToCStr(), "MAT3" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT3; componentCount = 9; }
-							else if ( OVR_stricmp( type.ToCStr(), "MAT4" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT4; componentCount = 16; }
+							if ( OVR_stricmp( type.c_str(), "SCALAR" ) == 0 ) { newGltfAccessor.type = ACCESSOR_SCALAR; componentCount = 1; }
+							else if ( OVR_stricmp( type.c_str(), "VEC2" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC2; componentCount = 2; }
+							else if ( OVR_stricmp( type.c_str(), "VEC3" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC3; componentCount = 3; }
+							else if ( OVR_stricmp( type.c_str(), "VEC4" ) == 0 ) { newGltfAccessor.type = ACCESSOR_VEC4; componentCount = 4; }
+							else if ( OVR_stricmp( type.c_str(), "MAT2" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT2; componentCount = 4; }
+							else if ( OVR_stricmp( type.c_str(), "MAT3" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT3; componentCount = 9; }
+							else if ( OVR_stricmp( type.c_str(), "MAT4" ) == 0 ) { newGltfAccessor.type = ACCESSOR_MAT4; componentCount = 16; }
 							else
 							{
-								WARN( "Error: Invalid type in gltfAccessor" );
+								OVR_WARN( "Error: Invalid type in gltfAccessor" );
 								loaded = false;
 							}
 
-							const JSON * min = accessor.GetChildByName( "min" );
-							const JSON * max = accessor.GetChildByName( "max" );
+							auto min = accessor.GetChildByName( "min" );
+							auto max = accessor.GetChildByName( "max" );
 							if ( min != nullptr && max != nullptr )
 							{
 								switch ( newGltfAccessor.componentType )
@@ -295,14 +295,14 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									ParseFloatArray( newGltfAccessor.floatMax, componentCount, max );
 									break;
 								default:
-									WARN( "Error: Invalid componentType in gltfAccessor" );
+									OVR_WARN( "Error: Invalid componentType in gltfAccessor" );
 									loaded = false;
 								}
 								newGltfAccessor.minMaxSet = true;
 							}
 
 							newGltfAccessor.bufferView = &modelFile.BufferViews[bufferView];
-							modelFile.Accessors.PushBack( newGltfAccessor );
+							modelFile.Accessors.push_back( newGltfAccessor );
 
 							count++;
 						}
@@ -331,28 +331,28 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 
 							if ( newGltfSampler.magFilter != GL_NEAREST && newGltfSampler.magFilter != GL_LINEAR )
 							{
-								WARN( "Error: Invalid magFilter in gltfSampler" );
+								OVR_WARN( "Error: Invalid magFilter in gltfSampler" );
 								loaded = false;
 							}
 							if ( newGltfSampler.minFilter != GL_NEAREST && newGltfSampler.minFilter != GL_LINEAR
 								&& newGltfSampler.minFilter != GL_LINEAR_MIPMAP_NEAREST && newGltfSampler.minFilter != GL_NEAREST_MIPMAP_LINEAR
 								&& newGltfSampler.minFilter != GL_LINEAR_MIPMAP_LINEAR )
 							{
-								WARN( "Error: Invalid minFilter in gltfSampler" );
+								OVR_WARN( "Error: Invalid minFilter in gltfSampler" );
 								loaded = false;
 							}
 							if ( newGltfSampler.wrapS != GL_CLAMP_TO_EDGE && newGltfSampler.wrapS != GL_MIRRORED_REPEAT && newGltfSampler.wrapS != GL_REPEAT )
 							{
-								WARN( "Error: Invalid wrapS in gltfSampler" );
+								OVR_WARN( "Error: Invalid wrapS in gltfSampler" );
 								loaded = false;
 							}
 							if ( newGltfSampler.wrapT != GL_CLAMP_TO_EDGE && newGltfSampler.wrapT != GL_MIRRORED_REPEAT && newGltfSampler.wrapT != GL_REPEAT )
 							{
-								WARN( "Error: Invalid wrapT in gltfSampler" );
+								OVR_WARN( "Error: Invalid wrapT in gltfSampler" );
 								loaded = false;
 							}
 
-							modelFile.Samplers.PushBack( newGltfSampler );
+							modelFile.Samplers.push_back( newGltfSampler );
 						}
 					}
 				}
@@ -360,7 +360,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 				// default sampler
 				ModelSampler defaultGltfSampler;
 				defaultGltfSampler.name = "Default_Sampler";
-				modelFile.Samplers.PushBack( defaultGltfSampler );
+				modelFile.Samplers.push_back( defaultGltfSampler );
 			} // END SAMPLERS
 
 			if ( loaded )
@@ -380,22 +380,22 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							const int sampler = texture.GetChildInt32ByName( "sampler", -1 );
 							const int image = texture.GetChildInt32ByName( "source", -1 );
 
-							if ( sampler < -1 || sampler >= modelFile.Samplers.GetSizeI() )
+							if ( sampler < -1 || sampler >= static_cast< int >( modelFile.Samplers.size() ) )
 							{
-								WARN( "Error: Invalid sampler Index in gltfTexture" );
+								OVR_WARN( "Error: Invalid sampler Index in gltfTexture" );
 								loaded = false;
 							}
 
-							if ( image < -1 || image >= modelFile.Textures.GetSizeI() )
+							if ( image < -1 || image >= static_cast< int >( modelFile.Textures.size() ) )
 							{
-								WARN( "Error: Invalid source Index in gltfTexture" );
+								OVR_WARN( "Error: Invalid source Index in gltfTexture" );
 								loaded = false;
 							}
 
 
 							if ( sampler < 0 )
 							{
-								newGltfTexture.sampler = &modelFile.Samplers[modelFile.Samplers.GetSizeI() - 1];
+								newGltfTexture.sampler = &modelFile.Samplers[static_cast< int >( modelFile.Samplers.size() ) - 1];
 							}
 							else
 							{
@@ -409,7 +409,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							{
 								newGltfTexture.image = &modelFile.Textures[image];
 							}
-							modelFile.TextureWrappers.PushBack( newGltfTexture );
+							modelFile.TextureWrappers.push_back( newGltfTexture );
 						}
 					}
 				}
@@ -431,12 +431,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							// material
 							newGltfMaterial.name = material.GetChildStringByName( "name" );
 
-							const JSON * emissiveFactor = material.GetChildByName( "emissiveFactor" );
+							auto emissiveFactor = material.GetChildByName( "emissiveFactor" );
 							if ( emissiveFactor != nullptr )
 							{
 								if ( emissiveFactor->GetItemCount() != 3 )
 								{
-									WARN( "Error: Invalid Itemcount on emissiveFactor for gltfMaterial" );
+									OVR_WARN( "Error: Invalid Itemcount on emissiveFactor for gltfMaterial" );
 									loaded = false;
 								}
 								newGltfMaterial.emmisiveFactor.x = emissiveFactor->GetItemByIndex( 0 )->GetFloatValue();
@@ -444,13 +444,13 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								newGltfMaterial.emmisiveFactor.z = emissiveFactor->GetItemByIndex( 2 )->GetFloatValue();
 							}
 
-							const String alphaModeString = material.GetChildStringByName( "alphaMode", "OPAQUE" );
-							if ( OVR_stricmp( alphaModeString.ToCStr(), "OPAQUE" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_OPAQUE; }
-							else if ( OVR_stricmp( alphaModeString.ToCStr(), "MASK" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_MASK; }
-							else if ( OVR_stricmp( alphaModeString.ToCStr(), "BLEND" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_BLEND; }
+							const std::string alphaModeString = material.GetChildStringByName( "alphaMode", "OPAQUE" );
+							if ( OVR_stricmp( alphaModeString.c_str(), "OPAQUE" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_OPAQUE; }
+							else if ( OVR_stricmp( alphaModeString.c_str(), "MASK" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_MASK; }
+							else if ( OVR_stricmp( alphaModeString.c_str(), "BLEND" ) == 0 ) { newGltfMaterial.alphaMode = ALPHA_MODE_BLEND; }
 							else
 							{
-								WARN( "Error: Invalid alphaMode in gltfMaterial" );
+								OVR_WARN( "Error: Invalid alphaMode in gltfMaterial" );
 								loaded = false;
 							}
 
@@ -461,12 +461,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							const JsonReader pbrMetallicRoughness = material.GetChildByName( "pbrMetallicRoughness" );
 							if ( pbrMetallicRoughness.IsObject() )
 							{
-								const JSON * baseColorFactor = pbrMetallicRoughness.GetChildByName( "baseColorFactor" );
+								auto baseColorFactor = pbrMetallicRoughness.GetChildByName( "baseColorFactor" );
 								if ( baseColorFactor != nullptr )
 								{
 									if ( baseColorFactor->GetItemCount() != 4 )
 									{
-										WARN( "Error: Invalid Itemcount on baseColorFactor for gltfMaterial" );
+										OVR_WARN( "Error: Invalid Itemcount on baseColorFactor for gltfMaterial" );
 										loaded = false;
 									}
 									newGltfMaterial.baseColorFactor.x = baseColorFactor->GetItemByIndex( 0 )->GetFloatValue();
@@ -479,9 +479,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								if ( baseColorTexture.IsObject() )
 								{
 									int index = baseColorTexture.GetChildInt32ByName( "index", -1 );
-									if ( index < 0 || index >= modelFile.TextureWrappers.GetSizeI() )
+									if ( index < 0 || index >= static_cast< int >( modelFile.TextureWrappers.size() ) )
 									{
-										WARN( "Error: Invalid baseColorTexture index in gltfMaterial" );
+										OVR_WARN( "Error: Invalid baseColorTexture index in gltfMaterial" );
 										loaded = false;
 									}
 									newGltfMaterial.baseColorTextureWrapper = &modelFile.TextureWrappers[index];
@@ -494,9 +494,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								if ( metallicRoughnessTexture.IsObject() )
 								{
 									int index = metallicRoughnessTexture.GetChildInt32ByName( "index", -1 );
-									if ( index < 0 || index >= modelFile.TextureWrappers.GetSizeI() )
+									if ( index < 0 || index >= static_cast< int >( modelFile.TextureWrappers.size() ) )
 									{
-										WARN( "Error: Invalid metallicRoughnessTexture index in gltfMaterial" );
+										OVR_WARN( "Error: Invalid metallicRoughnessTexture index in gltfMaterial" );
 										loaded = false;
 									}
 									newGltfMaterial.metallicRoughnessTextureWrapper = &modelFile.TextureWrappers[index];
@@ -508,9 +508,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							if ( normalTexture.IsObject() )
 							{
 								int index = normalTexture.GetChildInt32ByName( "index", -1 );
-								if ( index < 0 || index >= modelFile.TextureWrappers.GetSizeI() )
+								if ( index < 0 || index >= static_cast< int >( modelFile.TextureWrappers.size() ) )
 								{
-									WARN( "Error: Invalid normalTexture index in gltfMaterial" );
+									OVR_WARN( "Error: Invalid normalTexture index in gltfMaterial" );
 									loaded = false;
 								}
 								newGltfMaterial.normalTextureWrapper = &modelFile.TextureWrappers[index];
@@ -523,9 +523,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							if ( occlusionTexture.IsObject() )
 							{
 								int index = occlusionTexture.GetChildInt32ByName( "index", -1 );
-								if ( index < 0 || index >= modelFile.TextureWrappers.GetSizeI() )
+								if ( index < 0 || index >= static_cast< int >( modelFile.TextureWrappers.size() ) )
 								{
-									WARN( "Error: Invalid occlusionTexture index in gltfMaterial" );
+									OVR_WARN( "Error: Invalid occlusionTexture index in gltfMaterial" );
 									loaded = false;
 								}
 								newGltfMaterial.occlusionTextureWrapper = &modelFile.TextureWrappers[index];
@@ -538,20 +538,20 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							if ( emissiveTexture.IsObject() )
 							{
 								int index = emissiveTexture.GetChildInt32ByName( "index", -1 );
-								if ( index < 0 || index >= modelFile.TextureWrappers.GetSizeI() )
+								if ( index < 0 || index >= static_cast< int >( modelFile.TextureWrappers.size() ) )
 								{
-									WARN( "Error: Invalid emissiveTexture index in gltfMaterial" );
+									OVR_WARN( "Error: Invalid emissiveTexture index in gltfMaterial" );
 									loaded = false;
 								}
 								newGltfMaterial.emissiveTextureWrapper = &modelFile.TextureWrappers[index];
 							}
 
-							modelFile.Materials.PushBack( newGltfMaterial );
+							modelFile.Materials.push_back( newGltfMaterial );
 						}
 					}
 					// Add a default material at the end of the list for primitives with an unspecified material.
 					ModelMaterial defaultmaterial;
-					modelFile.Materials.PushBack( defaultmaterial );
+					modelFile.Materials.push_back( defaultmaterial );
 				}
 			} // END MATERIALS
 
@@ -575,8 +575,8 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							{
 								while ( !weights.IsEndOfArray() )
 								{
-									const JSON * weight = weights.GetNextArrayElement();
-									newGltfModel.weights.PushBack( weight->GetFloatValue() );
+									auto weight = weights.GetNextArrayElement();
+									newGltfModel.weights.push_back( weight->GetFloatValue() );
 								}
 							}
 
@@ -584,7 +584,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								const JsonReader primitives( mesh.GetChildByName( "primitives" ) );
 								if ( !primitives.IsArray() )
 								{
-									WARN( "Error: no primitives on gltfMesh" );
+									OVR_WARN( "Error: no primitives on gltfMesh" );
 									loaded = false;
 								}
 
@@ -597,12 +597,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									const int materialIndex = primitive.GetChildInt32ByName( "material", -1 );
 									if ( materialIndex < 0 )
 									{
-										LOGV( "Using default for material on %s", newGltfModel.name.ToCStr() );
-										newGltfSurface.material = &modelFile.Materials[modelFile.Materials.GetSizeI() - 1];
+										LOGV( "Using default for material on %s", newGltfModel.name.c_str() );
+										newGltfSurface.material = &modelFile.Materials[static_cast< int >( modelFile.Materials.size() ) - 1];
 									}
-									else if ( materialIndex >= modelFile.Materials.GetSizeI() )
+									else if ( materialIndex >= static_cast< int >( modelFile.Materials.size() ) )
 									{
-										WARN( "Error: Invalid materialIndex on gltfPrimitive" );
+										OVR_WARN( "Error: Invalid materialIndex on gltfPrimitive" );
 										loaded = false;
 									}
 									else
@@ -613,13 +613,13 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									const int mode = primitive.GetChildInt32ByName( "mode", 4 );
 									if ( mode < GL_POINTS || mode > GL_TRIANGLE_FAN )
 									{
-										WARN( "Error: Invalid mode on gltfPrimitive" );
+										OVR_WARN( "Error: Invalid mode on gltfPrimitive" );
 										loaded = false;
 									}
 									if ( mode != GL_TRIANGLES )
 									{
 										// #TODO: support modes other than triangle?
-										WARN( "Error: Mode other then TRIANGLE (4) not currently supported on gltfPrimitive" );
+										OVR_WARN( "Error: Mode other then TRIANGLE (4) not currently supported on gltfPrimitive" );
 										loaded = false;
 									}
 
@@ -628,14 +628,14 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									const JsonReader attributes( primitive.GetChildByName( "attributes" ) );
 									if ( !attributes.IsObject() )
 									{
-										WARN( "Error: no attributes on gltfPrimitive" );
+										OVR_WARN( "Error: no attributes on gltfPrimitive" );
 										loaded = false;
 									}
 
 									TriangleIndex outGeoIndexOffset = 0;
 									if ( outModelGeo != nullptr )
 									{
-										outGeoIndexOffset = static_cast< TriangleIndex >( ( *outModelGeo ).positions.GetSize() );
+										outGeoIndexOffset = static_cast< TriangleIndex >( ( *outModelGeo ).positions.size() );
 									}
 
 									// VERTICES
@@ -645,7 +645,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										const int positionIndex = attributes.GetChildInt32ByName( "POSITION", -1 );
 										if ( positionIndex < 0 )
 										{
-											WARN( "Error: Invalid position index on gltfPrimitive" );
+											OVR_WARN( "Error: Invalid position index on gltfPrimitive" );
 											loaded = false;
 										}
 
@@ -654,12 +654,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										const ModelAccessor * positionAccessor = &modelFile.Accessors[positionIndex];
 										if ( positionAccessor == nullptr )
 										{
-											WARN( "Error: Invalid positionAccessor on surface %s", newGltfSurface.surfaceDef.surfaceName.ToCStr() );
+											OVR_WARN( "Error: Invalid positionAccessor on surface %s", newGltfSurface.surfaceDef.surfaceName.c_str() );
 											loaded = false;
 										}
 										else if ( !positionAccessor->minMaxSet )
 										{
-											WARN( "Error: no min and max set on positionAccessor on surface %s", newGltfSurface.surfaceDef.surfaceName.ToCStr() );
+											OVR_WARN( "Error: no min and max set on positionAccessor on surface %s", newGltfSurface.surfaceDef.surfaceName.c_str() );
 											loaded = false;
 										}
 										else
@@ -677,29 +677,29 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											newGltfSurface.surfaceDef.geo.localBounds.AddPoint( max );
 										}
 									}
-
-									const int numVertices = attribs.position.GetSizeI();
+									
+									const int numVertices = static_cast< int >( attribs.position.size() );
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.normal, modelFile, attributes.GetChildInt32ByName( "NORMAL", -1 ), ACCESSOR_VEC3, GL_FLOAT, numVertices ); }
-									// #TODO:  we have tangent as a vec3, the spec has it as a vec4.  so we will have to one off the loading of it.  skipping for now, since none of our shaders use tangent
-									//if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.tangent, modelFile, attributes.GetChildInt32ByName( "TANGENT", -1 ), ACCESSOR_VEC3, GL_FLOAT, numVertices ); }
+									// #TODO:  we have tangent as a vec3, the spec has it as a vec4.  so we will have to one off the loading of it.  
+									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.tangent, modelFile, attributes.GetChildInt32ByName( "TANGENT", -1 ), ACCESSOR_VEC3, GL_FLOAT, numVertices ); }
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.binormal, modelFile, attributes.GetChildInt32ByName( "BINORMAL", -1 ), ACCESSOR_VEC3, GL_FLOAT, numVertices ); }
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.color, modelFile, attributes.GetChildInt32ByName( "COLOR", -1 ), ACCESSOR_VEC4, GL_FLOAT, numVertices ); }
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.uv0, modelFile, attributes.GetChildInt32ByName( "TEXCOORD_0", -1 ), ACCESSOR_VEC2, GL_FLOAT, numVertices ); }
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.uv1, modelFile, attributes.GetChildInt32ByName( "TEXCOORD_1", -1 ), ACCESSOR_VEC2, GL_FLOAT, numVertices ); }
 									// #TODO:  TEXCOORD_2 is in the gltf spec, but we only support 2 uv sets. support more uv coordinates, skipping for now.
-									//if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.uv2, modelFile, attributes.GetChildInt32ByName( "TEXCOORD_2", -1 ), ACCESSOR_VEC2, GL_FLOAT, attribs.position.GetSizeI() ); }
+									//if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.uv2, modelFile, attributes.GetChildInt32ByName( "TEXCOORD_2", -1 ), ACCESSOR_VEC2, GL_FLOAT, static_cast< int >( attribs.position.size() ) ); }
 									// #TODO: get weights of type unsigned_byte and unsigned_short working.
 									if ( loaded ) { loaded = ReadSurfaceDataFromAccessor( attribs.jointWeights, modelFile, attributes.GetChildInt32ByName( "WEIGHTS_0", -1 ), ACCESSOR_VEC4, GL_FLOAT, numVertices ); }
 									// WEIGHT_0 can be either GL_UNSIGNED_SHORT or GL_BYTE
 									if ( loaded ) 
 									{ 
 										int jointIndex = attributes.GetChildInt32ByName( "JOINTS_0", -1 );
-										if ( jointIndex >= 0 && jointIndex < modelFile.Accessors.GetSizeI() )
+										if ( jointIndex >= 0 && jointIndex < static_cast< int >( modelFile.Accessors.size() ) )
 										{
 											ModelAccessor & acc = modelFile.Accessors[jointIndex];
 											if ( acc.componentType == GL_UNSIGNED_SHORT )
 											{
-												attribs.jointIndices.Resize( acc.count );
+												attribs.jointIndices.resize( acc.count );
 												for ( int accIndex = 0; accIndex < acc.count; accIndex++ )
 												{
 													attribs.jointIndices[accIndex].x = ( int )( ( unsigned short * )( acc.BufferData() ) )[accIndex * 4 + 0];
@@ -710,7 +710,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											}
 											else if ( acc.componentType == GL_BYTE )
 											{
-												attribs.jointIndices.Resize( acc.count );
+												attribs.jointIndices.resize( acc.count );
 												for ( int accIndex = 0; accIndex < acc.count; accIndex++ )
 												{
 													attribs.jointIndices[accIndex].x = ( int )( ( uint8_t * )( acc.BufferData() ) )[accIndex * 4 + 0];
@@ -721,7 +721,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											}
 											else if ( acc.componentType == GL_FLOAT )
 											{ // not officially in spec, but it's what our exporter spits out.
-												attribs.jointIndices.Resize( acc.count );
+												attribs.jointIndices.resize( acc.count );
 												for ( int accIndex = 0; accIndex < acc.count; accIndex++ )
 												{
 													attribs.jointIndices[accIndex].x = ( int )( ( float * )( acc.BufferData() ) )[accIndex * 4 + 0];
@@ -732,24 +732,24 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											}
 											else
 											{
-												WARN( "invalid component type %d on joints_0 accessor on model %s", acc.componentType, modelFile.FileName.ToCStr() );
+												OVR_WARN( "invalid component type %d on joints_0 accessor on model %s", acc.componentType, modelFile.FileName.c_str() );
 												loaded = false;
 											}
 										}
 									}
 
 									// TRIANGLES
-									Array< TriangleIndex > indices;
+									std::vector< TriangleIndex > indices;
 									const int indicesIndex = primitive.GetChildInt32ByName( "indices", -1 );
-									if ( indicesIndex < 0 || indicesIndex >= modelFile.Accessors.GetSizeI() )
+									if ( indicesIndex < 0 || indicesIndex >= static_cast< int >( modelFile.Accessors.size() ) )
 									{
-										WARN( "Error: Invalid indices index on gltfPrimitive" );
+										OVR_WARN( "Error: Invalid indices index on gltfPrimitive" );
 										loaded = false;
 									}
 
 									if ( modelFile.Accessors[indicesIndex].componentType != GL_UNSIGNED_SHORT )
 									{
-										WARN( "Error: Currently, only componentType of %d supported for indices, %d requested", GL_UNSIGNED_SHORT, modelFile.Accessors[indicesIndex].componentType );
+										OVR_WARN( "Error: Currently, only componentType of %d supported for indices, %d requested", GL_UNSIGNED_SHORT, modelFile.Accessors[indicesIndex].componentType );
 										loaded = false;
 									}
 
@@ -760,19 +760,19 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									
 
 									// Create the uniform buffer for storing the joint matrices.
-									if ( attribs.jointIndices.GetSizeI() > 0 )
+									if ( attribs.jointIndices.size() > 0 )
 									{
-										newGltfSurface.surfaceDef.graphicsCommand.uniformJoints.Create( GLBUFFER_TYPE_UNIFORM, attribs.jointIndices.GetSize() * sizeof( Matrix4f ), nullptr );
+										newGltfSurface.surfaceDef.graphicsCommand.uniformJoints.Create( GLBUFFER_TYPE_UNIFORM, attribs.jointIndices.size() * sizeof( Matrix4f ), nullptr );
 									}
 									
-									bool skinned = ( attribs.jointIndices.GetSize() == attribs.position.GetSize() &&
-										attribs.jointWeights.GetSize() == attribs.position.GetSize() );
+									bool skinned = ( attribs.jointIndices.size() == attribs.position.size() &&
+										attribs.jointWeights.size() == attribs.position.size() );
 									 
 									if ( outModelGeo != nullptr )
 									{
-										for ( int i = 0; i < indices.GetSizeI(); ++i )
+										for ( int i = 0; i < static_cast< int >( indices.size() ); ++i )
 										{
-											( *outModelGeo ).indices.PushBack( indices[i] + outGeoIndexOffset );
+											( *outModelGeo ).indices.push_back( indices[i] + outGeoIndexOffset );
 										}
 									}
 
@@ -781,7 +781,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									{
 										// #TODO: implement ALPHA_MODE_MASK if we need it.
 										// Just blend because alpha testing is rather expensive.
-										WARN( "gltfAlphaMode ALPHA_MODE_MASK requested, doing ALPHA_MODE_BLEND instead" );
+										OVR_WARN( "gltfAlphaMode ALPHA_MODE_MASK requested, doing ALPHA_MODE_BLEND instead" );
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.blendEnable = ovrGpuState::BLEND_ENABLE;
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.depthMaskEnable = false;
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.blendSrc = GL_SRC_ALPHA;
@@ -791,7 +791,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									{
 										if ( materialParms.Transparent&& newGltfSurface.material->alphaMode != ALPHA_MODE_BLEND )
 										{
-											WARN( "gltfAlphaMode is %d but treating at ALPHA_MODE_BLEND due to materialParms.Transparent", newGltfSurface.material->alphaMode );
+											OVR_WARN( "gltfAlphaMode is %d but treating at ALPHA_MODE_BLEND due to materialParms.Transparent", newGltfSurface.material->alphaMode );
 										}
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.blendEnable = ovrGpuState::BLEND_ENABLE;
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.depthMaskEnable = false;
@@ -820,7 +820,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											newGltfSurface.surfaceDef.graphicsCommand.numUniformTextures = 2;
 											if ( programs.ProgBaseColorEmissivePBR == nullptr )
 											{
-												FAIL( "No ProgBaseColorEmissivePBR set" );
+												OVR_FAIL( "No ProgBaseColorEmissivePBR set" );
 											}
 											newGltfSurface.surfaceDef.graphicsCommand.uniformTextures[1] = newGltfSurface.material->emissiveTextureWrapper->image->texid;
 
@@ -838,6 +838,11 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 
 											if ( skinned )
 											{
+												if ( programs.ProgSkinnedBaseColorEmissivePBR == nullptr )
+												{
+													OVR_FAIL( "No ProgSkinnedBaseColorEmissivePBR set" );
+												}
+
 												newGltfSurface.surfaceDef.graphicsCommand.Program = *programs.ProgSkinnedBaseColorEmissivePBR;
 												newGltfSurface.surfaceDef.surfaceName = "ProgSkinnedBaseColorEmissivePBR";
 											}
@@ -850,10 +855,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										else
 										{
 											newGltfSurface.surfaceDef.graphicsCommand.numUniformTextures = 1;
-											if ( programs.ProgBaseColorPBR == nullptr )
-											{
-												FAIL( "No ProgBaseColorPBR set" );
-											}
+											
 
 											newGltfSurface.surfaceDef.graphicsCommand.uniformSlots[0] = 2;
 											newGltfSurface.surfaceDef.graphicsCommand.uniformValues[0][0] = newGltfSurface.material->baseColorFactor.x;
@@ -863,11 +865,19 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 
 											if ( skinned )
 											{
+												if ( programs.ProgSkinnedBaseColorPBR == nullptr )
+												{
+													OVR_FAIL( "No ProgSkinnedBaseColorPBR set" );
+												}
 												newGltfSurface.surfaceDef.graphicsCommand.Program = *programs.ProgSkinnedBaseColorPBR;
 												newGltfSurface.surfaceDef.surfaceName = "ProgSkinnedBaseColorPBR";
 											}
 											else
 											{
+												if ( programs.ProgBaseColorPBR == nullptr )
+												{
+													OVR_FAIL( "No ProgBaseColorPBR set" );
+												}
 												newGltfSurface.surfaceDef.graphicsCommand.Program = *programs.ProgBaseColorPBR;
 												newGltfSurface.surfaceDef.surfaceName = "ProgBaseColorPBR";
 											}
@@ -878,7 +888,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										newGltfSurface.surfaceDef.graphicsCommand.numUniformTextures = 0;
 										if ( programs.ProgSimplePBR == nullptr )
 										{
-											FAIL( "No ProgSimplePBR set" );
+											OVR_FAIL( "No ProgSimplePBR set" );
 										}
 
 										newGltfSurface.surfaceDef.graphicsCommand.uniformSlots[0] = 1;
@@ -908,10 +918,10 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									{
 										newGltfSurface.surfaceDef.graphicsCommand.GpuState.cullEnable = false;
 									}
-									newGltfModel.surfaces.PushBack( newGltfSurface );
+									newGltfModel.surfaces.push_back( newGltfSurface );
 								}
 							} // END SURFACES
-							modelFile.Models.PushBack( newGltfModel );
+							modelFile.Models.push_back( newGltfModel );
 						}
 					}
 				}
@@ -933,17 +943,17 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 
 							newGltfCamera.name = camera.GetChildStringByName( "name" );
 
-							const String cameraTypeString = camera.GetChildStringByName( "type" );
-							if ( OVR_stricmp( cameraTypeString.ToCStr(), "perspective" ) == 0 )
+							const std::string cameraTypeString = camera.GetChildStringByName( "type" );
+							if ( OVR_stricmp( cameraTypeString.c_str(), "perspective" ) == 0 )
 							{
 								newGltfCamera.type = MODEL_CAMERA_TYPE_PERSPECTIVE;
 							}
-							else if ( OVR_stricmp( cameraTypeString.ToCStr(), "orthographic" ) == 0 )
+							else if ( OVR_stricmp( cameraTypeString.c_str(), "orthographic" ) == 0 )
 							{
 								newGltfCamera.type = MODEL_CAMERA_TYPE_ORTHOGRAPHIC;
 							}
 							else { 
-								WARN( "Error: Invalid camera type on gltfCamera %s", cameraTypeString.ToCStr() );
+								OVR_WARN( "Error: Invalid camera type on gltfCamera %s", cameraTypeString.c_str() );
 								loaded = false;
 							}
 
@@ -952,7 +962,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								const JsonReader orthographic( camera.GetChildByName( "orthographic" ) );
 								if ( !orthographic.IsObject() )
 								{
-									WARN( "Error: No orthographic object on orthographic gltfCamera" );
+									OVR_WARN( "Error: No orthographic object on orthographic gltfCamera" );
 									loaded = false;
 								}
 								newGltfCamera.orthographic.magX = orthographic.GetChildFloatByName( "xmag" );
@@ -964,7 +974,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									|| newGltfCamera.orthographic.nearZ <= 0.0f
 									|| newGltfCamera.orthographic.farZ <= newGltfCamera.orthographic.nearZ )
 								{
-									WARN( "Error: Invalid data in orthographic gltfCamera" );
+									OVR_WARN( "Error: Invalid data in orthographic gltfCamera" );
 									loaded = false;
 								}
 							}
@@ -973,7 +983,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								const JsonReader perspective( camera.GetChildByName( "perspective" ) );
 								if ( !perspective.IsObject() )
 								{
-									WARN( "Error: No perspective object on perspective gltfCamera" );
+									OVR_WARN( "Error: No perspective object on perspective gltfCamera" );
 									loaded = false;
 								}
 								newGltfCamera.perspective.aspectRatio = perspective.GetChildFloatByName( "aspectRatio" );
@@ -987,11 +997,11 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									|| newGltfCamera.perspective.nearZ <= 0.0f
 									|| newGltfCamera.perspective.farZ <= 0.0f )
 								{
-									WARN( "Error: Invalid data in perspective gltfCamera" );
+									OVR_WARN( "Error: Invalid data in perspective gltfCamera" );
 									loaded = false;
 								}
 							}
-							modelFile.Cameras.PushBack( newGltfCamera );
+							modelFile.Cameras.push_back( newGltfCamera );
 						}
 					}
 				}
@@ -1000,11 +1010,11 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 			if ( loaded )
 			{ // NODES
 				LOGV( "Loading nodes" );
-				const JSON * pNodes = models.GetChildByName( "nodes" );
+				auto pNodes = models.GetChildByName( "nodes" );
 				const JsonReader nodes( pNodes );
 				if ( nodes.IsArray() && loaded )
 				{
-					modelFile.Nodes.Resize( pNodes->GetItemCount() );
+					modelFile.Nodes.resize( pNodes->GetItemCount() );
 
 					int nodeIndex = 0;
 					while ( !nodes.IsEndOfArray() )
@@ -1077,7 +1087,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								}
 							}
 
-							const JSON * rotation = node.GetChildByName( "rotation" );
+							auto rotation = node.GetChildByName( "rotation" );
 							if ( rotation != nullptr )
 							{
 								pGltfNode->rotation.x = rotation->GetItemByIndex( 0 )->GetFloatValue();
@@ -1086,7 +1096,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								pGltfNode->rotation.w = rotation->GetItemByIndex( 3 )->GetFloatValue();
 							}
 
-							const JSON * scale = node.GetChildByName( "scale" );
+							auto scale = node.GetChildByName( "scale" );
 							if ( scale != nullptr )
 							{
 								pGltfNode->scale.x = scale->GetItemByIndex( 0 )->GetFloatValue();
@@ -1094,7 +1104,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								pGltfNode->scale.z = scale->GetItemByIndex( 2 )->GetFloatValue();
 							}
 
-							const JSON * translation = node.GetChildByName( "translation" );
+							auto translation = node.GetChildByName( "translation" );
 							if ( translation != nullptr )
 							{
 								pGltfNode->translation.x = translation->GetItemByIndex( 0 )->GetFloatValue();
@@ -1107,9 +1117,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							int cameraIndex = node.GetChildInt32ByName( "camera", -1 );
 							if ( cameraIndex >= 0 )
 							{
-								if ( cameraIndex >= modelFile.Cameras.GetSizeI() )
+								if ( cameraIndex >= static_cast< int >( modelFile.Cameras.size() ) )
 								{
-									WARN( "Error: Invalid camera index %d on gltfNode", cameraIndex );
+									OVR_WARN( "Error: Invalid camera index %d on gltfNode", cameraIndex );
 									loaded = false;
 								}
 								pGltfNode->camera = &modelFile.Cameras[cameraIndex];
@@ -1118,9 +1128,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							int meshIndex = node.GetChildInt32ByName( "mesh", -1 );
 							if ( meshIndex >= 0 )
 							{
-								if ( meshIndex >= modelFile.Models.GetSizeI() )
+								if ( meshIndex >= static_cast< int >( modelFile.Models.size() ) )
 								{
-									WARN( "Error: Invalid Mesh index %d on gltfNode", meshIndex );
+									OVR_WARN( "Error: Invalid Mesh index %d on gltfNode", meshIndex );
 									loaded = false;
 								}
 								pGltfNode->model = &modelFile.Models[meshIndex];
@@ -1137,16 +1147,16 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								while ( !children.IsEndOfArray() )
 								{
 
-									const JSON* child = children.GetNextArrayElement();
+									auto child = children.GetNextArrayElement();
 									int childIndex = child->GetInt32Value();
 									
-									if ( childIndex < 0 || childIndex >= modelFile.Nodes.GetSizeI() )
+									if ( childIndex < 0 || childIndex >= static_cast< int >( modelFile.Nodes.size() ) )
 									{
-										WARN( "Error: Invalid child node index %d for %d in gltfNode", childIndex, nodeIndex );
+										OVR_WARN( "Error: Invalid child node index %d for %d in gltfNode", childIndex, nodeIndex );
 										loaded = false;
 									}
 									
-									pGltfNode->children.PushBack( childIndex );
+									pGltfNode->children.push_back( childIndex );
 									modelFile.Nodes[childIndex].parentIndex = nodeIndex;
 								}
 							}
@@ -1160,14 +1170,14 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 			if ( loaded )
 			{ // ANIMATIONS
 				LOGV( "loading Animations" );
-				const JSON * animationsJSON = models.GetChildByName( "animations" );
+				auto animationsJSON = models.GetChildByName( "animations" );
 				const JsonReader animations = animationsJSON;
 				if ( animations.IsArray() )
 				{
 					int animationCount = 0;
 					while ( !animations.IsEndOfArray() && loaded )
 					{
-						modelFile.Animations.Resize( animationsJSON->GetArraySize() );
+						modelFile.Animations.resize( animationsJSON->GetArraySize() );
 						const JsonReader animation( animations.GetNextArrayElement() );
 						if ( animation.IsObject() )
 						{
@@ -1186,9 +1196,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									if ( sampler.IsObject() )
 									{
 										int inputIndex = sampler.GetChildInt32ByName( "input", -1 );
-										if ( inputIndex < 0 || inputIndex >= modelFile.Accessors.GetSizeI() )
+										if ( inputIndex < 0 || inputIndex >= static_cast< int >( modelFile.Accessors.size() ) )
 										{
-											WARN( "bad input index %d on sample on %s", inputIndex, modelAnimation.name.ToCStr() );
+											OVR_WARN( "bad input index %d on sample on %s", inputIndex, modelAnimation.name.c_str() );
 											loaded = false;
 										}
 										else
@@ -1196,15 +1206,15 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											modelAnimationSampler.input = &modelFile.Accessors[inputIndex];
 											if ( modelAnimationSampler.input->componentType != GL_FLOAT )
 											{
-												WARN( "animation sampler input not of type GL_FLOAT on '%s'", modelAnimation.name.ToCStr() );
+												OVR_WARN( "animation sampler input not of type GL_FLOAT on '%s'", modelAnimation.name.c_str() );
 												loaded = false;
 											}
 										}
 
 										int outputIndex = sampler.GetChildInt32ByName( "output", -1 );
-										if ( outputIndex < 0 || outputIndex >= modelFile.Accessors.GetSizeI() )
+										if ( outputIndex < 0 || outputIndex >= static_cast< int >( modelFile.Accessors.size() ) )
 										{
-											WARN( "bad input outputIndex %d on sample on %s", outputIndex, modelAnimation.name.ToCStr() );
+											OVR_WARN( "bad input outputIndex %d on sample on %s", outputIndex, modelAnimation.name.c_str() );
 											loaded = false;
 										}
 										else
@@ -1212,26 +1222,26 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											modelAnimationSampler.output = &modelFile.Accessors[outputIndex];
 										}
 
-										String interpolation = sampler.GetChildStringByName( "interpolation", "LINEAR" );
-										if ( OVR_stricmp( interpolation.ToCStr(), "LINEAR" ) == 0 )
+										std::string interpolation = sampler.GetChildStringByName( "interpolation", "LINEAR" );
+										if ( OVR_stricmp( interpolation.c_str(), "LINEAR" ) == 0 )
 										{
 											modelAnimationSampler.interpolation = MODEL_ANIMATION_INTERPOLATION_LINEAR;
 										}
-										else if ( OVR_stricmp( interpolation.ToCStr(), "STEP" ) == 0 )
+										else if ( OVR_stricmp( interpolation.c_str(), "STEP" ) == 0 )
 										{
 											modelAnimationSampler.interpolation = MODEL_ANIMATION_INTERPOLATION_STEP;
 										}
-										else if ( OVR_stricmp( interpolation.ToCStr(), "CATMULLROMSPLINE" ) == 0 )
+										else if ( OVR_stricmp( interpolation.c_str(), "CATMULLROMSPLINE" ) == 0 )
 										{
 											modelAnimationSampler.interpolation = MODEL_ANIMATION_INTERPOLATION_CATMULLROMSPLINE;
 										}
-										else if ( OVR_stricmp( interpolation.ToCStr(), "CUBICSPLINE" ) == 0 )
+										else if ( OVR_stricmp( interpolation.c_str(), "CUBICSPLINE" ) == 0 )
 										{
 											modelAnimationSampler.interpolation = MODEL_ANIMATION_INTERPOLATION_CUBICSPLINE;
 										}
 										else
 										{
-											WARN( "Error: Invalid interpolation type '%s' on sampler on animtion '%s'", interpolation.ToCStr(), modelAnimation.name.ToCStr() );
+											OVR_WARN( "Error: Invalid interpolation type '%s' on sampler on animtion '%s'", interpolation.c_str(), modelAnimation.name.c_str() );
 											loaded = false;
 										}
 
@@ -1241,12 +1251,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											{
 												if ( modelAnimationSampler.input->count != modelAnimationSampler.output->count )
 												{
-													WARN( "input and output have different counts on sampler  on animation '%s'", modelAnimation.name.ToCStr() );
+													OVR_WARN( "input and output have different counts on sampler  on animation '%s'", modelAnimation.name.c_str() );
 													loaded = false;
 												}
 												if ( modelAnimationSampler.input->count < 2 )
 												{
-													WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.ToCStr() );
+													OVR_WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.c_str() );
 													loaded = false;
 												}
 											}
@@ -1254,12 +1264,12 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											{
 												if ( ( modelAnimationSampler.input->count + 2 ) != modelAnimationSampler.output->count )
 												{
-													WARN( "input and output have invalid counts on sampler on animation '%s'", modelAnimation.name.ToCStr() );
+													OVR_WARN( "input and output have invalid counts on sampler on animation '%s'", modelAnimation.name.c_str() );
 													loaded = false;
 												}
 												if ( modelAnimationSampler.input->count < 4 )
 												{
-													WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.ToCStr() );
+													OVR_WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.c_str() );
 													loaded = false;
 												}
 											}
@@ -1267,34 +1277,34 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 											{
 												if ( modelAnimationSampler.input->count != ( modelAnimationSampler.output->count * 3) )
 												{
-													WARN( "input and output have invalid counts on sampler on animation '%s'", modelAnimation.name.ToCStr() );
+													OVR_WARN( "input and output have invalid counts on sampler on animation '%s'", modelAnimation.name.c_str() );
 													loaded = false;
 												}
 												if ( modelAnimationSampler.input->count < 2 )
 												{
-													WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.ToCStr() );
+													OVR_WARN( "invalid number of samples on animation sampler input %d '%s'", modelAnimationSampler.input->count, modelAnimation.name.c_str() );
 													loaded = false;
 												}
 											}
 											else
 											{
-												WARN( "unkown animaiton interpolation on '%s'", modelAnimation.name.ToCStr() );
+												OVR_WARN( "unkown animaiton interpolation on '%s'", modelAnimation.name.c_str() );
 												loaded = false;
 											}
 										}
 
-										modelAnimation.samplers.PushBack( modelAnimationSampler );
+										modelAnimation.samplers.push_back( modelAnimationSampler );
 									}
 									else
 									{
-										WARN( "bad sampler on '%s'", modelAnimation.name.ToCStr() );
+										OVR_WARN( "bad sampler on '%s'", modelAnimation.name.c_str() );
 										loaded = false;
 									}
 								}
 							}
 							else
 							{
-								WARN( "bad samplers on '%s'", modelAnimation.name.ToCStr() );
+								OVR_WARN( "bad samplers on '%s'", modelAnimation.name.c_str() );
 								loaded = false;
 							} // END ANIMATION SAMPLERS
 
@@ -1310,9 +1320,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										ModelAnimationChannel modelAnimationChannel;
 
 										int samplerIndex = channel.GetChildInt32ByName( "sampler", -1 );
-										if ( samplerIndex < 0 || samplerIndex >= modelAnimation.samplers.GetSizeI() )
+										if ( samplerIndex < 0 || samplerIndex >= static_cast< int >( modelAnimation.samplers.size() ) )
 										{
-											WARN( "bad samplerIndex %d on channel on %s", samplerIndex, modelAnimation.name.ToCStr() );
+											OVR_WARN( "bad samplerIndex %d on channel on %s", samplerIndex, modelAnimation.name.c_str() );
 											loaded = false;
 										}
 										else
@@ -1325,9 +1335,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										{
 											// not required so -1 means do not do animation.  
 											int nodeIndex = target.GetChildInt32ByName( "node", -1 );
-											if ( nodeIndex >= modelFile.Nodes.GetSizeI() )
+											if ( nodeIndex >= static_cast< int >( modelFile.Nodes.size() ) )
 											{
-												WARN( "bad nodeIndex %d on target on '%s'", nodeIndex, modelAnimation.name.ToCStr() );
+												OVR_WARN( "bad nodeIndex %d on target on '%s'", nodeIndex, modelAnimation.name.c_str() );
 												loaded = false;
 											}
 											else
@@ -1335,63 +1345,63 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 												modelAnimationChannel.nodeIndex = nodeIndex;
 											}
 
-											String path = target.GetChildStringByName( "path" );
+											std::string path = target.GetChildStringByName( "path" );
 
-											if ( OVR_stricmp( path.ToCStr(), "translation" ) == 0 )
+											if ( OVR_stricmp( path.c_str(), "translation" ) == 0 )
 											{
 												modelAnimationChannel.path = MODEL_ANIMATION_PATH_TRANSLATION;
 											}
-											else if ( OVR_stricmp( path.ToCStr(), "rotation" ) == 0 )
+											else if ( OVR_stricmp( path.c_str(), "rotation" ) == 0 )
 											{
 												modelAnimationChannel.path = MODEL_ANIMATION_PATH_ROTATION;
 											}
-											else if ( OVR_stricmp( path.ToCStr(), "scale" ) == 0 )
+											else if ( OVR_stricmp( path.c_str(), "scale" ) == 0 )
 											{
 												modelAnimationChannel.path = MODEL_ANIMATION_PATH_SCALE;
 											}
-											else if ( OVR_stricmp( path.ToCStr(), "weights" ) == 0 )
+											else if ( OVR_stricmp( path.c_str(), "weights" ) == 0 )
 											{
 												modelAnimationChannel.path = MODEL_ANIMATION_PATH_WEIGHTS;
 											}
 											else
 											{
-												WARN( " bad path '%s' on target on '%s'", path.ToCStr(), modelAnimation.name.ToCStr() );
+												OVR_WARN( " bad path '%s' on target on '%s'", path.c_str(), modelAnimation.name.c_str() );
 												loaded = false;
 											}
 										}
 										else
 										{
-											WARN( "bad target object on '%s'", modelAnimation.name.ToCStr() );
+											OVR_WARN( "bad target object on '%s'", modelAnimation.name.c_str() );
 											loaded = false;
 										}
 
 
-										modelAnimation.channels.PushBack( modelAnimationChannel );
+										modelAnimation.channels.push_back( modelAnimationChannel );
 									}
 									else
 									{
-										WARN( "bad channel on '%s'", modelAnimation.name.ToCStr() );
+										OVR_WARN( "bad channel on '%s'", modelAnimation.name.c_str() );
 										loaded = false;
 									}
 								}
 							}
 							else
 							{
-								WARN( "bad channels on '%s'", modelAnimation.name.ToCStr() );
+								OVR_WARN( "bad channels on '%s'", modelAnimation.name.c_str() );
 								loaded = false;
 							} // END ANIMATION CHANNELS
 
 							if ( loaded )
 							{ // ANIMATION TIMELINES
 								// create the timelines
-								for ( int i = 0; i < modelFile.Animations.GetSizeI(); i++ )
+								for ( int i = 0; i < static_cast< int >( modelFile.Animations.size() ); i++ )
 								{
-									for ( int j = 0; j < modelFile.Animations[i].samplers.GetSizeI(); j++ )
+									for ( int j = 0; j < static_cast< int >( modelFile.Animations[i].samplers.size() ); j++ )
 									{
 										// if there isn't already a timeline with this accessor, create a new one.
 										ModelAnimationSampler & sampler = modelFile.Animations[i].samplers[j];
 										bool foundTimeLine = false;
-										for ( int timeLineIndex = 0; timeLineIndex < modelFile.AnimationTimeLines.GetSizeI(); timeLineIndex++ )
+										for ( int timeLineIndex = 0; timeLineIndex < static_cast< int >( modelFile.AnimationTimeLines.size() ); timeLineIndex++ )
 										{
 											if ( modelFile.AnimationTimeLines[timeLineIndex].accessor == sampler.input )
 											{
@@ -1405,19 +1415,19 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 										{
 											ModelAnimationTimeLine timeline;
 											timeline.Initialize( sampler.input );
-											if ( modelFile.AnimationTimeLines.GetSizeI() == 0 )
+											if ( static_cast< int >( modelFile.AnimationTimeLines.size() ) == 0 )
 											{
 												modelFile.animationStartTime = timeline.startTime;
 												modelFile.animationEndTime = timeline.endTime;
 											}
 											else
 											{
-												modelFile.animationStartTime = Alg::Min( modelFile.animationStartTime, timeline.startTime );
-												modelFile.animationEndTime = Alg::Max( modelFile.animationEndTime, timeline.endTime );
+												modelFile.animationStartTime = std::min< float >( modelFile.animationStartTime, timeline.startTime );
+												modelFile.animationEndTime = std::max< float >( modelFile.animationEndTime, timeline.endTime );
 											}
 
-											modelFile.AnimationTimeLines.PushBack( timeline );
-											sampler.timeLineIndex = modelFile.AnimationTimeLines.GetSizeI() - 1;
+											modelFile.AnimationTimeLines.push_back( timeline );
+											sampler.timeLineIndex = static_cast< int >( modelFile.AnimationTimeLines.size() ) - 1;
 										}
 									}
 								}
@@ -1427,7 +1437,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 						}
 						else
 						{
-							WARN( "bad animation object in animations" );
+							OVR_WARN( "bad animation object in animations" );
 							loaded = false;
 						}
 					}
@@ -1450,9 +1460,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 							newSkin.name = skin.GetChildStringByName( "name" );
 							newSkin.skeletonRootIndex = skin.GetChildInt32ByName( "skeleton", -1 );
 							int bindMatricesAccessorIndex = skin.GetChildInt32ByName( "inverseBindMatrices", -1 );
-							if ( bindMatricesAccessorIndex >= modelFile.Accessors.GetSizeI() )
+							if ( bindMatricesAccessorIndex >= static_cast< int >( modelFile.Accessors.size() ) )
 							{
-								WARN( "inverseBindMatrices %d higher then number of accessors on model: %s", bindMatricesAccessorIndex, modelFile.FileName.ToCStr() );
+								OVR_WARN( "inverseBindMatrices %d higher then number of accessors on model: %s", bindMatricesAccessorIndex, modelFile.FileName.c_str() );
 								loaded = false;
 							}
 							else if ( bindMatricesAccessorIndex >= 0 )
@@ -1464,7 +1474,7 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 									Matrix4f matrix;
 									memcpy( matrix.M[0], ( ( float * )( acc.BufferData() ) ) + i  * 16, sizeof( float ) * 16 );
 									matrix.Transpose();
-									newSkin.inverseBindMatrices.PushBack( matrix );
+									newSkin.inverseBindMatrices.push_back( matrix );
 								}
 							}
 
@@ -1474,31 +1484,31 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								while ( !joints.IsEndOfArray() && loaded )
 								{
 									int jointIndex = joints.GetNextArrayInt32( -1 );
-									if ( jointIndex < 0 || jointIndex >= modelFile.Nodes.GetSizeI() )
+									if ( jointIndex < 0 || jointIndex >= static_cast< int >( modelFile.Nodes.size() ) )
 									{
-										WARN( "bad jointindex %d on skin on model: %s", jointIndex, modelFile.FileName.ToCStr() );
+										OVR_WARN( "bad jointindex %d on skin on model: %s", jointIndex, modelFile.FileName.c_str() );
 										loaded = false;
 									}
-									newSkin.jointIndexes.PushBack( jointIndex );
+									newSkin.jointIndexes.push_back( jointIndex );
 								}
 							} 
 							else
 							{
-								WARN( "no joints on skin on model: %s", modelFile.FileName.ToCStr() );
+								OVR_WARN( "no joints on skin on model: %s", modelFile.FileName.c_str() );
 								loaded = false;
 							}
 
-							if ( newSkin.jointIndexes.GetSizeI() > MAX_JOINTS )
+							if ( static_cast< int >( newSkin.jointIndexes.size() ) > MAX_JOINTS )
 							{
-								WARN( "%d joints on skin on model: %s, currently only %d allowed ", newSkin.jointIndexes.GetSizeI(), modelFile.FileName.ToCStr(), MAX_JOINTS );
+								OVR_WARN( "%d joints on skin on model: %s, currently only %d allowed ", static_cast< int >( newSkin.jointIndexes.size() ), modelFile.FileName.c_str(), MAX_JOINTS );
 								loaded = false;
 							}
 
-							modelFile.Skins.PushBack( newSkin );
+							modelFile.Skins.push_back( newSkin );
 						}
 						else
 						{
-							WARN( "bad skin on model: %s", modelFile.FileName.ToCStr() );
+							OVR_WARN( "bad skin on model: %s", modelFile.FileName.c_str() );
 							loaded = false;
 						}
 					}
@@ -1508,11 +1518,11 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 
 			if ( loaded )
 			{ // verify skin indexes on nodes
-				for ( int i = 0; i < modelFile.Nodes.GetSizeI(); i++ )
+				for ( int i = 0; i < static_cast< int >( modelFile.Nodes.size() ); i++ )
 				{
-					if ( modelFile.Nodes[i].skinIndex > modelFile.Skins.GetSizeI() )
+					if ( modelFile.Nodes[i].skinIndex > static_cast< int >( modelFile.Skins.size() ) )
 					{
-						WARN( "bad skin index %d on node %d on model: %s", modelFile.Nodes[i].skinIndex, i, modelFile.FileName.ToCStr() );
+						OVR_WARN( "bad skin index %d on node %d on model: %s", modelFile.Nodes[i].skinIndex, i, modelFile.FileName.c_str() );
 						loaded = false;
 					}
 				}
@@ -1539,23 +1549,23 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 								while ( !nodes.IsEndOfArray() )
 								{
 									const int nodeIndex = nodes.GetNextArrayInt32();
-									if ( nodeIndex < 0 || nodeIndex >= modelFile.Nodes.GetSizeI() )
+									if ( nodeIndex < 0 || nodeIndex >= static_cast< int >( modelFile.Nodes.size() ) )
 									{
-										WARN( "Error: Invalid nodeIndex %d in Model", nodeIndex );
+										OVR_WARN( "Error: Invalid nodeIndex %d in Model", nodeIndex );
 										loaded = false;
 									}
-									newGltfScene.nodes.PushBack( nodeIndex );
+									newGltfScene.nodes.push_back( nodeIndex );
 								}
 							}
-							modelFile.SubScenes.PushBack( newGltfScene );
+							modelFile.SubScenes.push_back( newGltfScene );
 						}
 					}
 				}
 
 				// Calculate the nodes global transforms;
-				for ( int i = 0; i < modelFile.SubScenes.GetSizeI(); i++ )
+				for ( int i = 0; i < static_cast< int >( modelFile.SubScenes.size() ); i++ )
 				{
-					for ( int j = 0; j < modelFile.SubScenes[i].nodes.GetSizeI(); j++ )
+					for ( int j = 0; j < static_cast< int >( modelFile.SubScenes[i].nodes.size() ); j++ )
 					{
 						modelFile.Nodes[modelFile.SubScenes[i].nodes[j]].RecalculateGlobalTransform( modelFile );
 					}
@@ -1567,9 +1577,9 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 				const int sceneIndex = models.GetChildInt32ByName( "scene", -1 );
 				if ( sceneIndex >= 0 )
 				{
-					if ( sceneIndex >= modelFile.SubScenes.GetSizeI() )
+					if ( sceneIndex >= static_cast< int >( modelFile.SubScenes.size() ) )
 					{
-						WARN( "Error: Invalid initial scene index %d on gltfFile", sceneIndex );
+						OVR_WARN( "Error: Invalid initial scene index %d on gltfFile", sceneIndex );
 						loaded = false;
 					}
 					modelFile.SubScenes[sceneIndex].visible = true;
@@ -1579,24 +1589,24 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 			// print out the scene info
 			if ( loaded )
 			{
-				LOGV( "Model Loaded:     '%s'", modelFile.FileName.ToCStr() );
-				LOGV( "\tBuffers        : %d", modelFile.Buffers.GetSizeI() );
-				LOGV( "\tBufferViews    : %d", modelFile.BufferViews.GetSizeI() );
-				LOGV( "\tAccessors      : %d", modelFile.Accessors.GetSizeI() );
-				LOGV( "\tTextures       : %d", modelFile.Textures.GetSizeI() );
-				LOGV( "\tTextureWrappers: %d", modelFile.TextureWrappers.GetSizeI() );
-				LOGV( "\tMaterials      : %d", modelFile.Materials.GetSizeI() );
-				LOGV( "\tModels         : %d", modelFile.Models.GetSizeI() );
-				LOGV( "\tCameras        : %d", modelFile.Cameras.GetSizeI() );
-				LOGV( "\tNodes          : %d", modelFile.Nodes.GetSizeI() );
-				LOGV( "\tAnimations     : %d", modelFile.Animations.GetSizeI() );
-				LOGV( "\tAnimationTimeLines: %d", modelFile.AnimationTimeLines.GetSizeI() );
-				LOGV( "\tSkins          : %d", modelFile.Skins.GetSizeI() );
-				LOGV( "\tSubScenes      : %d", modelFile.SubScenes.GetSizeI() );
+				LOGV( "Model Loaded:     '%s'", modelFile.FileName.c_str() );
+				LOGV( "\tBuffers        : %d", static_cast< int >( modelFile.Buffers.size() ) );
+				LOGV( "\tBufferViews    : %d", static_cast< int >( modelFile.BufferViews.size() ) );
+				LOGV( "\tAccessors      : %d", static_cast< int >( modelFile.Accessors.size() ) );
+				LOGV( "\tTextures       : %d", static_cast< int >( modelFile.Textures.size() ) );
+				LOGV( "\tTextureWrappers: %d", static_cast< int >( modelFile.TextureWrappers.size() ) );
+				LOGV( "\tMaterials      : %d", static_cast< int >( modelFile.Materials.size() ) );
+				LOGV( "\tModels         : %d", static_cast< int >( modelFile.Models.size() ) );
+				LOGV( "\tCameras        : %d", static_cast< int >( modelFile.Cameras.size() ) );
+				LOGV( "\tNodes          : %d", static_cast< int >( modelFile.Nodes.size() ) );
+				LOGV( "\tAnimations     : %d", static_cast< int >( modelFile.Animations.size() ) );
+				LOGV( "\tAnimationTimeLines: %d", static_cast< int >( modelFile.AnimationTimeLines.size() ) );
+				LOGV( "\tSkins          : %d", static_cast< int >( modelFile.Skins.size() ) );
+				LOGV( "\tSubScenes      : %d", static_cast< int >( modelFile.SubScenes.size() ) );
 			}
 			else
 			{
-				WARN( "Could not load model '%s'", modelFile.FileName.ToCStr() );
+				OVR_WARN( "Could not load model '%s'", modelFile.FileName.c_str() );
 			}
 
 			// #TODO: what to do with our collision?  One possible answer is extras on the data tagging certain models as collision.
@@ -1608,9 +1618,6 @@ bool LoadModelFile_glTF_Json( ModelFile & modelFile, const char * modelsJson,
 		{
 			loaded = false;
 		}
-	
-
-		json->Release();
 	}
 
 	return loaded;
@@ -1647,7 +1654,7 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 
 				if ( buffer == nullptr )
 				{
-					WARN( "LoadModelFile_glTF_OvrScene:Failed to read %s from %s", entryName, fileName );
+					OVR_WARN( "LoadModelFile_glTF_OvrScene:Failed to read %s from %s", entryName, fileName );
 					continue;
 				}
 
@@ -1658,7 +1665,7 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 				}
 				else
 				{
-					WARN( "LoadModelFile_glTF_OvrScene: multiple .gltf files found %s", fileName );
+					OVR_WARN( "LoadModelFile_glTF_OvrScene: multiple .gltf files found %s", fileName );
 					delete[] buffer;
 					continue;
 				}
@@ -1669,10 +1676,10 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 	bool loaded = true;
 
 	const char * error = nullptr;
-	JSON * json = JSON::Parse( gltfJson, &error );
+	auto json = JSON::Parse( gltfJson, &error );
 	if ( json == nullptr )
 	{
-		WARN( "LoadModelFile_glTF_OvrScene: Error loading %s : %s", modelFilePtr->FileName.ToCStr(), error );
+		OVR_WARN( "LoadModelFile_glTF_OvrScene: Error loading %s : %s", modelFilePtr->FileName.c_str(), error );
 		loaded = false;
 	}
 	else
@@ -1696,22 +1703,22 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 						{
 							ModelBuffer newGltfBuffer;
 
-							const String name = bufferReader.GetChildStringByName( "name" );
-							const String uri = bufferReader.GetChildStringByName( "uri" );
+							const std::string name = bufferReader.GetChildStringByName( "name" );
+							const std::string uri = bufferReader.GetChildStringByName( "uri" );
 							newGltfBuffer.byteLength = bufferReader.GetChildInt32ByName( "byteLength", -1 );
 
 							// #TODO: proper uri reading.  right now, assuming its a file name.
-							if ( OVR_stricmp( uri.GetExtension().ToCStr(), ".bin" ) != 0 )
+							if ( OVR_stricmp( uri.c_str() + (uri.length() - 4), ".bin" ) != 0 )
 							{
 								// #TODO: support loading buffers from data other then a bin file.  i.e. inline buffers etc.
-								WARN( "Loading buffers other then bin files currently unsupported" );
+								OVR_WARN( "Loading buffers other then bin files currently unsupported" );
 								loaded = false;
 							}
 							int bufferLength = 0;
-							uint8_t * tempbuffer = ReadFileBufferFromZipFile( zfp, uri.ToCStr(), bufferLength, ( const uint8_t * )fileData );
+							uint8_t * tempbuffer = ReadFileBufferFromZipFile( zfp, uri.c_str(), bufferLength, ( const uint8_t * )fileData );
 							if ( tempbuffer == nullptr )
 							{
-								WARN( "could not load buffer for gltfBuffer" );
+								OVR_WARN( "could not load buffer for gltfBuffer" );
 								newGltfBuffer.bufferData = nullptr;
 								loaded = false;
 							}
@@ -1725,23 +1732,23 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 
 							if ( newGltfBuffer.byteLength > ( size_t )bufferLength )
 							{
-								WARN( "%d byteLength > bufferLength loading gltfBuffer %d", (int)newGltfBuffer.byteLength, bufferLength );
+								OVR_WARN( "%d byteLength > bufferLength loading gltfBuffer %d", (int)newGltfBuffer.byteLength, bufferLength );
 								loaded = false;
 							}
 
 							const char * bufferName;
-							if ( name.GetLength() > 0 )
+							if ( name.length() > 0 )
 							{
-								bufferName = name.ToCStr();
+								bufferName = name.c_str();
 							}
 							else
 							{
-								bufferName = uri.ToCStr();
+								bufferName = uri.c_str();
 							}
 
 							newGltfBuffer.name = bufferName;
 
-							modelFile.Buffers.PushBack( newGltfBuffer );
+							modelFile.Buffers.push_back( newGltfBuffer );
 						}
 					}
 				}
@@ -1767,24 +1774,24 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 							newBufferView.byteStride = bufferview.GetChildInt32ByName( "byteStride" );
 							newBufferView.target = bufferview.GetChildInt32ByName( "target" );
 
-							if ( buffer < 0 || buffer >= ( const int )modelFile.Buffers.GetSize() )
+							if ( buffer < 0 || buffer >= ( const int )modelFile.Buffers.size() )
 							{
-								WARN( "Error: Invalid buffer Index in gltfBufferView" );
+								OVR_WARN( "Error: Invalid buffer Index in gltfBufferView" );
 								loaded = false;
 							}
 							if ( newBufferView.byteStride < 0 || newBufferView.byteStride > 255 )
 							{
-								WARN( "Error: Invalid byeStride in gltfBufferView" );
+								OVR_WARN( "Error: Invalid byeStride in gltfBufferView" );
 								loaded = false;
 							}
 							if ( newBufferView.target < 0 )
 							{
-								WARN( "Error: Invalid target in gltfBufferView" );
+								OVR_WARN( "Error: Invalid target in gltfBufferView" );
 								loaded = false;
 							}
 
 							newBufferView.buffer = &modelFile.Buffers[buffer];
-							modelFile.BufferViews.PushBack( newBufferView );
+							modelFile.BufferViews.push_back( newBufferView );
 						}
 					}
 				}
@@ -1802,35 +1809,35 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 						const JsonReader image( images.GetNextArrayElement() );
 						if ( image.IsObject() )
 						{
-							const String name = image.GetChildStringByName( "name" );
-							const String uri = image.GetChildStringByName( "uri" );
+							const std::string name = image.GetChildStringByName( "name" );
+							const std::string uri = image.GetChildStringByName( "uri" );
 							int bufferView = image.GetChildInt32ByName( "bufferView", -1 );
 							if ( bufferView >= 0 )
 							{
 								// #TODO: support bufferView index for image files.
-								WARN( "Loading images from bufferView currently unsupported, defaulting image" );
+								OVR_WARN( "Loading images from bufferView currently unsupported, defaulting image" );
 								// Create a default texture.
 								LoadModelFileTexture( modelFile, "DefaultImage", nullptr, 0, materialParms );
 							}
 							else
 							{
 								// check to make sure the image is ktx.
-								if ( OVR_stricmp( uri.GetExtension().ToCStr(), ".ktx" ) != 0 )
+								if ( OVR_stricmp( uri.c_str() + (uri.length() - 4), ".ktx" ) != 0 )
 								{
 									// #TODO: Try looking for a ktx image before we load the non ktx image.
-									WARN( "Loading images other then ktx is not advised. %s", uri.ToCStr() );
+									OVR_WARN( "Loading images other then ktx is not advised. %s", uri.c_str() );
 
 									int bufferLength = 0;
-									uint8_t * buffer = ReadFileBufferFromZipFile( zfp, uri.ToCStr(), bufferLength, ( const uint8_t * )fileData );
-									const char * imageName = uri.ToCStr();
+									uint8_t * buffer = ReadFileBufferFromZipFile( zfp, uri.c_str(), bufferLength, ( const uint8_t * )fileData );
+									const char * imageName = uri.c_str();
 
 									LoadModelFileTexture( modelFile, imageName, ( const char * )buffer, bufferLength, materialParms );
 								}
 								else
 								{
 									int bufferLength = 0;
-									uint8_t * buffer = ReadFileBufferFromZipFile( zfp, uri.ToCStr(), bufferLength, ( const uint8_t * )fileData );
-									const char * imageName = uri.ToCStr();
+									uint8_t * buffer = ReadFileBufferFromZipFile( zfp, uri.c_str(), bufferLength, ( const uint8_t * )fileData );
+									const char * imageName = uri.c_str();
 
 									LoadModelFileTexture( modelFile, imageName, ( const char * )buffer, bufferLength, materialParms );
 								}
@@ -1843,10 +1850,9 @@ bool LoadModelFile_glTF_OvrScene( ModelFile * modelFilePtr, unzFile zfp, const c
 		}
 		else
 		{
-			WARN( "error: could not parse json for gltf" );
+			OVR_WARN( "error: could not parse json for gltf" );
 			loaded = false;
 		}
-		json->Release();
 
 		if ( loaded )
 		{
@@ -1883,7 +1889,7 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 	glTFBinaryHeader header;
 	if ( fileDataRemainingLength < sizeof( header ) )
 	{
-		WARN( "Error: could not load glb gltfHeader" );
+		OVR_WARN( "Error: could not load glb gltfHeader" );
 		loaded = false;
 	}
 
@@ -1895,19 +1901,19 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 		if ( header.magic != GLTF_BINARY_MAGIC )
 		{
-			WARN( "Error: invalid glb gltfHeader magic" );
+			OVR_WARN( "Error: invalid glb gltfHeader magic" );
 			loaded = false;
 		}
 
 		if ( header.version != GLTF_BINARY_VERSION )
 		{
-			WARN( "Error: invalid glb gltfHeader version" );
+			OVR_WARN( "Error: invalid glb gltfHeader version" );
 			loaded = false;
 		}
 
 		if ( header.length != ( uint32_t )fileDataLength )
 		{
-			WARN( "Error: invalid glb gltfHeader length" );
+			OVR_WARN( "Error: invalid glb gltfHeader length" );
 			loaded = false;
 		}
 	}
@@ -1926,11 +1932,11 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 		if ( chunkType != GLTF_BINARY_CHUNKTYPE_JSON )
 		{
-			WARN( "Error: glb first chunk not JSON" );
+			OVR_WARN( "Error: glb first chunk not JSON" );
 			loaded = false;
 		}
 
-		JSON * json = nullptr;
+		std::shared_ptr<JSON> json = nullptr;
 		const char * gltfJson = nullptr;
 		if ( loaded )
 		{
@@ -1942,7 +1948,7 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 			if ( json == nullptr )
 			{
-				WARN( "LoadModelFile_glB: Error Parsing JSON %s : %s", modelFilePtr->FileName.ToCStr(), error );
+				OVR_WARN( "LoadModelFile_glB: Error Parsing JSON %s : %s", modelFilePtr->FileName.c_str(), error );
 				loaded = false;
 			}
 		}
@@ -1963,26 +1969,26 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 				if ( bufferChunkType != GLTF_BINARY_CHUNKTYPE_BINARY )
 				{
-					WARN( "Error: glb second chunk not binary" );
+					OVR_WARN( "Error: glb second chunk not binary" );
 					loaded = false;
 				}
 				else if ( bufferLength > fileDataRemainingLength )
 				{
-					WARN( "Error: glb binary chunk length greater then remaining buffer" );
+					OVR_WARN( "Error: glb binary chunk length greater then remaining buffer" );
 					loaded = false;
 				}
 				else
 				{
 					if ( bufferLength < fileDataRemainingLength )
 					{
-						WARN( "Error: glb binary chunk length less then remaining buffer" );
+						OVR_WARN( "Error: glb binary chunk length less then remaining buffer" );
 					}
 					buffer = &fileData[fileDataIndex];
 				}
 			}
 			else
 			{
-				WARN( "Not enough data remaining to parse glB buffer" );
+				OVR_WARN( "Not enough data remaining to parse glB buffer" );
 				loaded = false;
 			}
 		}
@@ -2003,9 +2009,9 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 					{
 						while ( !buffers.IsEndOfArray() && loaded )
 						{
-							if ( modelFile.Buffers.GetSizeI() > 0 )
+							if ( static_cast< int >( modelFile.Buffers.size() ) > 0 )
 							{
-								WARN( "Error: glB file contains more then one buffer" );
+								OVR_WARN( "Error: glB file contains more then one buffer" );
 								loaded = false;
 							}
 
@@ -2014,20 +2020,20 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 							{
 								ModelBuffer newGltfBuffer;
 
-								const String name = bufferReader.GetChildStringByName( "name" );
-								const String uri = bufferReader.GetChildStringByName( "uri" );
+								const std::string name = bufferReader.GetChildStringByName( "name" );
+								const std::string uri = bufferReader.GetChildStringByName( "uri" );
 								newGltfBuffer.byteLength = bufferReader.GetChildInt32ByName( "byteLength", -1 );
 
 								//  #TODO: proper uri reading.  right now, assuming its a file name.
-								if ( !uri.IsEmpty() )
+								if ( !uri.empty() )
 								{
-									WARN( "Loading buffers with an uri currently unsupported in glb" );
+									OVR_WARN( "Loading buffers with an uri currently unsupported in glb" );
 									loaded = false;
 								}
 
 								if ( newGltfBuffer.byteLength > ( size_t )bufferLength )
 								{
-									WARN( "%d byteLength > bufferLength loading gltfBuffer %d", ( int )newGltfBuffer.byteLength, bufferLength );
+									OVR_WARN( "%d byteLength > bufferLength loading gltfBuffer %d", ( int )newGltfBuffer.byteLength, bufferLength );
 									loaded = false;
 								}
 
@@ -2037,9 +2043,9 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 								newGltfBuffer.bufferData[newGltfBuffer.byteLength] = '\0';
 
 								const char * bufferName;
-								if ( name.GetLength() > 0 )
+								if ( name.length() > 0 )
 								{
-									bufferName = name.ToCStr();
+									bufferName = name.c_str();
 								}
 								else
 								{
@@ -2048,7 +2054,7 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 								newGltfBuffer.name = bufferName;
 
-								modelFile.Buffers.PushBack( newGltfBuffer );
+								modelFile.Buffers.push_back( newGltfBuffer );
 							}
 						}
 					}
@@ -2074,24 +2080,24 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 								newBufferView.byteStride = bufferview.GetChildInt32ByName( "byteStride" );
 								newBufferView.target = bufferview.GetChildInt32ByName( "target" );
 
-								if ( bufferIndex < 0 || bufferIndex >= ( const int )modelFile.Buffers.GetSize() )
+								if ( bufferIndex < 0 || bufferIndex >= ( const int )modelFile.Buffers.size() )
 								{
-									WARN( "Error: Invalid buffer Index in gltfBufferView" );
+									OVR_WARN( "Error: Invalid buffer Index in gltfBufferView" );
 									loaded = false;
 								}
 								if ( newBufferView.byteStride < 0 || newBufferView.byteStride > 255 )
 								{
-									WARN( "Error: Invalid byeStride in gltfBufferView" );
+									OVR_WARN( "Error: Invalid byeStride in gltfBufferView" );
 									loaded = false;
 								}
 								if ( newBufferView.target < 0 )
 								{
-									WARN( "Error: Invalid target in gltfBufferView" );
+									OVR_WARN( "Error: Invalid target in gltfBufferView" );
 									loaded = false;
 								}
 
 								newBufferView.buffer = &modelFile.Buffers[bufferIndex];
-								modelFile.BufferViews.PushBack( newBufferView );
+								modelFile.BufferViews.push_back( newBufferView );
 							}
 						}
 					}
@@ -2109,11 +2115,11 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 							const JsonReader image( images.GetNextArrayElement() );
 							if ( image.IsObject() )
 							{
-								const String name = image.GetChildStringByName( "name" );
-								const String uri = image.GetChildStringByName( "uri" );
+								const std::string name = image.GetChildStringByName( "name" );
+								const std::string uri = image.GetChildStringByName( "uri" );
 								int bufferView = image.GetChildInt32ByName( "bufferView", -1 );
-								LOGV( "LoadModelFile_glB: %s, %s, %d", name.ToCStr(), uri.ToCStr(), bufferView );
-								if ( bufferView >= 0 && bufferView < modelFile.BufferViews.GetSizeI() )
+								LOGV( "LoadModelFile_glB: %s, %s, %d", name.c_str(), uri.c_str(), bufferView );
+								if ( bufferView >= 0 && bufferView < static_cast< int >( modelFile.BufferViews.size() ) )
 								{
 									ModelBufferView * pBufferView = &modelFile.BufferViews[bufferView];
 									int imageBufferLength = (int)pBufferView->byteLength;
@@ -2126,7 +2132,7 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 								}
 								else
 								{
-									WARN( "Loading images from othen then bufferView currently unsupported in glBfd, defaulting image" );
+									OVR_WARN( "Loading images from othen then bufferView currently unsupported in glBfd, defaulting image" );
 									// Create a default texture.
 									LoadModelFileTexture( modelFile, "DefaultImage", nullptr, 0, materialParms );
 								}
@@ -2140,11 +2146,6 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 			}
 		}
 
-		if ( json != nullptr )
-		{
-			json->Release();
-		}
-
 		if ( loaded )
 		{
 			loaded = LoadModelFile_glTF_Json( modelFile, gltfJson, programs, materialParms, outModelGeo );
@@ -2155,7 +2156,7 @@ ModelFile * LoadModelFile_glB( const char * fileName,
 
 	if ( !loaded )
 	{
-		WARN( "Error: failed to load %s", fileName );
+		OVR_WARN( "Error: failed to load %s", fileName );
 		delete modelFilePtr;
 		modelFilePtr = nullptr;
 	}

@@ -5,7 +5,7 @@ Content     :   A pop up Notification object, intended to be re-usable by many a
 Created     :   Apr 23, 2015
 Authors     :   Clint Brewer
 
-Copyright   :   Copyright 2015 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -23,15 +23,14 @@ Copyright   :   Copyright 2015 Oculus VR, LLC. All Rights reserved.
 #include "UI/UIImage.h"
 #include "UI/UIButton.h"
 
-#include "Kernel/OVR_Deque.h"
-
+#include <deque>
 
 namespace OVR {
 
 class VrAppInterface;
 class UINotification;
 
-typedef Deque< String > NotificationsDequeue;
+typedef std::deque< std::string > NotificationsDequeue;
 
 //==============================================================
 // UINotificationComponent
@@ -71,12 +70,12 @@ public:
 						~UINotification();
 
 	void 				AddToMenu( UIMenu *menu, const char* iconTextureName,  const char* backgroundTintTextureName, UIObject *parent = NULL );
-	void				QueueNotification( const String& description, bool showImmediately = false );//will interrupt any currently displaying notice
+	void				QueueNotification( const std::string& description, bool showImmediately = false );//will interrupt any currently displaying notice
 
 
 private:
 
-	void 				SetDescription( const String &description );
+	void 				SetDescription( const std::string &description );
 	void 				Update( float deltaSeconds );
 
 	NotificationsDequeue		NotificationsQueue;

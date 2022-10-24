@@ -5,14 +5,14 @@ Content     :   Gpu state management.
 Created     :   August 9. 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #if !defined( OVR_GPUSTATE_h )
 #define OVR_GPUSTATE_h
 
-#include "Kernel/OVR_Types.h"
+#include "OVR_Types.h"
 #include "OVR_GlUtils.h"
 
 #if !defined( GL_FILL )

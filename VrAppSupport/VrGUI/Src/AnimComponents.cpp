@@ -5,7 +5,7 @@ Content     :   A reusable component for animating VR menu object surfaces.
 Created     :   Sept 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, Inc. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -15,6 +15,7 @@ Copyright   :   Copyright 2014 Oculus VR, Inc. All Rights reserved.
 #include "VRMenuObject.h"
 #include "GuiSys.h"
 #include "VRMenuMgr.h"
+#include "OVR_Math.h"
 
 // FIXME:VRAPI remove: simulation code should use ovrFrameInput::PredictedDisplayTimeInSeconds
 #include "VrApi.h"	// for vrapi_GetTimeInSeconds()
@@ -58,7 +59,7 @@ eMsgStatus OvrAnimComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vr
 		FractionalFrame = static_cast<float>( FloatFrame - static_cast<double>( totalFrames ) );
 		int numFrames = GetNumFrames( self );
 		int frame = BaseFrame + totalFrames;
-		CurFrame = !Looping ? Alg::Clamp( frame, 0, numFrames - 1 ) : frame % numFrames;
+		CurFrame = !Looping ? clamp<int>( frame, 0, numFrames - 1 ) : frame % numFrames;
 		SetFrameVisibilities( guiSys, vrFrame, self );
 	} 
 	else if ( ForceVisibilityUpdate )
@@ -77,7 +78,7 @@ eMsgStatus OvrAnimComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vr
 void OvrAnimComponent::SetFrame( VRMenuObject * self, int const frameNum )
 {
 	OVR_ASSERT( self != NULL );
-	CurFrame = Alg::Clamp( frameNum, 0, GetNumFrames( self ) - 1 );
+	CurFrame = clamp<int>( frameNum, 0, GetNumFrames( self ) - 1 );
 	// we must reset the base frame and the current time so that the frame calculation
 	// remains correct if we're playing.  If we're not playing, this will cause the
 	// next Play() to start from this frame.

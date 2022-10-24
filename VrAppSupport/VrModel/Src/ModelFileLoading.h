@@ -5,7 +5,7 @@ Content     :   Model file loading.
 Created     :   December 2013
 Authors     :   John Carmack, J.M.P. van Waveren
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -15,14 +15,12 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "ModelFile.h"
 
 #include <math.h>
+#include <vector>
 
-#include "Kernel/OVR_Alg.h"
-#include "Kernel/OVR_Math.h"
-#include "Kernel/OVR_Array.h"
-#include "Kernel/OVR_String_Utils.h"
-#include "Kernel/OVR_JSON.h"
-#include "Kernel/OVR_BinaryFile.h"
+#include "OVR_Math.h"
+#include "OVR_JSON.h"
 
+#include "OVR_BinaryFile2.h"		// common implementation for OVR_BinaryFile outside of Kernel
 #include "OVR_LogTimer.h"			// for LOGCPUTIME
 
 #include "unzip.h"

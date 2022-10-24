@@ -5,15 +5,15 @@ Content     :   Geometry.
 Created     :   May, 2014
 Authors     :   J.M.P. van Waveren
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #include <math.h>
 #include <algorithm>				// for min, max
 
-#include "Kernel/OVR_Types.h"
-#include "Kernel/OVR_Math.h"
+#include "OVR_Types.h"
+#include "OVR_Math.h"
 
 namespace OVR
 {

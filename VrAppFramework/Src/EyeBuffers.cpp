@@ -5,15 +5,13 @@ Content     :   Handling of different eye buffer formats
 Created     :   March 8, 2014
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #include "EyeBuffers.h"
 
 #include <math.h>
-
-#include "VrApi.h"
 
 #include "Framebuffer.h"
 #include "SystemClock.h"
@@ -66,33 +64,36 @@ void ovrEyeBuffers::Initialize( const ovrEyeBufferParms & appBufferParms, const 
 	*
 	* TODO: fall back to simpler cases on failure and mark a flag in bufferData?
 	*/
-	LOG( "Reallocating buffers" );
+	OVR_LOG( "Reallocating buffers" );
 
-	LOG( "Allocate FBO: res=%ix%i color=%i depth=%i ms=%i",
+	OVR_LOG( "Allocate FBO: res=%ix%i color=%i depth=%i ms=%i",
 			bufferParms_.resolutionWidth, bufferParms_.resolutionHeight, 
 			bufferParms_.colorFormat, bufferParms_.depthFormat, bufferParms_.multisamples );
 
 	GL_CheckErrors( "Before framebuffer creation" );
 
-	ovrTextureFormat colorFormat = VRAPI_TEXTURE_FORMAT_8888;
+	int64_t colorFormat = GL_RGBA8;
 	switch ( bufferParms_.colorFormat )
 	{
-		case COLOR_565: 		colorFormat = VRAPI_TEXTURE_FORMAT_565; break;
-		case COLOR_5551:		colorFormat = VRAPI_TEXTURE_FORMAT_5551; break;
-		case COLOR_4444:		colorFormat = VRAPI_TEXTURE_FORMAT_4444; break;
-		case COLOR_8888:		colorFormat = VRAPI_TEXTURE_FORMAT_8888; break;
-		case COLOR_8888_sRGB:	colorFormat = VRAPI_TEXTURE_FORMAT_8888_sRGB; break;
-		case COLOR_RGBA16F:		colorFormat = VRAPI_TEXTURE_FORMAT_RGBA16F; break;
-		default: 				FAIL( "Unknown colorFormat %i", bufferParms_.colorFormat );
+		case COLOR_565: 		colorFormat = GL_RGB565; break;
+		case COLOR_5551:		colorFormat = GL_RGB5_A1; break;
+		case COLOR_4444:		colorFormat = GL_RGBA4; break;
+		case COLOR_8888:		colorFormat = GL_RGBA8; break;
+		case COLOR_8888_sRGB:	colorFormat = GL_SRGB8_ALPHA8; break;
+		case COLOR_RGBA16F:		colorFormat = GL_RGBA16F; break;
+		default: 				OVR_FAIL( "Unknown colorFormat %i", bufferParms_.colorFormat );
 	}
 
-	ovrTextureFormat depthFormat = VRAPI_TEXTURE_FORMAT_NONE;
+	// GL_DEPTH_COMPONENT16 is the only strictly legal thing in unextended GL ES 2.0
+	// The GL_OES_depth24 extension allows GL_DEPTH_COMPONENT24_OES.
+	// The GL_OES_packed_depth_stencil extension allows GL_DEPTH24_STENCIL8_OES.
+	int64_t depthFormat = GL_DEPTH_COMPONENT24;
 	switch ( bufferParms_.depthFormat )
 	{
-		case DEPTH_0:				depthFormat = VRAPI_TEXTURE_FORMAT_NONE; break;
-		case DEPTH_16:				depthFormat = VRAPI_TEXTURE_FORMAT_DEPTH_16; break;
-		case DEPTH_24:				depthFormat = VRAPI_TEXTURE_FORMAT_DEPTH_24; break;
-		case DEPTH_24_STENCIL_8:	depthFormat = VRAPI_TEXTURE_FORMAT_DEPTH_24_STENCIL_8; break;
+		case DEPTH_16:				depthFormat = GL_DEPTH_COMPONENT16; break;
+		case DEPTH_24:				depthFormat = GL_DEPTH_COMPONENT24; break;
+		case DEPTH_24_STENCIL_8:	depthFormat = GL_DEPTH24_STENCIL8; break;
+		default: 					OVR_FAIL( "Unknown depthFormat %i", bufferParms_.depthFormat );
 	}
 
 	for ( int eye = 0; eye < BufferCount; eye++ )
@@ -118,7 +119,7 @@ void ovrEyeBuffers::BeginFrame()
 		const double timeNow = floor( SystemClock::GetTimeInSeconds() );
 		if ( timeNow > lastReportTime )
 		{
-			LOG( "Eyes GPU time: %3.1f ms", LogEyeSceneGpuTime.GetTotalTime() );
+			OVR_LOG( "Eyes GPU time: %3.1f ms", LogEyeSceneGpuTime.GetTotalTime() );
 			lastReportTime = timeNow;
 		}
 	}

@@ -5,7 +5,7 @@ Content     :   Progress bar UI component, with an optional description and canc
 Created     :   Mar 11, 2015
 Authors     :   Alex Restrepo
 
-Copyright   :   Copyright 2015 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -29,7 +29,7 @@ public:
 
 	void 				AddToMenu( UIMenu *menu, bool showDescriptionLabel, bool showCancelButton, UIObject *parent = NULL );
 	void 				SetProgress( const float progress );
-	void 				SetDescription( const String &description );
+	void 				SetDescription( const std::string & description );
 	void				SetOnCancel( void ( *callback )( UIButton *, void * ), void *object );
 	float				GetProgress() const { return Progress; }
 	void				SetProgressImageZOffset( float offset );

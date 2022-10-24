@@ -5,7 +5,7 @@ Content     :   Tracking of short-press, long-press
 Created     :   June 18, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -42,7 +42,7 @@ class KeyState
 public:
 	static const int MAX_EVENTS = 2;
 
-					KeyState( float const doubleTapTime );
+					KeyState( float const shortPressTime );
 
 	void			HandleEvent( double const time, bool const down, int const repeatCount );
 

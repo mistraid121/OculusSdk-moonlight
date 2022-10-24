@@ -5,11 +5,11 @@ Content     :
 Created     :   
 Authors     :   
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
-#include "Android/JniUtils.h"
+#include "JniUtils.h"
 #include "SoundEffectContext.h"
 #include "VrCommon.h"
 #include "OVR_FileSys.h"
@@ -75,15 +75,15 @@ void ovrSoundEffectContext::LoadSoundAsset( const char * name )
 void ovrSoundEffectContext::PlayInternal( JNIEnv & env, const char * name )
 {
 	// Get sound from the asset mapping
-	String soundFile;
+	std::string soundFile;
 	if ( SoundAssetMapping.GetSound( name, soundFile ) )
 	{
-		// LOG( "ovrSoundEffectContext::PlayInternal(%s) : %s", name, soundFile.ToCStr() );
-		SoundPool.Play( env, soundFile.ToCStr() );
+		// OVR_LOG( "ovrSoundEffectContext::PlayInternal(%s) : %s", name, soundFile.c_str() );
+		SoundPool.Play( env, soundFile.c_str() );
 	}
 	else
 	{
-		WARN( "ovrSoundEffectContext::Play called with non-asset-mapping-defined sound: %s", name );
+		OVR_WARN( "ovrSoundEffectContext::Play called with non-asset-mapping-defined sound: %s", name );
 		// TODO: PC assumes the sound is defined in a sound-asset mapping table. The incoming
 		// name is a 'key-name' and not the actual file-name. Provide a PlaySoundFromUri for 
 		// non-asset-mapped sounds.
@@ -96,15 +96,15 @@ void ovrSoundEffectContext::PlayInternal( JNIEnv & env, const char * name )
 void ovrSoundEffectContext::StopInternal( JNIEnv & env, const char * name )
 {
 	// Get sound from the asset mapping
-	String soundFile;
+	std::string soundFile;
 	if ( SoundAssetMapping.GetSound( name, soundFile ) )
 	{
-		// LOG( "ovrSoundEffectContext::PlayInternal(%s) : %s", name, soundFile.ToCStr() );
-		SoundPool.Stop( env, soundFile.ToCStr() );
+		// OVR_LOG( "ovrSoundEffectContext::PlayInternal(%s) : %s", name, soundFile.c_str() );
+		SoundPool.Stop( env, soundFile.c_str() );
 	}
 	else
 	{
-		WARN( "ovrSoundEffectContext::Play called with non-asset-mapping-defined sound: %s", name );
+		OVR_WARN( "ovrSoundEffectContext::Play called with non-asset-mapping-defined sound: %s", name );
 		// TODO: PC assumes the sound is defined in a sound-asset mapping table. The incoming
 		// name is a 'key-name' and not the actual file-name. Provide a PlaySoundFromUri for 
 		// non-asset-mapped sounds.
@@ -121,14 +121,14 @@ void ovrSoundEffectContext::LoadSoundAssetInternal( JNIEnv & env, const char * n
 {
 #if defined( OVR_OS_ANDROID )
 	// Get sound from the asset mapping
-	String soundFile;
+	std::string soundFile;
 	if ( SoundAssetMapping.GetSound( name, soundFile ) )
 	{
-		SoundPool.LoadSoundAsset( env, soundFile.ToCStr() );
+		SoundPool.LoadSoundAsset( env, soundFile.c_str() );
 	}
 	else
 	{
-		WARN( "ovrSoundEffectContext::LoadSoundAssetInternal called with non-asset-mapping-defined sound: %s", name );
+		OVR_WARN( "ovrSoundEffectContext::LoadSoundAssetInternal called with non-asset-mapping-defined sound: %s", name );
 		SoundPool.LoadSoundAsset( env, name );
 	}
 #else

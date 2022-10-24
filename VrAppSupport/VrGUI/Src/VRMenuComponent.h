@@ -5,7 +5,7 @@ Content     :   Menuing system for VR apps.
 Created     :   June 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
@@ -16,6 +16,8 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 #include "VRMenuObject.h"
 #include "VRMenuEvent.h"
 #include "SoundLimiter.h"
+
+#include <string>
 
 namespace OVR {
 
@@ -66,7 +68,7 @@ public:
 	virtual int				GetTypeId() const { return TYPE_ID; }
 	virtual const char *	GetTypeName() const { return TYPE_NAME; }
 
-	const char *			GetName() const { return Name.ToCStr(); }
+	const char *			GetName() const { return Name.c_str(); }
 	void					SetName( char const * name ) { Name = name; }
 
 	virtual void			SetEnabled( const bool /*enabled*/ ) { OVR_ASSERT( false ); }
@@ -82,7 +84,7 @@ private:
 
 private:
 	VRMenuEventFlags_t      EventFlags;		// used to dispatch events to the correct handler
-	String					Name;			// only needs to be set if the component will be searched by name
+	std::string				Name;			// only needs to be set if the component will be searched by name
 };
 
 //==============================================================

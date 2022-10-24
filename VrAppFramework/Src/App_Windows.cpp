@@ -5,7 +5,7 @@ Content     :   Native counterpart to VrActivity and VrApp
 Created     :   September 30, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -14,12 +14,11 @@ Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
 
 #if defined( OVR_OS_WIN32 )
 
-#include "Android/JniUtils.h"
-#include "Kernel/OVR_Types.h"
-#include "Kernel/OVR_System.h"
-#include "Kernel/OVR_Math.h"
-#include "Kernel/OVR_TypesafeNumber.h"
-#include "Kernel/OVR_JSON.h"
+#include "JniUtils.h"
+#include "OVR_Types.h"
+#include "OVR_Math.h"
+#include "OVR_TypesafeNumber.h"
+#include "OVR_JSON.h"
 
 #include "VrApi.h"
 
@@ -70,7 +69,7 @@ long long VrAppInterface::SetActivity(	JNIEnv * jni, jclass clazz, jobject activ
 	else
 	{
 		exitCode = initResult;
-		LOG( "vrapi_Initialize Error: %d", initResult );
+		OVR_LOG( "vrapi_Initialize Error: %d", initResult );
 	}
 
 	vrapi_Shutdown();

@@ -5,12 +5,12 @@ Content     :
 Created     :   
 Authors     :   
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #include "SoundPool.h"
-#include "Android/JniUtils.h"
+#include "JniUtils.h"
 
 #if defined( OVR_OS_WIN32 )
 #include "Windows/AudioPlayer.h"
@@ -47,8 +47,7 @@ ovrSoundPool::~ovrSoundPool()
 {
 #if defined( OVR_OS_ANDROID )
 	jni.CallVoidMethod( pooler, releaseMethod );
-	// TODO: check for exceptions? Maybe this should be in LibOVRKernel as a
-	// call wrapper.
+	// TODO: check for exceptions?
 	jni.DeleteGlobalRef( pooler );
 #else
 	delete AudioPlayer;
@@ -67,7 +66,7 @@ void ovrSoundPool::Initialize( class ovrFileSys * fileSys )
 
 void ovrSoundPool::Play( JNIEnv & env, const char * soundName )
 {
-	// LOG( "ovrSoundPool::Play(%s)", soundName );
+	// OVR_LOG( "ovrSoundPool::Play(%s)", soundName );
 #if defined( OVR_OS_ANDROID )
 	jstring cmdString = (jstring) ovr_NewStringUTF( &env, soundName );
 	env.CallVoidMethod( pooler, playMethod, cmdString );
@@ -84,7 +83,7 @@ void ovrSoundPool::Play( JNIEnv & env, const char * soundName )
 
 void ovrSoundPool::Stop( JNIEnv & env, const char * soundName )
 {
-	// LOG( "ovrSoundPool::Stop(%s)", soundName );
+	// OVR_LOG( "ovrSoundPool::Stop(%s)", soundName );
 #if defined( OVR_OS_ANDROID )
 	jstring cmdString = (jstring) ovr_NewStringUTF( &env, soundName );
 	env.CallVoidMethod( pooler, stopMethod, cmdString );

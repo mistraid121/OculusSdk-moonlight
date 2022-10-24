@@ -5,7 +5,7 @@ Content     :
 Created     :	1/23/2015
 Authors     :   Jim Dose
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -26,8 +26,6 @@ UIButton::UIButton( OvrGuiSys &guiSys ) :
 	NormalColor( 1.0f ),
 	HoverColor( 1.0f ),
 	PressedColor( 1.0f ),
-    IsSelectedFunction( NULL ),
-    IsSelectedObject( NULL ),
 	OnClickFunction( NULL ),
 	OnClickObject( NULL ),
 	OnFocusGainedFunction( NULL ),
@@ -39,6 +37,13 @@ UIButton::UIButton( OvrGuiSys &guiSys ) :
 
 UIButton::~UIButton()
 {
+	// since components get deleted when the VRMenuObject is deleted, we need to let the 
+	// component know that it no longer has a valid button.
+	if ( ButtonComponent != nullptr ) 
+	{
+		ButtonComponent->OwnerDeleted();
+		ButtonComponent = nullptr;
+	}
 }
 
 void UIButton::AddToMenu( UIMenu *menu, UIObject *parent )
@@ -48,7 +53,7 @@ void UIButton::AddToMenu( UIMenu *menu, UIObject *parent )
 	Vector3f defaultScale( 1.0f );
 	VRMenuFontParms fontParms( HORIZONTAL_CENTER, VERTICAL_CENTER, false, false, false, 1.0f );
 	
-	VRMenuObjectParms parms( VRMENU_BUTTON, Array< VRMenuComponent* >(), VRMenuSurfaceParms(),
+	VRMenuObjectParms parms( VRMENU_BUTTON, std::vector< VRMenuComponent* >(), VRMenuSurfaceParms(),
 			"", pose, defaultScale, fontParms, menu->AllocId(),
 			VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
@@ -88,11 +93,6 @@ void UIButton::SetAsToggleButton( const UITexture & pressedHoverTexture, const V
 	PressedHoverTexture = &pressedHoverTexture;
 }
 
-void UIButton::SetIsSelected( bool ( *callback )( UIButton *, void * ), void *object )
-{
-	IsSelectedFunction = callback;
-	IsSelectedObject = object;
-}
 void UIButton::SetOnClick( void ( *callback )( UIButton *, void * ), void *object )
 {
 	OnClickFunction = callback;
@@ -106,13 +106,6 @@ void UIButton::SetText( const char * text )
 	object->SetText( text );
 }
 
-const String & UIButton::GetText() const
-{
-    VRMenuObject * object = GetMenuObject();
-    OVR_ASSERT( object );
-    return object->GetText();
-}
-
 void UIButton::SetOnFocusGained( void( *callback )( UIButton *, void * ), void *object )
 {
 	OnFocusGainedFunction = callback;
@@ -123,16 +116,6 @@ void UIButton::SetOnFocusLost( void( *callback )( UIButton *, void * ), void *ob
 {
 	OnFocusLostFunction = callback;
 	OnFocusLostObject = object;
-}
-
-
-bool UIButton::IsSelected()
-{
-    if (  IsSelectedFunction != NULL )
-    {
-        return ( *IsSelectedFunction )( this, OnClickObject );
-    }
-    return false;
 }
 
 void UIButton::OnClick()
@@ -171,7 +154,7 @@ void UIButton::UpdateButtonState()
 		SetImage( 0, SURFACE_TEXTURE_DIFFUSE, *PressedHoverTexture, dims.x, dims.y, border );
 		SetColor( PressedHoverColor );
 	}
-	else if (  ButtonComponent->IsPressed() || IsSelected() )
+	else if ( ButtonComponent->IsPressed() )
 	{
 		SetImage( 0, SURFACE_TEXTURE_DIFFUSE, *PressedTexture, dims.x, dims.y, border );
 		SetColor( PressedColor );
@@ -213,10 +196,14 @@ UIButtonComponent::UIButtonComponent( UIButton &button ) :
             VRMENU_EVENT_TOUCH_UP |
             VRMENU_EVENT_FOCUS_GAINED |
             VRMENU_EVENT_FOCUS_LOST ),
-    Button( button ),
+    Button( &button ),
 	TouchDown( false )
-
 {
+}
+
+UIButtonComponent::~UIButtonComponent()
+{
+	Button = nullptr;
 }
 
 //==============================
@@ -224,6 +211,11 @@ UIButtonComponent::UIButtonComponent( UIButton &button ) :
 eMsgStatus UIButtonComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
+	if ( Button == nullptr ) 
+	{
+		OVR_LOG( "UIButtonComponent::OnEvent_Impl - button deleted." );
+		return MSG_STATUS_ALIVE;
+	}
     switch( event.EventType )
     {
         case VRMENU_EVENT_FOCUS_GAINED:
@@ -231,33 +223,33 @@ eMsgStatus UIButtonComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput co
         case VRMENU_EVENT_FOCUS_LOST:
             return FocusLost( guiSys, vrFrame, self, event );
         case VRMENU_EVENT_TOUCH_DOWN:
-			if ( Button.ToggleButton )
+			if ( Button->ToggleButton )
 			{
 				TouchDown = !TouchDown;
-				Button.OnClick();
+				Button->OnClick();
 			}
 			else
 			{
 				TouchDown = true;
-				if ( Button.ActionType == UIButton::eButtonActionType::ClickOnDown )
+				if ( Button->ActionType == UIButton::eButtonActionType::ClickOnDown )
 				{
-					Button.OnClick();
+					Button->OnClick();
 				}
 			}
-        	Button.UpdateButtonState();
-			DownSoundLimiter.PlaySoundEffect( guiSys, TouchDownSnd.ToCStr(), 0.1 );
+        	Button->UpdateButtonState();
+			DownSoundLimiter.PlaySoundEffect( guiSys, TouchDownSnd.c_str(), 0.1 );
             return MSG_STATUS_ALIVE;
 		case VRMENU_EVENT_TOUCH_UP:
-			if ( !Button.ToggleButton )
+			if ( !Button->ToggleButton )
 			{
 				TouchDown = false;
 			}
-        	Button.UpdateButtonState();
-			if ( !Button.ToggleButton && Button.ActionType == UIButton::eButtonActionType::ClickOnUp )
+        	Button->UpdateButtonState();
+			if ( !Button->ToggleButton && Button->ActionType == UIButton::eButtonActionType::ClickOnUp )
 			{
-				Button.OnClick();
+				Button->OnClick();
 			}
-			UpSoundLimiter.PlaySoundEffect( guiSys, TouchUpSnd.ToCStr(), 0.1 );
+			UpSoundLimiter.PlaySoundEffect( guiSys, TouchUpSnd.c_str(), 0.1 );
             return MSG_STATUS_ALIVE;
         default:
             OVR_ASSERT( !"Event flags mismatch!" );
@@ -270,10 +262,15 @@ eMsgStatus UIButtonComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput co
 eMsgStatus UIButtonComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
+	if ( Button == nullptr ) 
+	{
+		return MSG_STATUS_ALIVE;
+	}
+
     // set the hilight flag
-	Button.FocusGained();
+	Button->FocusGained();
     self->SetHilighted( true );
-    Button.UpdateButtonState();
+    Button->UpdateButtonState();
 	GazeOverSoundLimiter.PlaySoundEffect( guiSys, "gaze_on", 0.1 );
     return MSG_STATUS_ALIVE;
 }
@@ -283,12 +280,16 @@ eMsgStatus UIButtonComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput con
 eMsgStatus UIButtonComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
+	if ( Button == nullptr ) 
+	{
+		return MSG_STATUS_ALIVE;
+	}
     // clear the hilight flag
-	Button.FocusLost();
+	Button->FocusLost();
     self->SetHilighted( false );
-	if ( !Button.ToggleButton )
+	if ( !Button->ToggleButton )
 		TouchDown = false;
-    Button.UpdateButtonState();
+    Button->UpdateButtonState();
     GazeOverSoundLimiter.PlaySoundEffect( guiSys, "gaze_off", 0.1 );
     return MSG_STATUS_ALIVE;
 }

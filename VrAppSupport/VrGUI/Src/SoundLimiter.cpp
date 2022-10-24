@@ -5,18 +5,18 @@ Content     :   Utility class for limiting how often sounds play.
 Created     :   June 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 
 *************************************************************************************/
 
 #include "SoundLimiter.h"
 
-#include "Kernel/OVR_Types.h"
-#include "Kernel/OVR_TypesafeNumber.h"
-#include "Kernel/OVR_BitFlags.h"
-#include "Kernel/OVR_Math.h"
-#include "Kernel/OVR_LogUtils.h"
+#include "OVR_Types.h"
+#include "OVR_TypesafeNumber.h"
+#include "OVR_BitFlags.h"
+#include "OVR_Math.h"
+#include "OVR_LogUtils.h"
 
 #include "OVR_Input.h"
 #include "VrCommon.h"

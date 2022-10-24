@@ -5,15 +5,17 @@ Content     :
 Created     :	11/3/2015
 Authors     :   Eric Duhon
 
-Copyright   :   Copyright 2015 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
 #if !defined( UIKeyboard_h )
 #define UIKeyboard_h
 
-#include "Kernel/OVR_Math.h"
+#include "OVR_Math.h"
 #include "UIMenu.h"
+
+#include <string>
 
 namespace OVR
 {
@@ -28,7 +30,7 @@ namespace OVR
 			Backspace,
 			Return
 		};
-		using KeyPressEventT = void( *)( const KeyEventType, const String &, void * );
+		using KeyPressEventT = void( *)( const KeyEventType, const std::string &, void * );
 
 		UIKeyboard( const UIKeyboard & ) = delete;
 		UIKeyboard & operator=( const UIKeyboard & ) = delete;
