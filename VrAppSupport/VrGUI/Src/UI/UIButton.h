@@ -17,6 +17,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "VRMenuComponent.h"
 #include "UI/UITexture.h"
 
+
 namespace OVR {
 
 class VrAppInterface;
@@ -94,6 +95,7 @@ public:
 	//By default OnClick happens when button is released, but can be changed to happen on button down instead.
 	void								SetActionType( const eButtonActionType actionType ) { ActionType = actionType; }
 	void								SetText( const char * text );
+	const String & 						GetText() const;
 
 	void								SetOnClick( void ( *callback )( UIButton *, void * ), void *object );
 	void								SetOnFocusGained( void( *callback )( UIButton *, void * ), void *object );
@@ -105,6 +107,8 @@ public:
 
 	void								SetTouchDownSnd( const char * touchDownSnd );
 	void								SetTouchUpSnd( const char * touchUpSnd );
+
+	void 								SetIsSelected (bool (*callback)(UIButton *, void *), void *object );
 
 private:
 	UIButtonComponent *					ButtonComponent;
@@ -122,10 +126,16 @@ private:
 	bool								ToggleButton { false };
 	eButtonActionType					ActionType { ClickOnUp };
 
+
+
+	bool 								( *IsSelectedFunction )( UIButton *button, void *object );
+	void *								IsSelectedObject;
+
 	void 								( *OnClickFunction )( UIButton *button, void *object );
 	void *								OnClickObject;
 
 	void 								OnClick();
+    bool                                IsSelected();
 
 	void								( *OnFocusGainedFunction )( UIButton *button, void *object );
 	void *								OnFocusGainedObject;
