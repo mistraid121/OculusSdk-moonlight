@@ -95,7 +95,7 @@ public:
 	//By default OnClick happens when button is released, but can be changed to happen on button down instead.
 	void								SetActionType( const eButtonActionType actionType ) { ActionType = actionType; }
 	void								SetText( const char * text );
-	const String & 						GetText() const;
+	const std::string & 				GetText() const;
 
 	void								SetOnClick( void ( *callback )( UIButton *, void * ), void *object );
 	void								SetOnFocusGained( void( *callback )( UIButton *, void * ), void *object );

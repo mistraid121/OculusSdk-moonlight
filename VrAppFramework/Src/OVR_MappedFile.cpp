@@ -119,7 +119,7 @@ bool MappedFile::OpenRead( const char * path, bool read_ahead, bool no_cache )
 #else
 
 	// Don't allow private files to be read by other applications.
-	File = open( path, O_RDONLY, (mode_t)0440 );
+	File = open( path, O_CREAT|O_RDONLY, (mode_t)0440 );
 
 	if ( File == -1 )
 	{

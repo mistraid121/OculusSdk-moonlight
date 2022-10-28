@@ -113,7 +113,7 @@ void UIButton::SetText( const char * text )
 	object->SetText( text );
 }
 
-const String & UIButton::GetText() const
+const std::string & UIButton::GetText() const
 {
     VRMenuObject * object = GetMenuObject();
     OVR_ASSERT( object );
