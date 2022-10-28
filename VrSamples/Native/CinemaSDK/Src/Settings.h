@@ -15,8 +15,8 @@ LICENSE file in the StreamTheater/ directory.
 #if !defined( GenericSettings_h )
 #define GenericSettings_h
 
-#include "Kernel/OVR_Array.h"
-#include "Kernel/OVR_JSON.h"
+#include "vector"
+#include "OVR_JSON.h"
 
 namespace OculusCinema {
 
@@ -52,7 +52,7 @@ public:
 
 	// Remove a variable from the saved settings file
 	// (automatically saved with no other changes)
-	void DeleteVar(const char* varName);
+	//void DeleteVar(const char* varName);
 
 	// Load any defined values into the specified variables
 	void Load();
@@ -64,7 +64,7 @@ public:
 	void SaveChanged();
 
 	// Update or create only the values of these variables
-	void SaveOnly(const Array<const char*> &varNames);
+	void SaveOnly(const std::vector<const char*> &varNames);
 
 	// Save out any currently defined variable names if they don't exist but without data
 	// Allows users to edit variables that might not be changeable, without forcing a default value
@@ -76,14 +76,14 @@ private:
 
 private:
 	char* settingsFileName;
-	JSON* rootSettingsJSON;
-	JSON* settingsJSON;
-	Array<IVariable*> variables;
+	std::shared_ptr<JSON> rootSettingsJSON;
+	std::shared_ptr<JSON> settingsJSON;
+	std::vector<IVariable*> variables;
 
 };
 
 #ifndef NDEBUG
-void SettingsTest(String packageName);
+//void SettingsTest(std::string packageName);
 #endif
 
 } // namespace VRMatterStreamTheater

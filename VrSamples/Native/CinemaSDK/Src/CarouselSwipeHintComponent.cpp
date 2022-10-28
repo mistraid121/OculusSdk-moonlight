@@ -5,7 +5,7 @@ Content     :   Menu component for the swipe hints.
 Created     :   October 6, 2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -17,6 +17,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CarouselBrowserComponent.h"
 #include "OVR_Input.h"
 #include "GuiSys.h"
+
+#include <algorithm>
 
 namespace OculusCinema {
 
@@ -138,7 +140,7 @@ eMsgStatus CarouselSwipeHintComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput 
 		{
 			float normTime = static_cast<float>( time / TotalTime );
 			alpha *= sinf( MATH_FLOAT_PI * 2.0f * normTime );
-			alpha = OVR::Alg::Max( alpha, 0.0f );
+			alpha = std::max< float >( alpha, 0.0f );
 		}
 	}
 

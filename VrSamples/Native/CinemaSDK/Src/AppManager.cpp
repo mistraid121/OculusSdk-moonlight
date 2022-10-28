@@ -13,8 +13,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "Kernel/OVR_String_Utils.h"
-#include "Kernel/OVR_JSON.h"
+#include "OVR_JSON.h"
+#include "OVR_BinaryFile2.h"
 
 #include "AppManager.h"
 #include "CinemaApp.h"
@@ -35,6 +35,19 @@ namespace OculusCinema {
     const int AppManager::PosterWidth = 228;
     const int AppManager::PosterHeight = 344;
 
+    static void ReplaceExtension(std::string & s, const std::string & newExtension)
+    {
+        // find the last .
+        size_t lastDot = s.rfind('.');
+        if (lastDot != std::string::npos)
+        {
+            s.replace( s.begin() + lastDot, s.end(), newExtension );
+        }
+        else
+        {
+            s += newExtension;
+        }
+    }
 //=======================================================================================
 
     AppManager::AppManager(CinemaApp &cinema) :
@@ -49,7 +62,7 @@ namespace OculusCinema {
     }
 
     void AppManager::OneTimeInit(const char *launchIntent) {
-        LOG("AppManager::OneTimeInit");
+        OVR_LOG("AppManager::OneTimeInit");
 
         OVR_UNUSED(launchIntent);
 
@@ -59,7 +72,7 @@ namespace OculusCinema {
         DefaultPoster = LoadTextureFromApplicationPackage(
                 "assets/default_poster.png",
                 TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-        LOG(" Default gluint: %i", DefaultPoster);
+        OVR_LOG(" Default gluint: %i", DefaultPoster);
 
 
 
@@ -70,28 +83,28 @@ namespace OculusCinema {
         MakeTextureClamped(GlTexture(DefaultPoster, width, height));
         LoadApps();
 
-        LOG("AppManager::OneTimeInit: %i movies loaded, %3.1f seconds", Apps.GetSizeI(),
+        OVR_LOG("AppManager::OneTimeInit: %i movies loaded, %3.1f seconds", static_cast<int>(Apps.size()),
             vrapi_GetTimeInSeconds() - start);
 
     }
 
     void AppManager::OneTimeShutdown() {
-        LOG("AppManager::OneTimeShutdown");
+        OVR_LOG("AppManager::OneTimeShutdown");
     }
 
     void AppManager::LoadApps() {
-        LOG("LoadApps");
+        OVR_LOG("LoadApps");
 
         const double start = SystemClock::GetTimeInSeconds();
 
-        Array<String> appNames; // TODO: Get app list from JNI AppSelector
-        LOG("%i movies scanned, %3.1f seconds", appNames.GetSizeI(),
+        std::vector<std::string> appNames; // TODO: Get app list from JNI AppSelector
+        OVR_LOG("%i movies scanned, %3.1f seconds", static_cast<int>(appNames.size()),
             vrapi_GetTimeInSeconds() - start);
 
 
-        for (UPInt i = 0; i < appNames.GetSize(); i++) {
+        for (UPInt i = 0; i < appNames.size(); i++) {
             AppDef *app = new AppDef();
-            Apps.PushBack(app);
+            Apps.push_back(app);
 
 
             app->Name = appNames[i];
@@ -102,23 +115,23 @@ namespace OculusCinema {
 
         }
 
-        LOG("%i movies panels loaded, %3.1f seconds", Apps.GetSizeI(),
+        OVR_LOG("%i movies panels loaded, %3.1f seconds", static_cast<int>(Apps.size()),
             vrapi_GetTimeInSeconds() - start);
 
     }
 
-    void AppManager::AddApp(const String &name, const String &posterFileName, int id, bool isRunning)
+    void AppManager::AddApp(const std::string &name, const std::string &posterFileName, int id, bool isRunning)
     {
-    LOG("App %s with id %i added!", name.ToCStr(), id);
+        OVR_LOG("App %s with id %i added!", name.c_str(), id);
         AppDef *anApp = NULL;
         bool isNew = false;
-        for (UPInt i = 0; i < Apps.GetSize(); i++) {
-            if (Apps[i]->Name.CompareNoCase(name) == 0)
+        for (UPInt i = 0; i < Apps.size(); i++) {
+            if (OVR::OVR_stricmp(Apps[i]->Name.c_str(),name.c_str()) == 0)
                 anApp = Apps[i];
         }
         if (anApp == NULL) {
             anApp = new AppDef();
-            Apps.PushBack(anApp);
+            Apps.push_back(anApp);
             isNew = true;
         }
 
@@ -134,9 +147,9 @@ namespace OculusCinema {
     }
 
     void AppManager::RemoveApp(int id) {
-        for (UPInt i = 0; i < Apps.GetSize(); i++)
+        for (UPInt i = 0; i < Apps.size(); i++)
             if (Apps[i]->Id == id) {
-                Apps.RemoveAt(i);
+                Apps.erase( Apps.cbegin() + i );
                 i--;
             }
     }
@@ -146,41 +159,39 @@ namespace OculusCinema {
 
     void AppManager::ReadMetaData( PcDef *anApp )
     {
-        String filename = anApp->Name;
-        filename.StripExtension();
-        filename.AppendString(".app.txt" );
+        std::string filename = anApp->Name;
+        ReplaceExtension( filename, ".app.txt" );
 
 
         const char* error = NULL;
 
-        if ( !Cinema.FileExists( filename.ToCStr() ) )
+        if ( !Cinema.FileExists( filename.c_str() ) )
         {
             return;
         }
 
-        if ( JSON* metadata = JSON::Load( filename.ToCStr(), &error ) )
+        if ( auto metadata = JSON::Load( filename.c_str(), &error ) )
         {
 
-            metadata->Release();
+           // metadata->Release();
 
-            LOG( "Loaded metadata: %s", filename.ToCStr() );
+            OVR_LOG( "Loaded metadata: %s", filename.c_str() );
         }
         else
         {
-            LOG( "Error loading metadata for %s: %s", filename.ToCStr(), ( error == NULL ) ? "NULL" : error );
+            OVR_LOG( "Error loading metadata for %s: %s", filename.c_str(), ( error == NULL ) ? "NULL" : error );
         }
     }
 
     void AppManager::LoadPoster( PcDef *anApp ) {
-        String posterFilename = anApp->PosterFileName;
-        posterFilename.StripExtension();
-        posterFilename.AppendString(".png");
+        std::string posterFilename = anApp->PosterFileName;
+        ReplaceExtension( posterFilename, ".png" );
 
-        anApp->Poster = LoadTextureFromBuffer(posterFilename.ToCStr(),
-                                              MemBufferFile(posterFilename.ToCStr()),
+        anApp->Poster = LoadTextureFromBuffer(posterFilename.c_str(),
+                                              MemBufferFile(posterFilename.c_str()),
                                               TextureFlags_t(TEXTUREFLAG_NO_DEFAULT),
                                               anApp->PosterWidth, anApp->PosterHeight);
-        LOG("Poster loaded: %s %i %i %i", posterFilename.ToCStr(), anApp->Poster,
+        OVR_LOG("Poster loaded: %s %i %i %i", posterFilename.c_str(), anApp->Poster,
             anApp->PosterWidth, anApp->PosterHeight);
         //if (anApp->Poster == 0) {
         anApp->Poster = DefaultPoster;
@@ -194,7 +205,7 @@ namespace OculusCinema {
 
     void AppManager::LoadPosters()
     {
-        for(UPInt i=0; i < Apps.GetSize(); i++)
+        for(UPInt i=0; i < Apps.size(); i++)
         {
             /*if( Apps[i]->Poster == 0 || Apps[i]->Poster == DefaultPoster )
             {
@@ -205,16 +216,16 @@ namespace OculusCinema {
     }
 
 
-    Array<const PcDef *> AppManager::GetAppList( PcCategory category ) const
+    std::vector<const PcDef *> AppManager::GetAppList( PcCategory category ) const
     {
-        Array<const PcDef *> result;
+        std::vector<const PcDef *> result;
 
-        for( UPInt i = 0; i < Apps.GetSize(); i++ )
+        for( UPInt i = 0; i < Apps.size(); i++ )
         {
-            LOG("App: %s Poster %i", Apps[i]->Name.ToCStr(), Apps[i]->Poster);
+            OVR_LOG("App: %s Poster %i", Apps[i]->Name.c_str(), Apps[i]->Poster);
             if ( Apps[ i ]->Category == category && Apps[i]->Poster != 0)
             {
-                result.PushBack( Apps[ i ] );
+                result.push_back( Apps[ i ] );
             }
         }
 

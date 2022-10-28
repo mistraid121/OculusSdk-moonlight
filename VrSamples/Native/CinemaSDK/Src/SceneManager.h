@@ -5,7 +5,7 @@ Content     :	Handles rendering of current scene and movie.
 Created     :   September 3, 2013
 Authors     :	Jim Dosé, based on a fork of VrVideo.cpp from VrVideo by John Carmack.
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant
@@ -19,6 +19,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "PcManager.h"
 #include "SceneView.h"
 #include "Lerp.h"
+#include "SurfaceTexture.h"
 
 using namespace OVR;
 
@@ -39,16 +40,16 @@ public:
 
 	void 				SetSeat( int newSeat );
 	bool 				ChangeSeats( const ovrFrameInput & vrFrame );
-	void                NextSeat();
+	void                		NextSeat();
 
 	void 				ClearMovie();
 	void 				PutScreenInFront();
 
 	void				ClearGazeCursorGhosts();  	// clear gaze cursor to avoid seeing it lerp
 
-	void 				ToggleLights( const float duration );
-	void 				LightsOn( const float duration );
-	void 				LightsOff( const float duration );
+	void 				ToggleLights( const float duration, const double currTimeInSeconds );
+	void 				LightsOn( const float duration, const double currTimeInSeconds );
+	void 				LightsOff( const float duration, const double currTimeInSeconds );
 
 	void				SetSceneModel( const SceneDef & sceneDef );
 	void				SetSceneProgram( const sceneProgram_t opaqueProgram, const sceneProgram_t additiveProgram );
@@ -65,15 +66,11 @@ public:
 	void				AllowMovement( bool allow ) { AllowMove = allow; }
 	bool				MovementAllowed() const { return AllowMove; }
 
-	bool				GetUseOverlay() const;
-
 public:
 	CinemaApp &			Cinema;
 
 	// Allow static lighting to be faded up or down
 	Lerp				StaticLighting;
-
-	bool				UseOverlay;
 
 	SurfaceTexture	* 	MovieTexture;
 	long long			MovieTextureTimestamp;
@@ -94,7 +91,7 @@ public:
 	int					CurrentMovieHeight;
 	int					MovieTextureWidth;
 	int					MovieTextureHeight;
-    MovieFormat			CurrentMovieFormat;
+	MovieFormat			CurrentMovieFormat;
 	int					MovieRotation;
 	int					MovieDuration;
 

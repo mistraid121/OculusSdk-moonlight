@@ -16,7 +16,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( AppSelectionView_h )
 #define AppSelectionView_h
 
-#include "Kernel/OVR_Array.h"
+#include "vector"
 #include "Lerp.h"
 #include "SelectionView.h"
 #include "CarouselBrowserComponent.h"
@@ -48,13 +48,13 @@ public:
 	virtual void 		OneTimeInit( const char * launchIntent );
 	virtual void		OneTimeShutdown();
 
-	virtual void 		OnOpen();
+	virtual void 		OnOpen(const double currTimeInSeconds );
 	virtual void 		OnClose();
 
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
 	virtual void 		Frame( const ovrFrameInput & vrFrame );
 
-	void                SetAppList( const Array<const PcDef *> &movies, const PcDef *nextMovie );
+	void                SetAppList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie );
     void                PairSuccess();
 
 
@@ -69,12 +69,12 @@ private:
 	{
 	public:
 		PcCategory      Category;
-		String			Text;
+		std::string			Text;
 		UILabel *		Button;
 		float			Width;
 		float			Height;
 
-					AppCategoryButton( const PcCategory category, const String &text ) :
+					AppCategoryButton( const PcCategory category, const std::string &text ) :
 						Category( category ), Text( text ), Button( NULL ), Width( 0.0f ), Height( 0.0f ) {}
 	};
 
@@ -139,15 +139,15 @@ private:
 	Lerp								SelectionFader;
 
 	CarouselBrowserComponent *			MovieBrowser;
-	Array<CarouselItem *> 				MovieBrowserItems;
-	Array<PanelPose>					MoviePanelPositions;
+	std::vector<CarouselItem *> 				MovieBrowserItems;
+	std::vector<PanelPose>					MoviePanelPositions;
 
-	Array<CarouselItemComponent *>	 	MoviePosterComponents;
+	std::vector<CarouselItemComponent *>	 	MoviePosterComponents;
 
-	Array<AppCategoryButton>			Categories;
+	std::vector<AppCategoryButton>			Categories;
 	PcCategory			 			CurrentCategory;
 	
-	Array<const PcDef *> 				AppList;
+	std::vector<const PcDef *> 				AppList;
 	int									MoviesIndex;
 
 	const PcDef *					LastMovieDisplayed;
@@ -181,8 +181,8 @@ private:
 	bool                                streamHostAudio;
 
 	float                                settingsVersion;
-	String                                defaultSettingsPath;
-	String                                appSettingsPath;
+	std::string                                defaultSettingsPath;
+	std::string                                appSettingsPath;
 	Settings*                            defaultSettings;
 	Settings*                            appSettings;
 

@@ -5,7 +5,7 @@ Content     :   Menu component for the movie theater selection menu.
 Created     :   August 15, 2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -45,7 +45,7 @@ void TheaterSelectionComponent::SetItem( VRMenuObject * self, const CarouselItem
 
 	if ( item != NULL )
 	{
-		self->SetText( item->Name.ToCStr() );
+		self->SetText( item->Name.c_str() );
 		self->SetSurfaceTexture( 0, 0, SURFACE_TEXTURE_DIFFUSE,
 			item->Texture, item->TextureWidth, item->TextureHeight );
 		self->SetColor( pose.Color );
@@ -83,7 +83,7 @@ eMsgStatus TheaterSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrame
         	if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
         	{
                 Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
-                CallbackView->SelectPressed();
+                CallbackView->SelectPressed( vrFrame.RealTimeInSeconds );
         		return MSG_STATUS_CONSUMED;
         	}
             return MSG_STATUS_ALIVE;
@@ -105,7 +105,7 @@ eMsgStatus TheaterSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameI
     self->SetHilighted( true );
 
     StartFadeOutTime = -1.0;
-    StartFadeInTime = vrapi_GetTimeInSeconds();
+    StartFadeInTime = vrFrame.RealTimeInSeconds;
 
     Sound.PlaySoundEffect( guiSys, "gaze_on", 0.1 );
 
@@ -125,7 +125,7 @@ eMsgStatus TheaterSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInp
     self->SetHilighted( false );
 
     StartFadeInTime = -1.0;
-    StartFadeOutTime = vrapi_GetTimeInSeconds();
+    StartFadeOutTime = vrFrame.RealTimeInSeconds;
 
     Sound.PlaySoundEffect( guiSys, "gaze_off", 0.1 );
 
@@ -140,7 +140,7 @@ eMsgStatus TheaterSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput c
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( event );
 
-    double t = vrapi_GetTimeInSeconds();
+    double t = vrFrame.RealTimeInSeconds;
     if ( StartFadeInTime >= 0.0f && t >= StartFadeInTime )
     {
         HilightFader.StartFadeIn();
@@ -159,22 +159,6 @@ eMsgStatus TheaterSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput c
 
     float const scale = ( ( HilightScale - 1.0f ) * hilightAlpha ) + 1.0f;
     self->SetHilightScale( scale );
-
-
-#if 0
-	if ( ( CallbackView != NULL ) && self->IsHilighted() && ( vrFrame.Input.buttonReleased & BUTTON_A ) )
-	{
-		if ( vrFrame.Input.buttonPressed & BUTTON_A )
-		{
-			Sound.PlaySoundEffect( guiSys, "touch_down", 0.1 );
-		}
-		if ( vrFrame.Input.buttonReleased & BUTTON_A )
-		{
-			Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
-			CallbackView->SelectPressed();
-		}
-	}
-#endif
 
     return MSG_STATUS_ALIVE;
 }

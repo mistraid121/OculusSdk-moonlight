@@ -5,7 +5,7 @@ Content     :
 Created     :	9/3/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -32,7 +32,7 @@ public:
 	virtual void 		OneTimeInit( const char * launchIntent );
 	virtual void		OneTimeShutdown();
 
-	virtual void 		OnOpen();
+	virtual void 		OnOpen( const double currTimeInSeconds );
 	virtual void 		OnClose();
 
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );

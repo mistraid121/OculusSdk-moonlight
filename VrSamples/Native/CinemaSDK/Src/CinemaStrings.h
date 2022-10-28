@@ -1,11 +1,11 @@
 /************************************************************************************
 
-Filename    :   CinemaStrings.h
-Content     :	Text strings used by app.  Located in one place to make translation easier.
+Filename    :   Cinemastd::strings.h
+Content     :	Text std::strings used by app.  Located in one place to make translation easier.
 Created     :	9/30/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -16,7 +16,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( CinemaStrings_h )
 #define CinemaStrings_h
 
-#include "Kernel/OVR_String.h"
+#include "OVR_Types.h"
+#include <string>
 
 using namespace OVR;
 
@@ -31,78 +32,78 @@ public:
 
 	void		OneTimeInit( CinemaApp &cinema );
 
-	String		Category_Trailers;
-	String		Category_MyVideos;
-	String     Category_LimeLight;
-    String     Category_RemoteDesktop;
-    String     Category_VNC;
+	std::string		Category_Trailers;
+	std::string		Category_MyVideos;
+	std::string     Category_LimeLight;
+	std::string     Category_RemoteDesktop;
+	std::string     Category_VNC;
 	
 
-	String		MovieSelection_Resume;
-	String		MovieSelection_Next;
+	std::string		MovieSelection_Resume;
+	std::string		MovieSelection_Next;
 
-	String		ResumeMenu_Title;
-	String		ResumeMenu_Resume;
-	String		ResumeMenu_Restart;
+	std::string		ResumeMenu_Title;
+	std::string		ResumeMenu_Resume;
+	std::string		ResumeMenu_Restart;
 
-	String		TheaterSelection_Title;
+	std::string		TheaterSelection_Title;
 
-	String		Error_NoVideosOnPhone;
-	String		Error_NoVideosInMyVideos;
-	String      Error_NoVideosInLimeLight;
+	std::string		Error_NoVideosOnPhone;
+	std::string		Error_NoVideosInMyVideos;
+	std::string      Error_NoVideosInLimeLight;
 
-	String	ButtonText_ButtonSaveApp;
-	String	ButtonText_ButtonSaveDefault;
-	String	ButtonText_ButtonResetSettings;
-	String	ButtonText_ButtonSaveSettings1;
-	String	ButtonText_ButtonSaveSettings2;
-	String	ButtonText_ButtonSaveSettings3;
-	String	ButtonText_ButtonLoadSettings1;
-	String	ButtonText_ButtonLoadSettings2;
-	String	ButtonText_ButtonLoadSettings3;
+	std::string	ButtonText_ButtonSaveApp;
+	std::string	ButtonText_ButtonSaveDefault;
+	std::string	ButtonText_ButtonResetSettings;
+	std::string	ButtonText_ButtonSaveSettings1;
+	std::string	ButtonText_ButtonSaveSettings2;
+	std::string	ButtonText_ButtonSaveSettings3;
+	std::string	ButtonText_ButtonLoadSettings1;
+	std::string	ButtonText_ButtonLoadSettings2;
+	std::string	ButtonText_ButtonLoadSettings3;
 
-	String    ButtonText_ButtonMapKeyboard;
-	String    ButtonText_ButtonSpeed;
-	String    ButtonText_ButtonComfortMode;
-	String    ButtonText_ButtonHostAudio;
-	String    ButtonText_ButtonBitrate;
-	String    ButtonText_ButtonApply;
-	String    ButtonText_Button4k60;
-	String    ButtonText_Button4k30;
-	String    ButtonText_Button1080p60;
-	String    ButtonText_Button1080p30;
-	String    ButtonText_Button720p60;
-	String    ButtonText_Button720p30;
-	String    ButtonText_ButtonDistance;
-	String    ButtonText_ButtonSize;
-	String    ButtonText_ButtonSBS;
-	String    ButtonText_ButtonChangeSeat;
-	String    ButtonText_ButtonGaze;
-	String    ButtonText_ButtonTrackpad;
+	std::string    ButtonText_ButtonMapKeyboard;
+	std::string    ButtonText_ButtonSpeed;
+	std::string    ButtonText_ButtonComfortMode;
+	std::string    ButtonText_ButtonHostAudio;
+	std::string    ButtonText_ButtonBitrate;
+	std::string    ButtonText_ButtonApply;
+	std::string    ButtonText_Button4k60;
+	std::string    ButtonText_Button4k30;
+	std::string    ButtonText_Button1080p60;
+	std::string    ButtonText_Button1080p30;
+	std::string    ButtonText_Button720p60;
+	std::string    ButtonText_Button720p30;
+	std::string    ButtonText_ButtonDistance;
+	std::string    ButtonText_ButtonSize;
+	std::string    ButtonText_ButtonSBS;
+	std::string    ButtonText_ButtonChangeSeat;
+	std::string    ButtonText_ButtonGaze;
+	std::string    ButtonText_ButtonTrackpad;
 
-	String    ButtonText_LabelTrackpadScale;
-
-
-	String    ButtonText_ButtonOff;
-	String    ButtonText_LabelGazeScale;
-	String    ButtonText_LabelLatency;
-	String    ButtonText_LabelVRXScale;
-	String    ButtonText_LabelVRYScale;
-	String    ButtonText_CloseApp;
-	String    ButtonText_Settings;
-
-	String    HelpText;
-
-	String 	  Error_UnknownHost;
-	String    Error_AddPCFailed;
-	String    title_add_pc;
+	std::string    ButtonText_LabelTrackpadScale;
 
 
-	String		Error_UnableToPlayMovie;
+	std::string    ButtonText_ButtonOff;
+	std::string    ButtonText_LabelGazeScale;
+	std::string    ButtonText_LabelLatency;
+	std::string    ButtonText_LabelVRXScale;
+	std::string    ButtonText_LabelVRYScale;
+	std::string    ButtonText_CloseApp;
+	std::string    ButtonText_Settings;
 
-	String		MoviePlayer_Reorient;
+	std::string    HelpText;
+
+	std::string 	  Error_UnknownHost;
+	std::string    Error_AddPCFailed;
+	std::string    title_add_pc;
+
+
+	std::string		Error_UnableToPlayMovie;
+
+	std::string		MoviePlayer_Reorient;
 };
 
 } // namespace OculusCinema
 
-#endif // CinemaStrings_h
+#endif // Cinemastd::strings_h

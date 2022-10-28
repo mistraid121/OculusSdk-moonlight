@@ -5,7 +5,7 @@ Content     :	Allocates and builds shader programs.
 Created     :	7/3/2014
 Authors     :   Jim Dosé and John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -48,8 +48,6 @@ public:
 	// Render the external image texture to a conventional texture to allow
 	// mipmap generation.
 	GlProgram				CopyMovieProgram;
-	GlProgram				MovieExternalUiProgram;
-	GlProgram				UniformColorProgram;
 
 	GlProgram				ProgVertexColor;
 	GlProgram				ProgSingleTexture;

@@ -5,7 +5,7 @@ Content     :
 Created     :	6/20/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -16,7 +16,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <VrApi_Types.h>
 #include "CinemaApp.h"
 #include "Native.h"
-#include "Android/JniUtils.h"
+#include <JniUtils.h>
 
 #if defined( OVR_OS_ANDROID )
 extern "C" {
@@ -24,13 +24,13 @@ extern "C" {
 long Java_com_oculus_cinemasdk_MainActivity_nativeSetAppInterface( JNIEnv *jni, jclass clazz, jobject activity,
 		jstring fromPackageName, jstring commandString, jstring uriString )
 {
-	LOG( "nativeSetAppInterface" );
+	OVR_LOG( "nativeSetAppInterface" );
 	return (new OculusCinema::CinemaApp())->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 }
 
 void Java_com_oculus_cinemasdk_MainActivity_nativeSetVideoSize( JNIEnv *jni, jclass clazz, jlong interfacePtr, int width, int height, int rotation, int duration )
 {
-	LOG( "nativeSetVideoSizes: width=%i height=%i rotation=%i duration=%i", width, height, rotation, duration );
+	OVR_LOG( "nativeSetVideoSizes: width=%i height=%i rotation=%i duration=%i", width, height, rotation, duration );
 
 	OculusCinema::CinemaApp * cinema = static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
 	cinema->GetMessageQueue().PostPrintf( "video %i %i %i %i", width, height, rotation, duration );
@@ -162,7 +162,7 @@ static jmethodID GetMethodID( App * app, jclass cls, const char * name, const ch
 	jmethodID mid = app->GetJava()->Env->GetMethodID( cls, name, signature );
 	if ( !mid )
 	{
-    	FAIL( "Couldn't find %s methodID", name );
+    	OVR_FAIL( "Couldn't find %s methodID", name );
     }
 
 	return mid;
@@ -171,7 +171,7 @@ static jmethodID GetMethodID( App * app, jclass cls, const char * name, const ch
 
 void Native::OneTimeInit( App *app, jclass mainActivityClass )
 {
-	LOG( "Native::OneTimeInit" );
+	OVR_LOG( "Native::OneTimeInit" );
 
 	const double start = SystemClock::GetTimeInSeconds();
 
@@ -200,34 +200,34 @@ void Native::OneTimeInit( App *app, jclass mainActivityClass )
 
 
 #endif
-	LOG( "Native::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "Native::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
 }
 
 void Native::OneTimeShutdown()
 {
-	LOG( "Native::OneTimeShutdown" );
+	OVR_LOG( "Native::OneTimeShutdown" );
 }
 
-String Native::GetExternalCacheDirectory( App * app )
+std::string Native::GetExternalCacheDirectory( App * app )
 {
 #if defined( OVR_OS_ANDROID )
 	jstring externalCacheDirectoryString = (jstring)app->GetJava()->Env->CallObjectMethod( app->GetJava()->ActivityObject, getExternalCacheDirectoryMethodId );
 
 	const char *externalCacheDirectoryStringUTFChars = app->GetJava()->Env->GetStringUTFChars( externalCacheDirectoryString, NULL );
-	String externalCacheDirectory = externalCacheDirectoryStringUTFChars;
+	std::string externalCacheDirectory = externalCacheDirectoryStringUTFChars;
 
 	app->GetJava()->Env->ReleaseStringUTFChars( externalCacheDirectoryString, externalCacheDirectoryStringUTFChars );
 	app->GetJava()->Env->DeleteLocalRef( externalCacheDirectoryString );
 
 	return externalCacheDirectory;
 #else
-	return String();
+	return std::string();
 #endif
 }
 
 bool Native::CreateVideoThumbnail( App *app, const char *uuid, int appId, const char *outputFilePath, const int width, const int height )
 {
-	LOG( "CreateVideoThumbnail( %s, %i, %s )", uuid, appId, outputFilePath );
+	OVR_LOG( "CreateVideoThumbnail( %s, %i, %s )", uuid, appId, outputFilePath );
 #if defined( OVR_OS_ANDROID )
 	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
 
@@ -237,12 +237,12 @@ bool Native::CreateVideoThumbnail( App *app, const char *uuid, int appId, const 
     //todo rafa
 
     jboolean result = app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, createVideoThumbnailMethodId, jstrUUID, appId, jstrOutputFilePath, width, height );
-    LOG( "Done creating thumbnail!");
+    OVR_LOG( "Done creating thumbnail!");
     app->GetJava()->Env->DeleteLocalRef( jstrUUID );
 
 	app->GetJava()->Env->DeleteLocalRef( jstrOutputFilePath );
 
-	//LOG( "CreateVideoThumbnail( %s, %s )", videoFilePath, outputFilePath );
+	//OVR_LOG( "CreateVideoThumbnail( %s, %s )", videoFilePath, outputFilePath );
 
 	return result;
 #else
@@ -252,7 +252,7 @@ bool Native::CreateVideoThumbnail( App *app, const char *uuid, int appId, const 
 
 bool Native::IsPlaying( App * app )
 {
-	LOG( "IsPlaying()" );
+	OVR_LOG( "IsPlaying()" );
 #if defined( OVR_OS_ANDROID )
 	return app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, isPlayingMethodId );
 #else
@@ -283,7 +283,7 @@ bool Native::HadPlaybackError( App * app )
 void Native::StartMovie( App *app, const char * uuid, const char * appName, int id, const char * binder, int width, int height, int fps, bool hostAudio, int customBitrate, bool remote )
 
 {
-	LOG( "StartMovie( %s )", appName );
+	OVR_LOG( "StartMovie( %s )", appName );
 
 	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
 	jstring jstrAppName = app->GetJava()->Env->NewStringUTF( appName );
@@ -299,19 +299,19 @@ void Native::StartMovie( App *app, const char * uuid, const char * appName, int 
 
 void Native::StopMovie( App *app )
 {
-	LOG( "StopMovie()" );
+	OVR_LOG( "StopMovie()" );
 	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, stopMovieMethodId );
 }
 
 void Native::InitPcSelector( App *app )
 {
-	LOG( "InitPcSelector()" );
+	OVR_LOG( "InitPcSelector()" );
 	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, initPcSelectorMethodId );
 }
 
 void Native::InitAppSelector( App *app, const char* uuid)
 {
-	LOG( "InitAppSelector()" );
+	OVR_LOG( "InitAppSelector()" );
 
 	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
 	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, initAppSelectorMethodId, jstrUUID );
@@ -319,7 +319,7 @@ void Native::InitAppSelector( App *app, const char* uuid)
 
 Native::PairState Native::GetPairState( App *app, const char* uuid)
 {
-	LOG( "GetPairState()" );
+	OVR_LOG( "GetPairState()" );
 
 	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
 	return (PairState)app->GetJava()->Env->CallIntMethod( app->GetJava()->ActivityObject, getPcPairStateMethodId, jstrUUID );
@@ -327,7 +327,7 @@ Native::PairState Native::GetPairState( App *app, const char* uuid)
 
 void Native::Pair( App *app, const char* uuid)
 {
-	LOG( "Pair()" );
+	OVR_LOG( "Pair()" );
 
 	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
 	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, pairPcMethodId, jstrUUID );

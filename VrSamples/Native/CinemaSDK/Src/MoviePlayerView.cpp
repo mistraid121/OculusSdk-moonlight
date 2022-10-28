@@ -5,7 +5,7 @@ Content     :
 Created     :	6/17/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -15,13 +15,15 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <unistd.h>
 #include <stdio.h>
-#include <OVR_Input.h>
 #include "OVR_Input.h"
 #include "CinemaApp.h"
 #include "Native.h"
 #include "VRMenuMgr.h"
 #include "GuiSys.h"
-#include "Kernel/OVR_String_Utils.h"
+#include "OVR_Math.h"
+
+#include <sstream>
+#include <iomanip>
 
 #include "CinemaStrings.h"
 
@@ -62,7 +64,7 @@ MoviePlayerView::MoviePlayerView( CinemaApp &cinema ) :
 	PlaybackControlsScale( Cinema.GetGuiSys() ),
 	MovieTitleLabel( Cinema.GetGuiSys() ),
 	ControlsBackground( Cinema.GetGuiSys() ),
-	GazeTimer(),
+	GazeTimer( nullptr ),
 	RewindButton( Cinema.GetGuiSys() ),
 	PlayButton( Cinema.GetGuiSys() ),
 	FastForwardButton( Cinema.GetGuiSys() ),
@@ -222,7 +224,7 @@ MoviePlayerView::~MoviePlayerView()
 
 void MoviePlayerView::OneTimeInit( const char * launchIntent )
 {
-	LOG( "MoviePlayerView::OneTimeInit" );
+	OVR_LOG( "MoviePlayerView::OneTimeInit" );
 
 	OVR_UNUSED( launchIntent );
 
@@ -230,12 +232,12 @@ void MoviePlayerView::OneTimeInit( const char * launchIntent )
 
 	CreateMenu( Cinema.GetGuiSys() );
 
-	LOG( "MoviePlayerView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "MoviePlayerView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
 }
 
 void MoviePlayerView::OneTimeShutdown()
 {
-	LOG( "MoviePlayerView::OneTimeShutdown" );
+	OVR_LOG( "MoviePlayerView::OneTimeShutdown" );
 	delete(defaultSettings);
 	defaultSettings = NULL;
 	delete(appSettings);
@@ -380,7 +382,7 @@ bool DisableButton					( UIButton *button, void *object ) { return false; }
 
 void MoviePlayerView::InitializeSettings()
 {
-	String	outPath;
+	std::string	outPath;
 	const bool validDir = Cinema.app->GetStoragePaths().GetPathIfValidPermission(
 					EST_INTERNAL_STORAGE, EFT_FILES, "", permissionFlags_t( PERMISSION_READ ) | permissionFlags_t( PERMISSION_WRITE ), outPath );
 
@@ -389,7 +391,7 @@ void MoviePlayerView::InitializeSettings()
 		if(defaultSettings == NULL)
 		{
 			defaultSettingsPath = outPath + "settings.json";
-			defaultSettings = new Settings(defaultSettingsPath);
+			defaultSettings = new Settings(defaultSettingsPath.c_str());
 
 			defaultSettings->Define("StreamTheaterSettingsVersion", &settingsVersion);
 			defaultSettings->Define("MouseMode", (int*)&mouseMode);
@@ -444,9 +446,9 @@ void MoviePlayerView::InitializeSettings()
 			settings2Path = outPath + "settings.2.json";
 			settings3Path = outPath + "settings.3.json";
 
-			settings1 = new Settings(settings1Path);
-			settings2 = new Settings(settings2Path);
-			settings3 = new Settings(settings3Path);
+			settings1 = new Settings(settings1Path.c_str());
+			settings2 = new Settings(settings2Path.c_str());
+			settings3 = new Settings(settings3Path.c_str());
 
 			settings1->CopyDefines(*defaultSettings);
 			settings1->Define("3dMode", (int*)&Cinema.SceneMgr.CurrentMovieFormat);
@@ -462,7 +464,7 @@ void MoviePlayerView::InitializeSettings()
 		}
 
 		appSettingsPath = outPath + "settings." + Cinema.GetCurrentMovie()->Name + ".json";
-		appSettings = new Settings(appSettingsPath);
+		appSettings = new Settings(appSettingsPath.c_str());
 		appSettings->CopyDefines(*defaultSettings);
 		appSettings->Load();
 
@@ -592,7 +594,7 @@ void MoviePlayerView::InitializeSettings()
 	ControlsBackground.SetLocalPosition( PixelPos( 220, 500, 0 ) );
 
 	ControlsBackground.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 168 );
-    ControlsBackground.AddComponent( &GazeTimer );
+    ControlsBackground.AddComponent( GazeTimer = new ControlsGazeTimer() );
 
 	MouseMenuButton.AddToMenu(  PlaybackControlsMenu, &ControlsBackground );
 
@@ -670,63 +672,63 @@ void MoviePlayerView::InitializeSettings()
 
 	ButtonSaveApp.AddToMenu( PlaybackControlsMenu, SaveMenu );
 	ButtonSaveApp.SetLocalPosition( PixelPos( 660, MENU_DIST_3_ROW, 1 ) );
-	ButtonSaveApp.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp.ToCStr()  );
+	ButtonSaveApp.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp.c_str()  );
 	ButtonSaveApp.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveApp, 0.5f);
 	ButtonSaveApp.SetOnClick( SaveAppCallback, this);
 
 	ButtonSaveDefault.AddToMenu(  PlaybackControlsMenu, SaveMenu );
 	ButtonSaveDefault.SetLocalPosition( PixelPos( 660, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveDefault.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault.ToCStr()  );
+	ButtonSaveDefault.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault.c_str()  );
 	ButtonSaveDefault.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveDefault, 0.5f);
 	ButtonSaveDefault.SetOnClick( SaveDefaultCallback, this);
 
 	ButtonResetSettings.AddToMenu(  PlaybackControlsMenu, SaveMenu );
 	ButtonResetSettings.SetLocalPosition( PixelPos( 660, MENU_DIST_1_ROW, 1 ) );
-	ButtonResetSettings.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonResetSettings.ToCStr()  );
+	ButtonResetSettings.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonResetSettings.c_str()  );
 	ButtonResetSettings.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonResetSettings, 0.5f);
 	ButtonResetSettings.SetOnClick( ResetDefaultCallback, this);
 
 	ButtonSaveSettings1.AddToMenu( PlaybackControlsMenu, SaveMenu );
 	ButtonSaveSettings1.SetLocalPosition( PixelPos( 0, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings1.ToCStr()  );
+	ButtonSaveSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings1.c_str()  );
 	ButtonSaveSettings1.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings1, 0.5f);
 	ButtonSaveSettings1.SetOnClick( Save1Callback, this);
 
 	ButtonSaveSettings2.AddToMenu( PlaybackControlsMenu, SaveMenu );
 	ButtonSaveSettings2.SetLocalPosition( PixelPos( 220, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings2.ToCStr()  );
+	ButtonSaveSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings2.c_str()  );
 	ButtonSaveSettings2.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings2, 0.5f);
 	ButtonSaveSettings2.SetOnClick( Save2Callback, this);
 
 	ButtonSaveSettings3.AddToMenu( PlaybackControlsMenu, SaveMenu );
 	ButtonSaveSettings3.SetLocalPosition( PixelPos( 440, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings3.ToCStr()  );
+	ButtonSaveSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings3.c_str()  );
 	ButtonSaveSettings3.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings3, 0.5f);
 	ButtonSaveSettings3.SetOnClick( Save3Callback, this);
 
 	ButtonLoadSettings1.AddToMenu(  PlaybackControlsMenu, SaveMenu );
 	ButtonLoadSettings1.SetLocalPosition( PixelPos( 0, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings1.ToCStr()  );
+	ButtonLoadSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings1.c_str()  );
 	ButtonLoadSettings1.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings1, 0.5f);
 	ButtonLoadSettings1.SetOnClick( Load1Callback, this);
 
 	ButtonLoadSettings2.AddToMenu(  PlaybackControlsMenu, SaveMenu );
 	ButtonLoadSettings2.SetLocalPosition( PixelPos( 220, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings2.ToCStr() );
+	ButtonLoadSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings2.c_str() );
 	ButtonLoadSettings2.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings2, 0.5f);
 	ButtonLoadSettings2.SetOnClick( Load2Callback, this);
 
 	ButtonLoadSettings3.AddToMenu(  PlaybackControlsMenu, SaveMenu );
 	ButtonLoadSettings3.SetLocalPosition( PixelPos( 440, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings3.ToCStr() );
+	ButtonLoadSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings3.c_str() );
 	ButtonLoadSettings3.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings3, 0.5f);
 	ButtonLoadSettings3.SetOnClick( Load3Callback, this);
@@ -739,7 +741,7 @@ void MoviePlayerView::InitializeSettings()
 
 	ButtonGaze.AddToMenu(  PlaybackControlsMenu, MouseMenu );
 	ButtonGaze.SetLocalPosition( PixelPos( MENU_X * -1.8, MENU_Y * 1, 1 ) );
-	ButtonGaze.SetText(  Cinema.GetCinemaStrings().ButtonText_ButtonGaze.ToCStr());
+	ButtonGaze.SetText(  Cinema.GetCinemaStrings().ButtonText_ButtonGaze.c_str());
 	TextButtonHelper(ButtonGaze);
 	ButtonGaze.SetOnClick( GazeCallback, this);
     ButtonGaze.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -750,7 +752,7 @@ void MoviePlayerView::InitializeSettings()
 
 	ButtonTrackpad.AddToMenu(  PlaybackControlsMenu, MouseMenu );
 	ButtonTrackpad.SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
-	ButtonTrackpad.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad.ToCStr() );
+	ButtonTrackpad.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad.c_str() );
 	TextButtonHelper(ButtonTrackpad);
 	ButtonTrackpad.SetOnClick( TrackpadCallback, this);
     ButtonTrackpad.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -758,7 +760,7 @@ void MoviePlayerView::InitializeSettings()
 
     ButtonOff.AddToMenu(  PlaybackControlsMenu, MouseMenu );
 	ButtonOff.SetLocalPosition( PixelPos( MENU_X * 1.8, MENU_Y * 1, 1 ) );
-	ButtonOff.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff.ToCStr()  );
+	ButtonOff.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff.c_str()  );
 	TextButtonHelper(ButtonOff);
 	ButtonOff.SetOnClick( OffCallback, this);
     ButtonOff.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -766,7 +768,7 @@ void MoviePlayerView::InitializeSettings()
 
 	GazeScale.AddToMenu( PlaybackControlsMenu, MouseMenu );
 	GazeScale.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
-    GazeScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelGazeScale.ToCStr()  );
+    GazeScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelGazeScale.c_str()  );
 
 
 	GazeScale.SetLocalScale( Vector3f( 1.0f ) );
@@ -780,7 +782,7 @@ void MoviePlayerView::InitializeSettings()
 
 	TrackpadScale.AddToMenu(  PlaybackControlsMenu, MouseMenu );
 	TrackpadScale.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
-    TrackpadScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelTrackpadScale.ToCStr()  );
+    TrackpadScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelTrackpadScale.c_str()  );
 	TrackpadScale.SetLocalScale( Vector3f( 1.0f ) );
 	TrackpadScale.SetFontScale( 1.0f );
 	TrackpadScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -799,7 +801,7 @@ void MoviePlayerView::InitializeSettings()
 
     Button4k60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
     Button4k60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 1, 1 ) );
-    Button4k60.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60.ToCStr() );
+    Button4k60.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60.c_str() );
     TextButtonHelper(Button4k60);
     Button4k60.SetOnClick( Button4k60Callback, this);
     Button4k60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -808,7 +810,7 @@ void MoviePlayerView::InitializeSettings()
 
     Button4k30.AddToMenu( PlaybackControlsMenu, StreamMenu );
     Button4k30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 1, 1 ) );
-    Button4k30.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30.ToCStr() );
+    Button4k30.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30.c_str() );
     TextButtonHelper(Button4k30);
     Button4k30.SetOnClick( Button4k30Callback, this);
     Button4k30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -824,7 +826,7 @@ void MoviePlayerView::InitializeSettings()
 
 	Button1080p60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
 	Button1080p60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
-	Button1080p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60.ToCStr() );
+	Button1080p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60.c_str() );
 	TextButtonHelper(Button1080p60);
 	Button1080p60.SetOnClick( Button1080p60Callback, this);
     Button1080p60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -833,7 +835,7 @@ void MoviePlayerView::InitializeSettings()
 
     Button1080p30.AddToMenu( PlaybackControlsMenu, StreamMenu );
 	Button1080p30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
-	Button1080p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30.ToCStr() );
+	Button1080p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30.c_str() );
 	TextButtonHelper(Button1080p30);
 	Button1080p30.SetOnClick( Button1080p30Callback, this);
     Button1080p30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -851,7 +853,7 @@ void MoviePlayerView::InitializeSettings()
 
     Button720p60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
 	Button720p60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 3, 1 ) );
-	Button720p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60.ToCStr()  );
+	Button720p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60.c_str()  );
 	TextButtonHelper(Button720p60);
 	Button720p60.SetOnClick( Button720p60Callback, this);
     Button720p60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -860,7 +862,7 @@ void MoviePlayerView::InitializeSettings()
 
     Button720p30.AddToMenu( PlaybackControlsMenu, StreamMenu );
 	Button720p30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 3, 1 ) );
-	Button720p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30.ToCStr()  );
+	Button720p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30.c_str()  );
 	TextButtonHelper(Button720p30);
 	Button720p30.SetOnClick( Button720p30Callback, this);
     Button720p30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -868,7 +870,7 @@ void MoviePlayerView::InitializeSettings()
 
 	/*ButtonHostAudio.AddToMenu(  PlaybackControlsMenu, StreamMenu );
 	ButtonHostAudio.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 4, 1 ) );
-	ButtonHostAudio.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio.ToCStr());
+	ButtonHostAudio.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio.c_str());
 	TextButtonHelper(ButtonHostAudio);
 	ButtonHostAudio.SetOnClick( HostAudioCallback, this);
     ButtonHostAudio.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );*/
@@ -876,7 +878,7 @@ void MoviePlayerView::InitializeSettings()
 
 	ButtonApply.AddToMenu(  PlaybackControlsMenu, StreamMenu );
 	ButtonApply.SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2, 1 ) );
-	ButtonApply.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonApply.ToCStr() );
+	ButtonApply.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonApply.c_str() );
 	TextButtonHelper(ButtonApply);
 	ButtonApply.SetOnClick( ApplyVideoCallback, this);
     ButtonApply.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -884,7 +886,7 @@ void MoviePlayerView::InitializeSettings()
 
 	BitrateAdjust.AddToMenu( PlaybackControlsMenu, StreamMenu );
 	BitrateAdjust.SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2.75, 1 ) );
-	BitrateAdjust.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonBitrate.ToCStr() );
+	BitrateAdjust.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonBitrate.c_str() );
 	BitrateAdjust.SetLocalScale( Vector3f( 1.0f ) );
 	BitrateAdjust.SetFontScale( 1.0f );
 	BitrateAdjust.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -900,14 +902,14 @@ void MoviePlayerView::InitializeSettings()
 
 	ButtonSBS.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
 	ButtonSBS.SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 2.25, 1 ) );
-	ButtonSBS.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSBS.ToCStr() );
+	ButtonSBS.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSBS.c_str() );
 	TextButtonHelper(ButtonSBS);
 	ButtonSBS.SetOnClick( SBSCallback, this);
     ButtonSBS.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 
 	ButtonChangeSeat.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
 	ButtonChangeSeat.SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 1.25, 1 ) );
-	ButtonChangeSeat.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonChangeSeat.ToCStr() );
+	ButtonChangeSeat.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonChangeSeat.c_str() );
 	TextButtonHelper(ButtonChangeSeat);
 	ButtonChangeSeat.SetOnClick( ChangeSeatCallback, this);
     ButtonChangeSeat.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
@@ -916,7 +918,7 @@ void MoviePlayerView::InitializeSettings()
 
 	ScreenDistance.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
 	ScreenDistance.SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 1.25, 1 ) );
-    ScreenDistance.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonDistance.ToCStr() );
+    ScreenDistance.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonDistance.c_str() );
 	ScreenDistance.SetLocalScale( Vector3f( 1.0f ) );
 	ScreenDistance.SetFontScale( 1.0f );
 	ScreenDistance.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -929,7 +931,7 @@ void MoviePlayerView::InitializeSettings()
 
 	ScreenSize.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
 	ScreenSize.SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 2.25 , 1 ) );
-    ScreenSize.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSize.ToCStr() );
+    ScreenSize.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSize.c_str() );
 	ScreenSize.SetLocalScale( Vector3f( 1.0f ) );
 	ScreenSize.SetFontScale( 1.0f );
 	ScreenSize.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -945,7 +947,7 @@ void MoviePlayerView::InitializeSettings()
 
 	LatencyScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
 	LatencyScale.SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
-	LatencyScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelLatency.ToCStr() );
+	LatencyScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelLatency.c_str() );
 	LatencyScale.SetLocalScale( Vector3f( 1.0f ) );
 	LatencyScale.SetFontScale( 1.0f );
 	LatencyScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -956,7 +958,7 @@ void MoviePlayerView::InitializeSettings()
 
 	VRXScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
 	VRXScale.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2.5, 1 ) );
-	VRXScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRXScale.ToCStr());
+	VRXScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRXScale.c_str());
 	VRXScale.SetLocalScale( Vector3f( 1.0f ) );
 	VRXScale.SetFontScale( 1.0f );
 	VRXScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -967,7 +969,7 @@ void MoviePlayerView::InitializeSettings()
 
 	VRYScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
 	VRYScale.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2.5, 1 ) );
-	VRYScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRYScale.ToCStr());
+	VRYScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRYScale.c_str());
 	VRYScale.SetLocalScale( Vector3f( 1.0f ) );
 	VRYScale.SetFontScale( 1.0f );
 	VRYScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
@@ -988,14 +990,14 @@ void MoviePlayerView::InitializeSettings()
 	HelpText.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	HelpText.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
 	HelpText.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 600 );
-	HelpText.SetTextWordWrapped( Cinema.GetCinemaStrings().HelpText.ToCStr(), Cinema.GetGuiSys().GetDefaultFont(), HelpText.GetWorldScale().x * 2);
+	HelpText.SetTextWordWrapped( Cinema.GetCinemaStrings().HelpText.c_str(), Cinema.GetGuiSys().GetDefaultFont(), HelpText.GetWorldScale().x * 2);
 
 
 }
 
-void MoviePlayerView::OnOpen()
+void MoviePlayerView::OnOpen( const double currTimeInSeconds )
 {
-	LOG( "OnOpen" );
+	OVR_LOG( "OnOpen" );
 	CurViewState = VIEWSTATE_OPEN;
 
 	Cinema.SceneMgr.ClearMovie();
@@ -1016,7 +1018,7 @@ void MoviePlayerView::OnOpen()
     SizeSlider.SetExtents(VoidScreenScaleMax,VoidScreenScaleMin,2);
     SizeSlider.SetValue(Cinema.SceneMgr.FreeScreenScale);
 
-	Cinema.SceneMgr.LightsOff( 1.5f );
+	Cinema.SceneMgr.LightsOff( 1.5f ,currTimeInSeconds);
 
     Cinema.StartMoviePlayback(WidthByAspect(), streamHeight, streamFPS, streamHostAudio, bitrate);
 	if ( Cinema.SceneMgr.SceneInfo.UseVRScreen )
@@ -1030,7 +1032,7 @@ void MoviePlayerView::OnOpen()
 	}
 
 
-	MovieTitleLabel.SetText( Cinema.GetCurrentMovie()->Name );
+	MovieTitleLabel.SetText( Cinema.GetCurrentMovie()->Name.c_str() );
 	Bounds3f titleBounds = MovieTitleLabel.GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() ) * VRMenuObject::TEXELS_PER_METER;
 	MovieTitleLabel.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, titleBounds.GetSize().x + 88, titleBounds.GetSize().y + 32 );
 
@@ -1039,7 +1041,7 @@ void MoviePlayerView::OnOpen()
 
 void MoviePlayerView::OnClose()
 {
-	LOG( "OnClose" );
+	OVR_LOG( "OnClose" );
 	CurViewState = VIEWSTATE_CLOSED;
 	HideUI();
 	Cinema.GetGuiSys().GetGazeCursor().ShowCursor();
@@ -1061,13 +1063,13 @@ void MoviePlayerView::OnClose()
 
 void MoviePlayerView::EnteredVrMode()
 {
-	LOG( "EnteredVrMode" );
+	OVR_LOG( "EnteredVrMode" );
 	Cinema.AppSelection( false );
 }
 
 void MoviePlayerView::LeavingVrMode()
 {
-	LOG( "LeavingVrMode" );
+	OVR_LOG( "LeavingVrMode" );
 	Native::StopMovie( Cinema.app );
 }
 
@@ -1079,14 +1081,14 @@ void MoviePlayerView::MovieLoaded( const int width, const int height, const int 
 
 void MoviePlayerView::SetError( const char *text, bool showSDCard, bool showErrorIcon )
 {
-    LOG( "Error: %s", text );
+    OVR_LOG( "Error: %s", text );
     Cinema.AppSelection( true );
     Cinema.ShowError( text );
 }
 
 void MoviePlayerView::BackPressed()
 {
-	LOG( "BackPressed" );
+	OVR_LOG( "BackPressed" );
 	if( screenMotionPaused )
 	{
 		screenMotionPaused = false;
@@ -1100,12 +1102,12 @@ void MoviePlayerView::BackPressed()
     }
     else
     {
-        ShowUI();
+        ShowUI(vrapi_GetTimeInSeconds());
     }
 }
 void MoviePlayerView::BackPressedDouble()
 {
-    LOG( "BackPressed" );
+    OVR_LOG( "BackPressed" );
     HideUI();
 
 	if ( Cinema.SceneMgr.SceneInfo.UseVRScreen )
@@ -1121,12 +1123,12 @@ void MoviePlayerView::BackPressedDouble()
 	}
 	else if ( Cinema.AllowTheaterSelection() )
 	{
-        LOG( "Opening TheaterSelection" );
+        OVR_LOG( "Opening TheaterSelection" );
         Cinema.TheaterSelection();
     }
     else
     {
-        LOG( "Opening MovieSelection" );
+        OVR_LOG( "Opening MovieSelection" );
         Cinema.AppSelection( true );
     }
 }
@@ -1142,12 +1144,12 @@ bool MoviePlayerView::OnKeyEvent( const int keyCode, const int repeatCount, cons
 			switch ( eventType )
 			{
 				case KEY_EVENT_SHORT_PRESS:
-                    LOG( "KEY_EVENT_SHORT_PRESS" );
+                    OVR_LOG( "KEY_EVENT_SHORT_PRESS" );
                     BackPressed();
                     return true;
                     break;
                 default:
-				    //LOG( "unexpected back key state %i", eventType );
+				    //OVR_LOG( "unexpected back key state %i", eventType );
 				    break;
 			}
 		}
@@ -1171,12 +1173,12 @@ bool MoviePlayerView::OnKeyEvent( const int keyCode, const int repeatCount, cons
 			switch ( eventType )
 			{
 				case KEY_EVENT_SHORT_PRESS:
-					LOG( "KEY_EVENT_SHORT_PRESS" );
+					OVR_LOG( "KEY_EVENT_SHORT_PRESS" );
 					BackPressed();
 					return true;
 					break;
 				default:
-					//LOG( "unexpected back key state %i", eventType );
+					//OVR_LOG( "unexpected back key state %i", eventType );
 					break;
 			}
 		}
@@ -1192,14 +1194,14 @@ static bool InsideUnit( const Vector2f v )
 	return v.x > -1.0f && v.x < 1.0f && v.y > -1.0f && v.y < 1.0f;
 }
 
-void MoviePlayerView::ShowUI()
+void MoviePlayerView::ShowUI( const double currTimeInSeconds )
 {
-	LOG( "ShowUI" );
+	OVR_LOG( "ShowUI" );
 	Cinema.SceneMgr.ForceMono = true;
 	Cinema.GetGuiSys().GetGazeCursor().ShowCursor();
 
 	PlaybackControlsMenu->Open();
-	GazeTimer.SetGazeTime();
+	GazeTimer->SetGazeTime(currTimeInSeconds);
 	MovieTitleLabel.SetVisible(true);
 
 	PlaybackControlsScale.SetLocalScale( Vector3f( Cinema.SceneMgr.GetScreenSize().y * ( 500.0f / 1080.0f ) ) );
@@ -1210,7 +1212,7 @@ void MoviePlayerView::ShowUI()
 
 void MoviePlayerView::HideUI()
 {
-	LOG( "HideUI" );
+	OVR_LOG( "HideUI" );
 	SaveMenu->SetVisible(false);
     MouseMenu->SetVisible(false);
     ScreenMenu->SetVisible(false);
@@ -1242,11 +1244,6 @@ void MoviePlayerView::CheckDebugControls( const ovrFrameInput & vrFrame )
 		//Cinema.SceneMgr.ToggleLights( 0.5f );
 	}
 
-	if ( vrFrame.Input.buttonPressed & BUTTON_SELECT )
-	{
-		//Cinema.SceneMgr.UseOverlay = !Cinema.SceneMgr.UseOverlay;
-	}
-
 	// Press Y to toggle FreeScreen mode, while holding the scale and distance can be adjusted
 	if ( vrFrame.Input.buttonPressed & BUTTON_SELECT )
 	{
@@ -1257,9 +1254,9 @@ void MoviePlayerView::CheckDebugControls( const ovrFrameInput & vrFrame )
 	if ( Cinema.SceneMgr.FreeScreenActive && ( vrFrame.Input.buttonState & BUTTON_SELECT ) )
 	{
 		Cinema.SceneMgr.FreeScreenDistance -= vrFrame.Input.sticks[0][1] * vrFrame.DeltaSeconds * 3;
-		Cinema.SceneMgr.FreeScreenDistance = OVR::Alg::Clamp( Cinema.SceneMgr.FreeScreenDistance, 1.0f, 4.0f );
+		Cinema.SceneMgr.FreeScreenDistance = clamp< float >( Cinema.SceneMgr.FreeScreenDistance, 1.0f, 4.0f );
 		Cinema.SceneMgr.FreeScreenScale += vrFrame.Input.sticks[0][0] * vrFrame.DeltaSeconds * 3;
-		Cinema.SceneMgr.FreeScreenScale = OVR::Alg::Clamp( Cinema.SceneMgr.FreeScreenScale, 1.0f, 4.0f );
+		Cinema.SceneMgr.FreeScreenScale = clamp< float >( Cinema.SceneMgr.FreeScreenScale, 1.0f, 4.0f );
 	}
 }
 
@@ -1315,34 +1312,50 @@ Vector2f MoviePlayerView::GazeCoordinatesOnScreen( const Matrix4f & viewMatrix, 
 
 
 	Matrix4f MoviePlayerView::InterpolatePoseAtTime( long time )
-	{
-		OldScreenPose* before = oldPoses.GetFirst();
-		OldScreenPose* after = oldPoses.GetFirst();
-		while(after->time < time && !oldPoses.IsLast(after))
+	{//faire un iterateur de liste
+		OldScreenPose before = oldPoses.front();
+		OldScreenPose after = oldPoses.front();
+		std::list<OldScreenPose>::iterator i = oldPoses.begin();
+		while (after.time < time && i != oldPoses.end())
 		{
-			OldScreenPose* tooOld = before;
+			i++;
+			OldScreenPose tooOld = before;
 			before = after;
-			after = oldPoses.GetNext(after);
+			after = *i;
 			if(tooOld != before) {
-				oldPoses.Remove(tooOld);
+				std::advance(i,-2);
+				i = oldPoses.erase(i);//remove tooOld
 			}
 		}
 
+/*
+		OldScreenPose before = oldPoses.front();
+		OldScreenPose after = oldPoses.front();
+		while(after.time < time && after!=oldPoses.back())
+		{
+			OldScreenPose tooOld = before;
+			before = after;
+			after = oldPoses.GetNext(after);
+			if(tooOld != before) {
+				oldPoses.remove(tooOld);
+			}
+		}
+*/
 //    if(before->time == after->time)
 		{
-			return after->pose;
+			return after.pose;
 		}
-		return ( before->pose * (time - before->time)
-				 + after->pose * (after->time - time) )
-			   / (after->time - before->time);
+		return ( before.pose * (time - before.time)
+				 + after.pose * (after.time - time) )
+			   / (after.time - before.time);
 	}
 
 	void MoviePlayerView::RecordPose( long time, Matrix4f pose )
 	{
-		OldScreenPose* p = new OldScreenPose();
-		p->time = time;
-		p->pose = pose;
-		oldPoses.PushBack(p);
+		OldScreenPose p;
+		p.time = time;
+		p.pose = pose;
+		oldPoses.push_back(p);
 	}
 
 	void MoviePlayerView::HandleCalibration( const  ovrFrameInput & vrFrame )
@@ -1423,7 +1436,7 @@ void MoviePlayerView::MovieScreenUpdated()
                 mouseDownLeft = false;
             } else		// open ui if it's not visible
             {
-                ShowUI();
+                ShowUI(vrFrame.RealTimeInSeconds);
                 // ignore button A or touchpad until release so we don't close the UI immediately after opening it
                 UIOpened = true;
             }
@@ -1596,12 +1609,12 @@ void MoviePlayerView::MovieScreenUpdated()
 	}
 	else if ( uiActive )
 	{
-		onscreen = GazeTimer.IsFocused();
+		onscreen = GazeTimer->IsFocused();
 	}
 
-    LOG("vrFrame.Input.NumKeyEvents i %i", vrFrame.Input.NumKeyEvents);
+    OVR_LOG("vrFrame.Input.NumKeyEvents i %i", vrFrame.Input.NumKeyEvents);
     for (int i=0; i< vrFrame.Input.NumKeyEvents; i++ ){
-        LOG("keyevent i, code, %i %i=", i, vrFrame.Input.KeyEvents[i].KeyCode);
+        OVR_LOG("keyevent i, code, %i %i=", i, vrFrame.Input.KeyEvents[i].KeyCode);
     }
 
 
@@ -1633,7 +1646,7 @@ void MoviePlayerView::MovieScreenUpdated()
         // Left click
         if ( ( vrFrame.Input.buttonReleased & BUTTON_TOUCH ) && !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) )
         {
-            ShowUI();
+            ShowUI(vrFrame.RealTimeInSeconds);
             // ignore button A or touchpad until release so we don't close the UI immediately after opening it
             UIOpened = true;
         }
@@ -1773,13 +1786,13 @@ void MoviePlayerView::MovieScreenUpdated()
 		}
 		else if ( uiActive )
 		{
-			onscreen = GazeTimer.IsFocused();
+			onscreen = GazeTimer->IsFocused();
 		}
 
 		if ( !onscreen )
 		{
 			// outside of screen, so show reposition message
-			const double now = vrapi_GetTimeInSeconds();
+			const double now = vrFrame.RealTimeInSeconds;
 			float alpha = static_cast<float>( MoveScreenAlpha.Value( now ) );
 			if ( alpha > 0.0f )
 			{
@@ -1822,7 +1835,7 @@ void MoviePlayerView::MovieScreenUpdated()
 		}
 		else
 		{
-			LOG( "User pressed button 2" );
+			OVR_LOG( "User pressed button 2" );
 			Cinema.GetGuiSys().GetSoundEffectPlayer().Play( "touch_up" );
 			HideUI();
 		}
@@ -1899,12 +1912,12 @@ void MoviePlayerView::MovieScreenUpdated()
 		HideUI();
         if ( Cinema.AllowTheaterSelection() )
         {
-            LOG( "Opening TheaterSelection" );
+            OVR_LOG( "Opening TheaterSelection" );
             Cinema.TheaterSelection();
         }
         else
         {
-            LOG( "Opening MovieSelection" );
+            OVR_LOG( "Opening MovieSelection" );
             Cinema.AppSelection( true );
         }
     }
@@ -1925,28 +1938,28 @@ void MoviePlayerView::SaveDefaultPressed()
 }
 void MoviePlayerView::ResetDefaultPressed()
 {
-	LOG("Resetting default settings");
-	remove(defaultSettingsPath);
+	OVR_LOG("Resetting default settings");
+	remove(defaultSettingsPath.c_str());
 	delete(defaultSettings);
 	defaultSettings = NULL;
 
-	LOG("Resetting settings 1");
-	remove(settings1Path);
+	OVR_LOG("Resetting settings 1");
+	remove(settings1Path.c_str());
 	delete(settings1);
 	settings1 = NULL;
 
-	LOG("Resetting settings 2");
-	remove(settings2Path);
+	OVR_LOG("Resetting settings 2");
+	remove(settings2Path.c_str());
 	delete(settings2);
 	settings2 = NULL;
 
-	LOG("Resetting settings 3");
-	remove(settings3Path);
+	OVR_LOG("Resetting settings 3");
+	remove(settings3Path.c_str());
 	delete(settings3);
 	settings3 = NULL;
 
-	LOG("Resetting app settings");
-	remove(appSettingsPath);
+	OVR_LOG("Resetting app settings");
+	remove(appSettingsPath.c_str());
 	delete(appSettings);
 	appSettings = NULL;
 
@@ -2377,7 +2390,7 @@ void MoviePlayerView::UpdateUI( const ovrFrameInput & vrFrame )
         //        double timeSinceLastGaze = vrapi_GetTimeInSeconds() - GazeTimer.GetLastGazeTime();
         //        if ( !ScrubBar.IsScrubbing() && ( timeSinceLastGaze > GazeTimeTimeout ) )
         //        {
-        //            LOG( "Gaze timeout" );
+        //            OVR_LOG( "Gaze timeout" );
         //            HideUI();
         //        }
 
@@ -2389,7 +2402,7 @@ void MoviePlayerView::UpdateUI( const ovrFrameInput & vrFrame )
 
         if ( !GazeTimer.IsFocused() && BackgroundClicked )
 			{
-				LOG( "Clicked outside playback controls" );
+				OVR_LOG( "Clicked outside playback controls" );
 				Cinema.GetGuiSys().GetSoundEffectPlayer().Play( "touch_up" );
 				HideUI();
 			}
@@ -2425,12 +2438,12 @@ void MoviePlayerView::Frame( const ovrFrameInput & vrFrame )
 
 	if ( Native::HadPlaybackError( Cinema.app ) )
 	{
-		LOG( "Playback failed" );
+		OVR_LOG( "Playback failed" );
 		Cinema.UnableToPlayMovie();
 	}
 	else if ( Native::IsPlaybackFinished( Cinema.app ) )
 	{
-		LOG( "Playback finished" );
+		OVR_LOG( "Playback finished" );
 		Cinema.MovieFinished();
 	}
 
@@ -2462,9 +2475,9 @@ ControlsGazeTimer::ControlsGazeTimer() :
 {
 }
 
-void ControlsGazeTimer::SetGazeTime()
+void ControlsGazeTimer::SetGazeTime( const double currTimeInSeconds )
 {
-	LastGazeTime = vrapi_GetTimeInSeconds();
+	LastGazeTime = currTimeInSeconds;
 }
 
 eMsgStatus ControlsGazeTimer::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
@@ -2479,12 +2492,12 @@ eMsgStatus ControlsGazeTimer::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput co
     	case VRMENU_EVENT_FRAME_UPDATE:
     		if ( HasFocus )
     		{
-    			LastGazeTime = vrapi_GetTimeInSeconds();
+    			LastGazeTime = vrFrame.RealTimeInSeconds;
     		}
     		return MSG_STATUS_ALIVE;
         case VRMENU_EVENT_FOCUS_GAINED:
         	HasFocus = true;
-        	LastGazeTime = vrapi_GetTimeInSeconds();
+        	LastGazeTime = vrFrame.RealTimeInSeconds;
     		return MSG_STATUS_ALIVE;
         case VRMENU_EVENT_FOCUS_LOST:
         	HasFocus = false;
@@ -2577,26 +2590,28 @@ SliderComponent::SliderComponent():
     {
         if( SigFigs == 0 )
         {
-            label->SetText( StringUtils::Va( "%d", (int) value ) );
+            label->SetText(std::to_string( value ).c_str() );
         }
 		else if( SigFigs == -1 )
 		{
 			if( (1 * value) > (1 * Min))
-				label->SetText( StringUtils::Va( "%d", (int) value ) );
+				label->SetText( std::to_string( value ).c_str() );
 			else
 				label->SetText( "Default" );
 		}
 		else if( SigFigs < -1 )
 		{ // Hex, just for fun
-            label->SetText( StringUtils::Va( "%#x", (int) value ) );
+            label->SetText( std::to_string( value ).c_str());
         }
         else if( SigFigs > 1000)
         { // Why are you adjusting numbers large enough to need exponent notation with a slider?
-            label->SetText( StringUtils::Va( "%.*g", SigFigs - 1000, value ) );
+            //label->SetText( StringUtils::Va( "%.*g", SigFigs - 1000, value ) );
+			label->SetText( std::to_string( value ).c_str() );
         }
         else
         {
-            label->SetText( StringUtils::Va( "%.*f", SigFigs, value ) );
+            //label->SetText( StringUtils::Va( "%.*f", SigFigs, value ) );
+			label->SetText( std::to_string( value ).c_str() );
         }
     }
 

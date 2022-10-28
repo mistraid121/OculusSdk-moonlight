@@ -16,8 +16,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( AppManager_h )
 #define AppManager_h
 
-#include "Kernel/OVR_String.h"
-#include "Kernel/OVR_Array.h"
+#include <vector>
+#include <string>
 #include "GlTexture.h"
 #include "PcManager.h"
 
@@ -43,13 +43,13 @@ public:
 	virtual void			OneTimeShutdown();
 	void					LoadApps();
 	void                    LoadPosters();
-	void                    AddApp(const String &name, const String &posterFileName, int id, bool isRunning);
+	void                    AddApp(const std::string &name, const std::string &posterFileName, int id, bool isRunning);
 	void					RemoveApp( int id);
 
-	Array<const PcDef *>	GetAppList( PcCategory category ) const;
+	std::vector<const PcDef *>	GetAppList( PcCategory category ) const;
 
 public:
-    Array<AppDef *> 		Apps;
+    std::vector<AppDef *> 		Apps;
 
     static const int 		PosterWidth;
     static const int 		PosterHeight;

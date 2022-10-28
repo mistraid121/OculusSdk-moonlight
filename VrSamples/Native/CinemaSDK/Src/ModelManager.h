@@ -5,7 +5,7 @@ Content     :
 Created     :	7/3/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -17,8 +17,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define ModelManager_h
 
 #include "ModelFile.h"
-#include "Kernel/OVR_String.h"
-#include "Kernel/OVR_Array.h"
+#include <vector>
+#include <string>
 
 using namespace OVR;
 
@@ -32,8 +32,6 @@ public:
 						SceneDef() : 
 							SceneModel( NULL ),
 							Filename(),
-							UseScreenGeometry( false ), 
-							LobbyScreen( false ),
 							UseFreeScreen( false ),
 							UseSeats( false ),
 							UseDynamicProgram( false ),
@@ -42,10 +40,8 @@ public:
 
 
 	ModelFile *			SceneModel;
-	String				Filename;
+	std::string			Filename;
 	GlTexture			IconTexture;
-	bool				UseScreenGeometry;	// set to true to draw using the screen geoemetry (for curved screens)
-	bool				LobbyScreen;
 	bool				UseFreeScreen;
 	bool 				UseSeats;
 	bool 				UseDynamicProgram;
@@ -63,18 +59,18 @@ public:
 	void				OneTimeInit( const char * launchIntent );
 	void				OneTimeShutdown();
 
-	int					GetTheaterCount() const { return Theaters.GetSizeI(); }
+	int					GetTheaterCount() const { return static_cast< int >( Theaters.size() ); }
 	const SceneDef & 	GetTheater( int index ) const;
 
 public:
 	CinemaApp &			Cinema;
 
-	Array<SceneDef *>	Theaters;
+	std::vector<SceneDef *>	Theaters;
 	SceneDef *			BoxOffice;
 	SceneDef *			VoidScene;
 	SceneDef *          VRScene;
 
-	String				LaunchIntent;
+	std::string			LaunchIntent;
 
 	ModelFile *			DefaultSceneModel;
 
@@ -82,8 +78,8 @@ private:
 	ModelManager &		operator=( const ModelManager & );
 
 	void 				LoadModels();
-	void 				ScanDirectoryForScenes( const char * directory, bool useDynamicProgram, bool useScreenGeometry, Array<SceneDef *> &scenes ) const;
-	SceneDef *			LoadScene( const char *filename, bool useDynamicProgram, bool useScreenGeometry, bool loadFromApplicationPackage ) const;
+	void 				ScanDirectoryForScenes( const std::string & directoryString, bool useDynamicProgram, std::vector<SceneDef *> &scenes ) const;
+	SceneDef *			LoadScene( const char * filename, bool useDynamicProgram, bool loadFromApplicationPackage ) const;
 };
 
 } // namespace OculusCinema

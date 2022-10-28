@@ -5,7 +5,7 @@ Content     :
 Created     :	7/3/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -13,10 +13,12 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "Kernel/OVR_String_Utils.h"
 #include "ModelManager.h"
 #include "CinemaApp.h"
 #include "PackageFiles.h"
+#include "OVR_BinaryFile2.h"
+
+#include <algorithm>
 
 #if defined( OVR_OS_ANDROID )
 #include <dirent.h>
@@ -45,7 +47,7 @@ ModelManager::~ModelManager()
 
 void ModelManager::OneTimeInit( const char * launchIntent )
 {
-	LOG( "ModelManager::OneTimeInit" );
+	OVR_LOG( "ModelManager::OneTimeInit" );
 	const double start = SystemClock::GetTimeInSeconds();
 	LaunchIntent = launchIntent;
 
@@ -53,16 +55,16 @@ void ModelManager::OneTimeInit( const char * launchIntent )
 
 	LoadModels();
 
-	LOG( "ModelManager::OneTimeInit: %i theaters loaded, %3.1f seconds", Theaters.GetSizeI(),  SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ModelManager::OneTimeInit: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  SystemClock::GetTimeInSeconds() - start );
 }
 
 void ModelManager::OneTimeShutdown()
 {
-	LOG( "ModelManager::OneTimeShutdown" );
+	OVR_LOG( "ModelManager::OneTimeShutdown" );
 
 	// Free GL resources
 
-	for( UPInt i = 0; i < Theaters.GetSize(); i++ )
+	for( UPInt i = 0; i < static_cast< UPInt >( Theaters.size() ); i++ )
 	{
 		delete Theaters[ i ];
 	}
@@ -70,28 +72,26 @@ void ModelManager::OneTimeShutdown()
 
 void ModelManager::LoadModels()
 {
-	LOG( "ModelManager::LoadModels" );
+	OVR_LOG( "ModelManager::LoadModels" );
 	const double start =  SystemClock::GetTimeInSeconds();
 
-	BoxOffice = LoadScene( "assets/scenes/BoxOffice.ovrscene", false, true, true );
+	BoxOffice = LoadScene( "assets/scenes/BoxOffice.ovrscene", false, true );
 	BoxOffice->UseSeats = false;
-	BoxOffice->LobbyScreen = true;
 
-	if ( LaunchIntent.GetLength() > 0 )
+	if ( LaunchIntent.length() > 0 )
 	{
-		Theaters.PushBack( LoadScene( LaunchIntent.ToCStr(), true, true, false ) );
+		Theaters.push_back( LoadScene( LaunchIntent.c_str(), true, false ) );
 	}
 	else
 	{
 		// we want our theaters to show up first
-		Theaters.PushBack( LoadScene( "assets/scenes/home_theater.ovrscene", true, false, true ) );
+		Theaters.push_back( LoadScene( "assets/scenes/home_theater.ovrscene", true, true ) );
 
 		// create void scene
 		VoidScene = new SceneDef();
 		VoidScene->SceneModel = new ModelFile( "Void" );
 		VoidScene->UseSeats = false;
 		VoidScene->UseDynamicProgram = false;
-		VoidScene->UseScreenGeometry = false;
 		VoidScene->UseFreeScreen = true;
 		//        VoidScene->UseVRScreen = true;
 
@@ -104,14 +104,13 @@ void ModelManager::LoadModels()
 		MakeTextureTrilinear( GlTexture( VoidScene->IconTexture, width, height ) );
 		MakeTextureClamped( GlTexture( VoidScene->IconTexture, width, height ) );
 
-		Theaters.PushBack( VoidScene );
+		Theaters.push_back( VoidScene );
 
 		// create void scene
 		VRScene = new SceneDef();
 		VRScene->SceneModel = new ModelFile( "VR" );
 		VRScene->UseSeats = false;
 		VRScene->UseDynamicProgram = false;
-		VRScene->UseScreenGeometry = false;
 		VRScene->UseFreeScreen = true;
 		VRScene->UseVRScreen = true;
 
@@ -123,35 +122,37 @@ void ModelManager::LoadModels()
 		MakeTextureClamped( VRScene->IconTexture );
 
 		//TODO activar el modo vr
-		//Theaters.PushBack( VRScene );
+		//Theaters.push_back( VRScene );
 
 
 		// load all scenes on startup, so there isn't a delay when switching theaters
-		ScanDirectoryForScenes( Cinema.ExternalRetailDir( TheatersDirectory ), true, false, Theaters );
-		ScanDirectoryForScenes( Cinema.RetailDir( TheatersDirectory ), true, false, Theaters );
-		ScanDirectoryForScenes( Cinema.SDCardDir( TheatersDirectory ), true, false, Theaters );
+		ScanDirectoryForScenes( Cinema.ExternalRetailDir( TheatersDirectory ), true, Theaters );
+		ScanDirectoryForScenes( Cinema.RetailDir( TheatersDirectory ), true, Theaters );
+		ScanDirectoryForScenes( Cinema.SDCardDir( TheatersDirectory ), true, Theaters );
 	}
 
-	LOG( "ModelManager::LoadModels: %i theaters loaded, %3.1f seconds", Theaters.GetSizeI(),  SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ModelManager::LoadModels: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  SystemClock::GetTimeInSeconds() - start );
 }
 
-void ModelManager::ScanDirectoryForScenes( const char * directory, bool useDynamicProgram, bool useScreenGeometry, Array<SceneDef *> &scenes ) const
+void ModelManager::ScanDirectoryForScenes( const std::string & directoryString, bool useDynamicProgram, std::vector<SceneDef *> &scenes ) const
 {
+	const char * directory = directoryString.c_str();
 #if defined( OVR_OS_ANDROID )
 	DIR * dir = opendir( directory );
 	if ( dir != NULL )
 	{
 		struct dirent * entry;
 		while( ( entry = readdir( dir ) ) != NULL ) {
-			String filename = entry->d_name;
-			String ext = filename.GetExtension().ToLower();
+			std::string filename = entry->d_name;
+			std::string ext = filename.substr(filename.rfind("."));
+			std::transform( ext.begin(), ext.end(), ext.begin(), ::tolower);
 			if ( ( ext == ".ovrscene" ) )
 			{
-				String fullpath = directory;
-				fullpath.AppendString( "/" );
-				fullpath.AppendString( filename.ToCStr() );
-				SceneDef *def = LoadScene( fullpath.ToCStr(), useDynamicProgram, useScreenGeometry, false );
-				scenes.PushBack( def );
+				std::string fullpath = directory;
+				fullpath += "/";
+				fullpath += filename;
+				SceneDef *def = LoadScene( fullpath.c_str(), useDynamicProgram, false );
+				scenes.push_back( def );
 			}
 		}
 
@@ -161,26 +162,26 @@ void ModelManager::ScanDirectoryForScenes( const char * directory, bool useDynam
     WIN32_FIND_DATA ffd;
     HANDLE hFind = INVALID_HANDLE_VALUE;
 
-    String scanDirectory = String( directory );
+    std::string scanDirectory = std::string( directory );
     scanDirectory.AppendChar( '*' );
 
-    hFind = FindFirstFile( scanDirectory.ToCStr(), &ffd );
+    hFind = FindFirstFile( scanDirectory.c_str(), &ffd );
     if ( INVALID_HANDLE_VALUE != hFind )
     {
         do
         {
             if ( !( ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
             {
-                String filename = ffd.cFileName;
+                std::string filename = ffd.cFileName;
 
-                String ext = filename.GetExtension().ToLower();
+                std::string ext = filename.GetExtension().ToLower();
                 if ( ( ext == ".ovrscene" ) )
                 {
-                    String fullpath = directory;
+                    std::string fullpath = directory;
                     fullpath.AppendString( "/" );
-                    fullpath.AppendString( filename.ToCStr() );
-					SceneDef *def = LoadScene( fullpath.ToCStr(), useDynamicProgram, useScreenGeometry, false );
-					scenes.PushBack( def );
+                    fullpath.AppendString( filename.c_str() );
+					SceneDef *def = LoadScene( fullpath.c_str(), useDynamicProgram, false );
+					scenes.push_back( def );
                 }
             }
         } while ( FindNextFile( hFind, &ffd ) != 0 );
@@ -188,13 +189,13 @@ void ModelManager::ScanDirectoryForScenes( const char * directory, bool useDynam
 #endif
 }
 
-SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicProgram, bool useScreenGeometry, bool loadFromApplicationPackage ) const
+SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicProgram, bool loadFromApplicationPackage ) const
 {
-	String filename;
+	std::string filename;
 
 	if ( loadFromApplicationPackage && !ovr_PackageFileExists( sceneFilename ) )
 	{
-		LOG( "Scene %s not found in application package.  Checking sdcard.", sceneFilename );
+		OVR_LOG( "Scene %s not found in application package.  Checking sdcard.", sceneFilename );
 		loadFromApplicationPackage = false;
 	}
 
@@ -219,7 +220,7 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 		filename = Cinema.SDCardDir( sceneFilename );
 	}
 
-	LOG( "Adding scene: %s, %s", filename.ToCStr(), sceneFilename );
+	OVR_LOG( "Adding scene: %s, %s", filename.c_str(), sceneFilename );
 
 	SceneDef *def = new SceneDef();
 	def->Filename = sceneFilename;
@@ -227,7 +228,7 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 	def->UseDynamicProgram = useDynamicProgram;
 
 	MaterialParms materialParms;
-	materialParms.UseSrgbTextureFormats = Cinema.app->GetFramebufferIsSrgb();
+	materialParms.UseSrgbTextureFormats = Cinema.GetUseSrgb();
 	// Improve the texture quality with anisotropic filtering.
 	materialParms.EnableDiffuseAniso = true;
 	// The emissive texture is used as a separate lighting texture and should not be LOD clamped.
@@ -235,31 +236,31 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 
 	ModelGlPrograms glPrograms = ( useDynamicProgram ) ? Cinema.ShaderMgr.DynamicPrograms : Cinema.ShaderMgr.DefaultPrograms;
 
-	String iconFilename = StringUtils::SetFileExtensionString( filename.ToCStr(), "png" );
+	std::string iconFilename = filename.substr(0, filename.rfind(".") + 1 ) + "png" ;
 
 	int textureWidth = 0, textureHeight = 0;
 
 	if ( loadFromApplicationPackage )
 	{
-		def->SceneModel = LoadModelFileFromApplicationPackage( filename.ToCStr(), glPrograms, materialParms );
-		def->IconTexture = LoadTextureFromApplicationPackage( iconFilename.ToCStr(), TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), textureWidth, textureHeight );
+		def->SceneModel = LoadModelFileFromApplicationPackage( filename.c_str(), glPrograms, materialParms );
+		def->IconTexture = LoadTextureFromApplicationPackage( iconFilename.c_str(), TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), textureWidth, textureHeight );
 	}
 	else
 	{
-		def->SceneModel = LoadModelFile( filename.ToCStr(), glPrograms, materialParms );
-		def->IconTexture = LoadTextureFromBuffer( iconFilename.ToCStr(), MemBufferFile( iconFilename.ToCStr() ),
+		def->SceneModel = LoadModelFile( filename.c_str(), glPrograms, materialParms );
+		def->IconTexture = LoadTextureFromBuffer( iconFilename.c_str(), MemBufferFile( iconFilename.c_str() ),
 				TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), textureWidth, textureHeight );
 	}
 
 	if ( def->SceneModel == nullptr )
 	{
-		WARN( "Could not load scenemodel %s", filename.ToCStr() );
+		OVR_WARN( "Could not load scenemodel %s", filename.c_str() );
 		def->SceneModel = new ModelFile( "Default Scene Model" );
 	}
 
 	if ( def->IconTexture != 0 )
 	{
-		LOG( "Loaded external icon for theater: %s", iconFilename.ToCStr() );
+		OVR_LOG( "Loaded external icon for theater: %s", iconFilename.c_str() );
 	}
 	else
 	{
@@ -270,7 +271,7 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 		}
 		else
 		{
-			LOG( "No icon in scene.  Loading default." );
+			OVR_LOG( "No icon in scene.  Loading default." );
 
 			int	width = 0, height = 0;
 			def->IconTexture = LoadTextureFromApplicationPackage( "assets/noimage.png",
@@ -282,7 +283,6 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 	MakeTextureTrilinear( def->IconTexture );
 	MakeTextureClamped( def->IconTexture );
 
-	def->UseScreenGeometry = useScreenGeometry;
 	def->UseFreeScreen = false;
 
 	return def;
@@ -290,7 +290,7 @@ SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicPr
 
 const SceneDef & ModelManager::GetTheater( int index ) const
 {
-	if ( index < Theaters.GetSizeI() )
+	if ( index < static_cast< int >( Theaters.size() ) )
 	{
 		return *Theaters[ index ];
 	}

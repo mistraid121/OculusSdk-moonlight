@@ -17,7 +17,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define PcSelectionView_h
 
 #include <UI/UIButton.h>
-#include "Kernel/OVR_Array.h"
+#include "vector"
 #include "Lerp.h"
 #include "SelectionView.h"
 #include "CarouselBrowserComponent.h"
@@ -45,13 +45,13 @@ public:
 	virtual void 		OneTimeInit( const char * launchIntent );
 	virtual void		OneTimeShutdown();
 
-	virtual void 		OnOpen();
+	virtual void 		OnOpen(const double currTimeInSeconds );
 	virtual void 		OnClose();
 
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
 	virtual void 		Frame( const ovrFrameInput & vrFrame );
 
-	void 				SetPcList( const Array<const PcDef *> &movies, const PcDef *nextMovie );
+	void 				SetPcList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie );
 
 	virtual void 				Select( void );
 	virtual void 				SelectionHighlighted( bool isHighlighted );
@@ -64,12 +64,12 @@ private:
 	{
 	public:
 		PcCategory 	Category;
-		String			Text;
+		std::string			Text;
 		UILabel *		Button;
 		float			Width;
 		float			Height;
 
-					PcCategoryButton( const PcCategory category, const String &text ) :
+					PcCategoryButton( const PcCategory category, const std::string &text ) :
 						Category( category ), Text( text ), Button( NULL ), Width( 0.0f ), Height( 0.0f ) {}
 	};
 
@@ -128,15 +128,15 @@ private:
 	Lerp								SelectionFader;
 
 	CarouselBrowserComponent *			MovieBrowser;
-	Array<CarouselItem *> 				MovieBrowserItems;
-	Array<PanelPose>					MoviePanelPositions;
+	std::vector<CarouselItem *> 				MovieBrowserItems;
+	std::vector<PanelPose>					MoviePanelPositions;
 
-	Array<CarouselItemComponent *>	 	MoviePosterComponents;
+	std::vector<CarouselItemComponent *>	 	MoviePosterComponents;
 
-	Array<PcCategoryButton>			Categories;
+	std::vector<PcCategoryButton>			Categories;
 	PcCategory			 			CurrentCategory;
 	
-	Array<const PcDef *> 			MovieList;
+	std::vector<const PcDef *> 			MovieList;
 	int									MoviesIndex;
 
 	const PcDef *					LastMovieDisplayed;
@@ -155,10 +155,10 @@ private:
 	UITexture                            bgTintTexture;
 	UIImage                                newPCbg;
 	UILabel                                newPCIPLabel;
-	Array<UIButton*>                newPCIPButtons;
+	std::vector<UIButton*>                newPCIPButtons;
 	int                                 IPoctets[4];
 	int                                    currentOctet;
-	String                                IPString;
+	std::string                                IPString;
 
 
 

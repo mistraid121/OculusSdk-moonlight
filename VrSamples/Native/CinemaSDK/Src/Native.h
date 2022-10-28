@@ -5,7 +5,7 @@ Content     :
 Created     :	8/8/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -15,6 +15,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #if !defined( Native_h )
 #define Native_h
+
+#include <string>
+
 #include "App.h"
 
 using namespace OVR;
@@ -26,8 +29,8 @@ public:
 	static void			OneTimeInit( App *app, jclass mainActivityClass );
 	static void			OneTimeShutdown();
 
-	static String		GetExternalCacheDirectory( App *app );  	// returns path to app specific writable directory
-	static bool         CreateVideoThumbnail( App *app, const char *uuid, int appId, const char *outputFilePath, const int width, const int height );
+	static std::string	GetExternalCacheDirectory( App *app );  	// returns path to app specific writable directory
+	static bool 		CreateVideoThumbnail( App *app, const char *uuid, int appId, const char *outputFilePath, const int width, const int height );
 
 	static bool			IsPlaying( App *app );
 	static bool 		IsPlaybackFinished( App *app );

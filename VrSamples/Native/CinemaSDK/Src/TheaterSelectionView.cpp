@@ -5,7 +5,7 @@ Content     :
 Created     :	6/19/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -59,19 +59,19 @@ void TheaterSelectionView::OneTimeInit( const char * launchIntent )
 {
 	OVR_UNUSED( launchIntent );
 
-	LOG( "TheaterSelectionView::OneTimeInit" );
+	OVR_LOG( "TheaterSelectionView::OneTimeInit" );
 
 	const double start = SystemClock::GetTimeInSeconds();
 
 	// Start with "Home theater" selected
 	SelectedTheater = 0;
 
-	LOG( "TheaterSelectionView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "TheaterSelectionView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
 }
 
 void TheaterSelectionView::OneTimeShutdown()
 {
-	LOG( "TheaterSelectionView::OneTimeShutdown" );
+	OVR_LOG( "TheaterSelectionView::OneTimeShutdown" );
 }
 
 void TheaterSelectionView::SelectTheater( int theater )
@@ -82,9 +82,9 @@ void TheaterSelectionView::SelectTheater( int theater )
 	SetPosition( Cinema.GetGuiSys().GetVRMenuMgr(), Cinema.SceneMgr.Scene.GetFootPos() );
 }
 
-void TheaterSelectionView::OnOpen()
+void TheaterSelectionView::OnOpen( const double currTimeInSeconds )
 {
-	LOG( "OnOpen" );
+	OVR_LOG( "OnOpen" );
 
 	if ( Menu == NULL )
 	{
@@ -94,20 +94,20 @@ void TheaterSelectionView::OnOpen()
 	SelectTheater( SelectedTheater );
 	TheaterBrowser->SetSelectionIndex( SelectedTheater );
 
-	Cinema.SceneMgr.LightsOn( 0.5f );
+	Cinema.SceneMgr.LightsOn( 0.5f, currTimeInSeconds );
 
 	Cinema.SceneMgr.ClearGazeCursorGhosts();
 	Cinema.GetGuiSys().OpenMenu( "TheaterSelectionBrowser" );
 
 	// ignore clicks for 0.5 seconds to avoid accidentally clicking through
-	IgnoreSelectTime = vrapi_GetTimeInSeconds() + 0.5;
+	IgnoreSelectTime = currTimeInSeconds + 0.5;
 
 	CurViewState = VIEWSTATE_OPEN;
 }
 
 void TheaterSelectionView::OnClose()
 {
-	LOG( "OnClose" );
+	OVR_LOG( "OnClose" );
 
 	Cinema.GetGuiSys().CloseMenu( Menu, false );
 
@@ -128,12 +128,12 @@ bool TheaterSelectionView::OnKeyEvent( const int keyCode, const int repeatCount,
 		case OVR_KEY_BACK: {
 			switch (eventType) {
 				case KEY_EVENT_SHORT_PRESS:
-					LOG("KEY_EVENT_SHORT_PRESS");
+					OVR_LOG("KEY_EVENT_SHORT_PRESS");
 					BackPressed();
 					return true;
 					break;
 				default:
-					//LOG( "unexpected back key state %i", eventType );
+					//OVR_LOG( "unexpected back key state %i", eventType );
 					break;
 			}
 		}
@@ -164,29 +164,29 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	Vector3f up( 0.0f, 1.0f, 0.0f );
 	Vector3f defaultScale( 1.0f );
 
-	Array< VRMenuObjectParms const * > parms;
+	std::vector< VRMenuObjectParms const * > parms;
 
 	VRMenuFontParms fontParms( true, true, false, false, false, 1.0f );
 
 	Quatf orientation( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f );
 	Vector3f centerPos( 0.0f, 0.0f, 0.0f );
 
-	VRMenuObjectParms centerRootParms( VRMENU_CONTAINER, Array< VRMenuComponent* >(), VRMenuSurfaceParms(), "CenterRoot",
+	VRMenuObjectParms centerRootParms( VRMENU_CONTAINER, std::vector< VRMenuComponent* >(), VRMenuSurfaceParms(), "CenterRoot",
 			Posef( orientation, centerPos ), Vector3f( 1.0f, 1.0f, 1.0f ), fontParms,
 			ID_CENTER_ROOT, VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
-	parms.PushBack( &centerRootParms );
+	parms.push_back( &centerRootParms );
 
 	// title
 	const Posef titlePose( Quatf( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f ), Vector3f( 0.0f, 0.0f, 0.0f ) );
 
-	VRMenuObjectParms titleRootParms( VRMENU_CONTAINER, Array< VRMenuComponent* >(), VRMenuSurfaceParms(),
+	VRMenuObjectParms titleRootParms( VRMENU_CONTAINER, std::vector< VRMenuComponent* >(), VRMenuSurfaceParms(),
 			"TitleRoot", titlePose, defaultScale, fontParms, ID_TITLE_ROOT,
 			VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-	parms.PushBack( &titleRootParms );
+	parms.push_back( &titleRootParms );
 
 	Menu->InitWithItems( guiSys, 0.0f, VRMenuFlags_t(), parms );
-	parms.Clear();
+	parms.clear();
 
 	int count = Cinema.ModelMgr.GetTheaterCount();
 	for ( int i = 0 ; i < count ; i++ )
@@ -196,18 +196,18 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 		CarouselItem *item = new CarouselItem();
 		item->Texture = theater.IconTexture;
 
-		Theaters.PushBack( item );
+		Theaters.push_back( item );
 	}
 
-	Array<PanelPose> panelPoses;
+	std::vector<PanelPose> panelPoses;
 
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f( -2.85f, 1.8f, -5.8f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f( -1.90f, 1.8f, -5.0f ), Vector4f( 0.25f, 0.25f, 0.25f, 1.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f( -0.95f, 1.8f, -4.2f ), Vector4f( 0.45f, 0.45f, 0.45f, 1.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f(  0.00f, 1.8f, -3.4f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f(  0.95f, 1.8f, -4.2f ), Vector4f( 0.45f, 0.45f, 0.45f, 1.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f(  1.90f, 1.8f, -5.0f ), Vector4f( 0.25f, 0.25f, 0.25f, 1.0f ) ) );
-	panelPoses.PushBack( PanelPose( Quatf( up, 0.0f ), Vector3f(  2.85f, 1.8f, -5.8f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f( -2.85f, 1.8f, -5.8f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f( -1.90f, 1.8f, -5.0f ), Vector4f( 0.25f, 0.25f, 0.25f, 1.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f( -0.95f, 1.8f, -4.2f ), Vector4f( 0.45f, 0.45f, 0.45f, 1.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f(  0.00f, 1.8f, -3.4f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f(  0.95f, 1.8f, -4.2f ), Vector4f( 0.45f, 0.45f, 0.45f, 1.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f(  1.90f, 1.8f, -5.0f ), Vector4f( 0.25f, 0.25f, 0.25f, 1.0f ) ) );
+	panelPoses.push_back( PanelPose( Quatf( up, 0.0f ), Vector3f(  2.85f, 1.8f, -5.8f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
 
 	// the centerroot item will get touch relative and touch absolute events and use them to rotate the centerRoot
 	menuHandle_t centerRootHandle = Menu->HandleForId( guiSys.GetVRMenuMgr(), ID_CENTER_ROOT );
@@ -222,8 +222,8 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	GLuint selectionTexture = LoadTextureFromApplicationPackage( "assets/VoidTheater.png",
 			TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), selectionWidth, selectionHeight );
 
-	int centerIndex = panelPoses.GetSizeI() / 2;
-	for ( int i = 0; i < panelPoses.GetSizeI(); ++i )
+	int centerIndex = static_cast< int >( panelPoses.size() ) / 2;
+	for ( int i = 0; i < static_cast< int >( panelPoses.size() ); ++i )
 	{
 		VRMenuSurfaceParms panelSurfParms( "",
 				selectionTexture, selectionWidth, selectionHeight, SURFACE_TEXTURE_DIFFUSE,
@@ -233,16 +233,16 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	    VRMenuId_t panelId = VRMenuId_t( ID_ICONS.Get() + i );
 		Quatf rot( up, 0.0f );
 		Posef panelPose( rot, fwd );
-		VRMenuObjectParms * p = new VRMenuObjectParms( VRMENU_BUTTON, Array< VRMenuComponent* >(),
-				panelSurfParms, NULL, panelPose, defaultScale, fontParms, panelId,
+		VRMenuObjectParms * p = new VRMenuObjectParms( VRMENU_BUTTON, std::vector< VRMenuComponent* >(),
+				panelSurfParms, "", panelPose, defaultScale, fontParms, panelId,
 				( i == centerIndex ) ? VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_DEPTH ) : VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_FOCUS_GAINED ) | VRMENUOBJECT_FLAG_NO_DEPTH,
 				VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
-		parms.PushBack( p );
+		parms.push_back( p );
 	}
 
 	Menu->AddItems( guiSys, parms, centerRootHandle, false );
 	DeletePointerArray( parms );
-	parms.Clear();
+	parms.clear();
 
 	menuHandle_t selectionHandle = CenterRoot->ChildHandleForId( guiSys.GetVRMenuMgr(), VRMenuId_t( ID_ICONS.Get() + centerIndex ) );
 	SelectionObject = guiSys.GetVRMenuMgr().ToObject( selectionHandle );
@@ -252,17 +252,17 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	SelectionObject->SetLocalBoundsExpand( selectionBoundsExpandMin, selectionBoundsExpandMax );
 	SelectionObject->AddFlags( VRMENUOBJECT_HIT_ONLY_BOUNDS );
 
-	Array<VRMenuObject *> menuObjs;
-	Array<CarouselItemComponent *> menuComps;
-	for ( int i = 0; i < panelPoses.GetSizeI(); ++i )
+	std::vector<VRMenuObject *> menuObjs;
+	std::vector<CarouselItemComponent *> menuComps;
+	for ( int i = 0; i < static_cast< int >( panelPoses.size() ); ++i )
 	{
 		menuHandle_t posterImageHandle = CenterRoot->ChildHandleForId( guiSys.GetVRMenuMgr(), VRMenuId_t( ID_ICONS.Get() + i ) );
 		VRMenuObject *posterImage = guiSys.GetVRMenuMgr().ToObject( posterImageHandle );
-		menuObjs.PushBack( posterImage );
+		menuObjs.push_back( posterImage );
 
 		CarouselItemComponent *panelComp = new TheaterSelectionComponent( i == centerIndex ? this : NULL );
 		posterImage->AddComponent( panelComp );
-		menuComps.PushBack( panelComp );
+		menuComps.push_back( panelComp );
 	}
 	TheaterBrowser->SetMenuObjects( menuObjs, menuComps );
 
@@ -275,15 +275,15 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 		VRMenuFontParms titleFontParms( true, true, false, false, false, 1.3f );
 
-		VRMenuObjectParms p( VRMENU_STATIC, Array< VRMenuComponent* >(),
-				VRMenuSurfaceParms(), Cinema.GetCinemaStrings().TheaterSelection_Title.ToCStr(), panelPose, defaultScale, titleFontParms, VRMenuId_t( ID_TITLE_ROOT.Get() + 1 ),
+		VRMenuObjectParms p( VRMENU_STATIC, std::vector< VRMenuComponent* >(),
+				VRMenuSurfaceParms(), Cinema.GetCinemaStrings().TheaterSelection_Title.c_str(), panelPose, defaultScale, titleFontParms, VRMenuId_t( ID_TITLE_ROOT.Get() + 1 ),
 				VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-		parms.PushBack( &p );
+		parms.push_back( &p );
 
 		menuHandle_t titleRootHandle = Menu->HandleForId( guiSys.GetVRMenuMgr(), ID_TITLE_ROOT );
 		Menu->AddItems( guiSys, parms, titleRootHandle, false );
-		parms.Clear();
+		parms.clear();
 	}
 
 	// ==============================================================================
@@ -319,40 +319,40 @@ void TheaterSelectionView::CreateMenu( OvrGuiSys & guiSys )
 			swipePose.Translation.x = ( ( selectionWidth + swipeIconLeftWidth * ( i + 2 ) ) * -0.5f ) * VRMenuObject::DEFAULT_TEXEL_SCALE;
 			swipePose.Translation.z += 0.01f * ( float )i;
 
-			Array< VRMenuComponent* > leftComps;
-			leftComps.PushBack( new CarouselSwipeHintComponent( TheaterBrowser, false, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
+			std::vector< VRMenuComponent* > leftComps;
+			leftComps.push_back( new CarouselSwipeHintComponent( TheaterBrowser, false, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
 
 			VRMenuObjectParms * swipeIconLeftParms = new VRMenuObjectParms( VRMENU_BUTTON, leftComps,
 				swipeIconLeftSurfParms, "", swipePose, defaultScale, fontParms, VRMenuId_t( ID_SWIPE_ICON_LEFT.Get() + i ),
 				VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_DEPTH ) | VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ),
 				VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-			parms.PushBack( swipeIconLeftParms );
+			parms.push_back( swipeIconLeftParms );
 
 			swipePose.Translation.x = ( ( selectionWidth + swipeIconRightWidth * ( i + 2 ) ) * 0.5f ) * VRMenuObject::DEFAULT_TEXEL_SCALE;
 
-			Array< VRMenuComponent* > rightComps;
-			rightComps.PushBack( new CarouselSwipeHintComponent( TheaterBrowser, true, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
+			std::vector< VRMenuComponent* > rightComps;
+			rightComps.push_back( new CarouselSwipeHintComponent( TheaterBrowser, true, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
 
 			VRMenuObjectParms * swipeIconRightParms = new VRMenuObjectParms( VRMENU_STATIC, rightComps,
 				swipeIconRightSurfParms, "", swipePose, defaultScale, fontParms, VRMenuId_t( ID_SWIPE_ICON_RIGHT.Get() + i ),
 				VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_DEPTH ) | VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ),
 				VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-			parms.PushBack( swipeIconRightParms );
+			parms.push_back( swipeIconRightParms );
 		}
 
 		Menu->AddItems( guiSys, parms, centerRootHandle, false );
 		DeletePointerArray( parms );
-		parms.Clear();
+		parms.clear();
 	}
 
 	Cinema.GetGuiSys().AddMenu( Menu );
 }
 
-void TheaterSelectionView::SelectPressed( void )
+void TheaterSelectionView::SelectPressed( const double currTimeInSeconds )
 {
-	const double now = vrapi_GetTimeInSeconds();
+	const double now = currTimeInSeconds;
 	if ( now < IgnoreSelectTime )
 	{
 		// ignore selection for first 0.5 seconds to reduce chances of accidentally clicking through
@@ -385,9 +385,9 @@ void TheaterSelectionView::Frame( const ovrFrameInput & vrFrame )
 	int selectedItem = TheaterBrowser->GetSelection();
 	if ( SelectedTheater != selectedItem )
 	{
-		if ( ( selectedItem >= 0 ) && ( selectedItem < Theaters.GetSizeI() ) )
+		if ( ( selectedItem >= 0 ) && ( selectedItem < static_cast< int >( Theaters.size() ) ) )
 		{
-			LOG( "Select: %d, %d, %d, %d", selectedItem, SelectedTheater, Theaters.GetSizeI(), Cinema.ModelMgr.GetTheaterCount() );
+			OVR_LOG( "Select: %d, %d, %d, %d", selectedItem, SelectedTheater, static_cast< int >( Theaters.size() ), Cinema.ModelMgr.GetTheaterCount() );
 			SelectedTheater = selectedItem;
 			SelectTheater( SelectedTheater );
 		}

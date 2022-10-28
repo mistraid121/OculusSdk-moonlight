@@ -15,7 +15,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <unistd.h>
 #include "OVR_Input.h"
-#include "Kernel/OVR_String_Utils.h"
 #include "App.h"
 #include "AppSelectionView.h"
 #include "CinemaApp.h"
@@ -135,7 +134,7 @@ static const char* Guuid;
     void AppSelectionView::OneTimeInit(const char *launchIntent) {
         OVR_UNUSED(launchIntent);
 
-        LOG("AppSelectionView::OneTimeInit");
+        OVR_LOG("AppSelectionView::OneTimeInit");
 
 
         const double start = SystemClock::GetTimeInSeconds();
@@ -145,18 +144,18 @@ static const char* Guuid;
 //        SetCategory(CATEGORY_LIMELIGHT);
 
 
-        LOG(
+        OVR_LOG(
                 "AppSelectionView::OneTimeInit %3.1f seconds", vrapi_GetTimeInSeconds() - start);
 
     }
 
     void AppSelectionView::OneTimeShutdown() {
-        LOG("AppSelectionView::OneTimeShutdown");
+        OVR_LOG("AppSelectionView::OneTimeShutdown");
     }
 
-    void AppSelectionView::OnOpen() {
+    void AppSelectionView::OnOpen(const double currTimeInSeconds ) {
         SetCategory(CATEGORY_LIMELIGHT);
-        LOG("OnOpen");
+        OVR_LOG("OnOpen");
         CurViewState = VIEWSTATE_OPEN;
 
         LastMovieDisplayed = NULL;
@@ -164,7 +163,6 @@ static const char* Guuid;
 
         if (Cinema.InLobby) {
             Cinema.SceneMgr.SetSceneModel(*Cinema.ModelMgr.BoxOffice);
-            Cinema.SceneMgr.UseOverlay = false;
 
             Vector3f size(PosterWidth * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.x,
                           PosterHeight * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.y, 0.0f);
@@ -173,7 +171,7 @@ static const char* Guuid;
             Cinema.SceneMgr.SceneScreenBounds.Translate(Vector3f(0.00f, 1.76f, -7.25f));
         }
 
-        Cinema.SceneMgr.LightsOn(1.5f);
+        Cinema.SceneMgr.LightsOn(1.5f,currTimeInSeconds);
 
         const double now = vrapi_GetTimeInSeconds();
         SelectionFader.Set(now, 0, now + 0.1, 1.0f);
@@ -208,14 +206,14 @@ static const char* Guuid;
             CarouselSwipeHintComponent::ShowSwipeHints = true;
 
             const PcDef *selectedPC = Cinema.GetCurrentPc();
-            String uuid = selectedPC->UUID;
-            Guuid = uuid.ToCStr();
+            std::string uuid = selectedPC->UUID;
+            Guuid = uuid.c_str();
             Native::PairState ps = Native::GetPairState(Cinema.app, Guuid);
             if (ps == Native::PAIRED) {
-                LOG("Paired");
+                OVR_LOG("Paired");
                 Native::InitAppSelector(Cinema.app, Guuid);
             } else {
-                LOG("Not Paired!");
+                OVR_LOG("Not Paired!");
                 Native::Pair(Cinema.app, Guuid);
             }
 
@@ -248,14 +246,14 @@ static const char* Guuid;
                 !Menu->GetVRMenu()->IsOpenOrOpening()) {
                 // if we finished the movie or have an error, don't resume it, go back to the lobby
                 if (ErrorShown()) {
-                    LOG("Error closed.  Return to lobby.");
+                    OVR_LOG("Error closed.  Return to lobby.");
                     ClearError();
                     Cinema.PcSelection(true);
                 } else if (Cinema.IsMovieFinished()) {
-                    LOG("Movie finished.  Return to lobby.");
+                    OVR_LOG("Movie finished.  Return to lobby.");
                     Cinema.PcSelection(true);
                 } else {
-                    LOG("Resume movie.");
+                    OVR_LOG("Resume movie.");
                     Cinema.ResumeMovieFromSavedLocation();
                 }
             }
@@ -338,7 +336,7 @@ static const char* Guuid;
 
     const PcDef *AppSelectionView::GetSelectedApp() const {
         int selectedItem = MovieBrowser->GetSelection();
-        if ((selectedItem >= 0) && (selectedItem < AppList.GetSizeI())) {
+        if ((selectedItem >= 0) && (selectedItem < static_cast<int>(AppList.size()))) {
             return AppList[selectedItem];
         }
 
@@ -349,7 +347,7 @@ static const char* Guuid;
         const PcDef * currentMovie = GetSelectedApp();
         if (LastMovieDisplayed != currentMovie) {
             if (currentMovie != NULL) {
-                MovieTitle->SetText(currentMovie->Name.ToCStr());
+                MovieTitle->SetText(currentMovie->Name.c_str());
             } else {
                 MovieTitle->SetText("");
             }
@@ -359,7 +357,7 @@ static const char* Guuid;
     }
 
     void AppSelectionView::OnClose() {
-        LOG("OnClose");
+        OVR_LOG("OnClose");
         ShowTimer = false;
         CurViewState = VIEWSTATE_CLOSED;
         CenterRoot->SetVisible(false);
@@ -508,22 +506,22 @@ static const char* Guuid;
         //
         // movie browser
         //
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(-5.59f, 1.76f, -12.55f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-5.59f, 1.76f, -12.55f),
                                                Vector4f(0.0f, 0.0f, 0.0f, 0.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(-3.82f, 1.76f, -10.97f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-3.82f, 1.76f, -10.97f),
                                                Vector4f(0.1f, 0.1f, 0.1f, 1.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(-2.05f, 1.76f, -9.39f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-2.05f, 1.76f, -9.39f),
                                                Vector4f(0.2f, 0.2f, 0.2f, 1.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(0.00f, 1.76f, -7.39f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(0.00f, 1.76f, -7.39f),
                                                Vector4f(1.0f, 1.0f, 1.0f, 1.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(2.05f, 1.76f, -9.39f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(2.05f, 1.76f, -9.39f),
                                                Vector4f(0.2f, 0.2f, 0.2f, 1.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(3.82f, 1.76f, -10.97f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(3.82f, 1.76f, -10.97f),
                                                Vector4f(0.1f, 0.1f, 0.1f, 1.0f)));
-        MoviePanelPositions.PushBack(PanelPose(forward, Vector3f(5.59f, 1.76f, -12.55f),
+        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(5.59f, 1.76f, -12.55f),
                                                Vector4f(0.0f, 0.0f, 0.0f, 0.0f)));
 
-        CenterIndex = MoviePanelPositions.GetSize() / 2;
+        CenterIndex = MoviePanelPositions.size() / 2;
         CenterPosition = MoviePanelPositions[CenterIndex].Position;
 
         MovieBrowser = new CarouselBrowserComponent(MovieBrowserItems, MoviePanelPositions);
@@ -549,8 +547,8 @@ static const char* Guuid;
         //
         // add shadow and 3D icon to movie poster panels
         //
-        Array<VRMenuObject *> menuObjs;
-        for (UPInt i = 0; i < MoviePanelPositions.GetSize(); ++i) {
+        std::vector<VRMenuObject *> menuObjs;
+        for (UPInt i = 0; i < MoviePanelPositions.size(); ++i) {
             UIContainer *posterContainer = new UIContainer(Cinema.GetGuiSys());
             posterContainer->AddToMenu(Menu, MovieRoot);
             posterContainer->SetLocalPose(MoviePanelPositions[i].Orientation,
@@ -606,8 +604,8 @@ static const char* Guuid;
                                        is3DIcon, shadow);
             posterContainer->AddComponent(posterComp);
 
-            menuObjs.PushBack(posterContainer->GetMenuObject());
-            MoviePosterComponents.PushBack(posterComp);
+            menuObjs.push_back(posterContainer->GetMenuObject());
+            MoviePosterComponents.push_back(posterComp);
         }
 
         MovieBrowser->SetMenuObjects(menuObjs, MoviePosterComponents);
@@ -616,24 +614,24 @@ static const char* Guuid;
         //
         // category browser
         //
-        Categories.PushBack(AppCategoryButton(CATEGORY_LIMELIGHT,
+        Categories.push_back(AppCategoryButton(CATEGORY_LIMELIGHT,
                                                 Cinema.GetCinemaStrings().Category_LimeLight));
 
 
         // create the buttons and calculate their size
         const float itemWidth = 1.10f;
         float categoryBarWidth = 0.0f;
-        for (UPInt i = 0; i < Categories.GetSize(); ++i) {
+        for (UPInt i = 0; i < Categories.size(); ++i) {
             Categories[i].Button = new UILabel(Cinema.GetGuiSys());
             Categories[i].Button->AddToMenu(Menu, CategoryRoot);
             Categories[i].Button->SetFontScale(2.2f);
-            Categories[i].Button->SetText(Categories[i].Text.ToCStr());
+            Categories[i].Button->SetText(Categories[i].Text.c_str());
             Categories[i].Button->AddComponent(
                     new PcCategoryComponent(this, Categories[i].Category));
 
             const Bounds3f &bounds = Categories[i].Button->GetTextLocalBounds(
                     Cinema.GetGuiSys().GetDefaultFont());
-            Categories[i].Width = OVR::Alg::Max(bounds.GetSize().x, itemWidth) +
+            Categories[i].Width = std::max(bounds.GetSize().x, itemWidth) +
                                   80.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
             Categories[i].Height =
                     bounds.GetSize().y + 108.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
@@ -642,7 +640,7 @@ static const char* Guuid;
 
         // reposition the buttons and set the background and border
         float startX = categoryBarWidth * -0.5f;
-        for (UPInt i = 0; i < Categories.GetSize(); ++i) {
+        for (UPInt i = 0; i < Categories.size(); ++i) {
             VRMenuSurfaceParms panelSurfParms("",
                                               BorderTexture.Texture, BorderTexture.Width,
                                               BorderTexture.Height, SURFACE_TEXTURE_ADDITIVE,
@@ -726,7 +724,7 @@ static const char* Guuid;
         ResumeIcon->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
         ResumeIcon->SetFontScale(0.3f);
         ResumeIcon->SetLocalScale(6.0f);
-        ResumeIcon->SetText(Cinema.GetCinemaStrings().MovieSelection_Resume.ToCStr());
+        ResumeIcon->SetText(Cinema.GetCinemaStrings().MovieSelection_Resume.c_str());
         ResumeIcon->SetTextOffset(Vector3f(0.0f, -ResumeIconTexture.Height *
                                                  VRMenuObject::DEFAULT_TEXEL_SCALE * 0.5f,
                                            0.0f));
@@ -824,7 +822,7 @@ static const char* Guuid;
         Button4k60 = new UIButton( Cinema.GetGuiSys() );
         Button4k60->AddToMenu(  Menu, settingsMenu );
         Button4k60->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button4k60->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60 );
+        Button4k60->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60.c_str() );
         TextButtonHelper(Button4k60);
         Button4k60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button4k60->SetOnClick( SettingsCallback, this);
@@ -835,7 +833,7 @@ static const char* Guuid;
         Button4k30 = new UIButton( Cinema.GetGuiSys() );
         Button4k30->AddToMenu(  Menu, settingsMenu );
         Button4k30->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button4k30->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30 );
+        Button4k30->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30.c_str() );
         TextButtonHelper(Button4k30);
         Button4k30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button4k30->SetOnClick( SettingsCallback, this);
@@ -845,7 +843,7 @@ static const char* Guuid;
         Button1080p60 = new UIButton( Cinema.GetGuiSys() );
         Button1080p60->AddToMenu(  Menu, settingsMenu );
         Button1080p60->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button1080p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60 );
+        Button1080p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60.c_str() );
         TextButtonHelper(Button1080p60);
         Button1080p60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button1080p60->SetOnClick( SettingsCallback, this);
@@ -854,7 +852,7 @@ static const char* Guuid;
         Button1080p30 = new UIButton( Cinema.GetGuiSys() );
         Button1080p30->AddToMenu(  Menu, settingsMenu );
         Button1080p30->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button1080p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30 );
+        Button1080p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30.c_str() );
         TextButtonHelper(Button1080p30);
         Button1080p30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button1080p30->SetOnClick( SettingsCallback, this);
@@ -863,7 +861,7 @@ static const char* Guuid;
         Button720p60 = new UIButton( Cinema.GetGuiSys() );
         Button720p60->AddToMenu( Menu, settingsMenu );
         Button720p60->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button720p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60 );
+        Button720p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60.c_str() );
         TextButtonHelper(Button720p60);
         Button720p60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button720p60->SetOnClick( SettingsCallback, this);
@@ -872,7 +870,7 @@ static const char* Guuid;
         Button720p30 = new UIButton( Cinema.GetGuiSys() );
         Button720p30->AddToMenu( Menu, settingsMenu );
         Button720p30->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        Button720p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30 );
+        Button720p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30.c_str() );
         TextButtonHelper(Button720p30);
         Button720p30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         Button720p30->SetOnClick( SettingsCallback, this);
@@ -884,7 +882,7 @@ static const char* Guuid;
         /*ButtonHostAudio = new UIButton( Cinema.GetGuiSys() );
         ButtonHostAudio->AddToMenu( Menu, settingsMenu );
         ButtonHostAudio->SetLocalPosition( Vector3f( column1, rowpos += rowinc, 0.1f ) );
-        ButtonHostAudio->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio );
+        ButtonHostAudio->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio.c_str() );
         TextButtonHelper(ButtonHostAudio);
         ButtonHostAudio->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonHostAudio->SetOnClick( SettingsCallback, this);*/
@@ -897,7 +895,7 @@ static const char* Guuid;
         ButtonGaze = new UIButton( Cinema.GetGuiSys() );
         ButtonGaze->AddToMenu( Menu, settingsMenu );
         ButtonGaze->SetLocalPosition( Vector3f( column2, rowpos += rowinc, 0.1f ) );
-        ButtonGaze->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonGaze );
+        ButtonGaze->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonGaze.c_str() );
         TextButtonHelper(ButtonGaze);
         ButtonGaze->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonGaze->SetOnClick( SettingsCallback, this);
@@ -906,7 +904,7 @@ static const char* Guuid;
         ButtonTrackpad = new UIButton( Cinema.GetGuiSys() );
         ButtonTrackpad->AddToMenu( Menu, settingsMenu );
         ButtonTrackpad->SetLocalPosition( Vector3f( column2, rowpos += rowinc, 0.1f ) );
-        ButtonTrackpad->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad );
+        ButtonTrackpad->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad.c_str() );
         TextButtonHelper(ButtonTrackpad);
         ButtonTrackpad->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonTrackpad->SetOnClick( SettingsCallback, this);
@@ -916,7 +914,7 @@ static const char* Guuid;
         ButtonOff = new UIButton( Cinema.GetGuiSys() );
         ButtonOff->AddToMenu( Menu, settingsMenu );
         ButtonOff->SetLocalPosition( Vector3f( column2, rowpos += rowinc, 0.1f ) );
-        ButtonOff->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff );
+        ButtonOff->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff.c_str() );
         TextButtonHelper(ButtonOff);
         ButtonOff->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonOff->SetOnClick( SettingsCallback, this);
@@ -949,7 +947,7 @@ static const char* Guuid;
         ButtonSaveApp = new UIButton( Cinema.GetGuiSys() );
         ButtonSaveApp->AddToMenu( Menu, settingsMenu );
         ButtonSaveApp->SetLocalPosition( Vector3f( column2, rowpos += rowinc, 0.1f ) );
-        ButtonSaveApp->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp );
+        ButtonSaveApp->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp.c_str() );
         TextButtonHelper(ButtonSaveApp);
         ButtonSaveApp->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonSaveApp->SetOnClick( SettingsCallback, this );
@@ -958,7 +956,7 @@ static const char* Guuid;
         ButtonSaveDefault = new UIButton( Cinema.GetGuiSys() );
         ButtonSaveDefault->AddToMenu( Menu, settingsMenu );
         ButtonSaveDefault->SetLocalPosition( Vector3f( column2, rowpos += rowinc, 0.1f ) );
-        ButtonSaveDefault->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault );
+        ButtonSaveDefault->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault.c_str() );
         TextButtonHelper(ButtonSaveDefault);
         ButtonSaveDefault->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
         ButtonSaveDefault->SetOnClick( SettingsCallback, this);
@@ -972,13 +970,13 @@ static const char* Guuid;
         const PcDef* app = NULL;
 
         int selected = MovieBrowser->GetSelection();
-        if(selected < AppList.GetSizeI())
+        if(selected <   static_cast< int >(AppList.size()))
         {
             app = AppList[selected];
         }
         if(pc && app)
         {
-            Native::closeApp( Cinema.app, pc->UUID, app->Id);
+            Native::closeApp( Cinema.app, pc->UUID.c_str(), app->Id);
         }
     }
 
@@ -988,7 +986,7 @@ static const char* Guuid;
 
         const PcDef* app = AppList[appIndex];
 
-        String    outPath;
+        std::string    outPath;
         const bool validDir = Cinema.app->GetStoragePaths().GetPathIfValidPermission(
                 EST_INTERNAL_STORAGE, EFT_FILES, "", permissionFlags_t( PERMISSION_READ ) | permissionFlags_t( PERMISSION_WRITE ), outPath );
 
@@ -997,7 +995,7 @@ static const char* Guuid;
             if(defaultSettings == NULL)
             {
                 defaultSettingsPath = outPath + "settings.json";
-                defaultSettings = new Settings(defaultSettingsPath);
+                defaultSettings = new Settings(defaultSettingsPath.c_str());
 
                 defaultSettings->Define("StreamTheaterSettingsVersion", &settingsVersion);
                 defaultSettings->Define("MouseMode", (int*)&mouseMode);
@@ -1015,7 +1013,7 @@ static const char* Guuid;
             }
 
             appSettingsPath = outPath + "settings." + app->Name + ".json";
-            appSettings = new Settings(appSettingsPath);
+            appSettings = new Settings(appSettingsPath.c_str());
             appSettings->CopyDefines(*defaultSettings);
 
             defaultSettings->Load();
@@ -1226,12 +1224,12 @@ static const char* Guuid;
             case OVR_KEY_BACK: {
                 switch (eventType) {
                     case KEY_EVENT_SHORT_PRESS:
-                        LOG("KEY_EVENT_SHORT_PRESS");
+                        OVR_LOG("KEY_EVENT_SHORT_PRESS");
                         BackPressed();
                         return true;
                         break;
                     default:
-                        //LOG( "unexpected back key state %i", eventType );
+                        //OVR_LOG( "unexpected back key state %i", eventType );
                         break;
                 }
             }
@@ -1259,7 +1257,7 @@ static const char* Guuid;
     }
 
     void AppSelectionView::Select() {
-        LOG( "AppSelectionView::Select");
+        OVR_LOG( "AppSelectionView::Select");
 
         // ignore selection while repositioning screen
         if (RepositionScreen) {
@@ -1297,16 +1295,16 @@ static const char* Guuid;
     void AppSelectionView::SetCategory(const PcCategory category) {
         // default to category in index 0
         UPInt categoryIndex = 0;
-        for (UPInt i = 0; i < Categories.GetSize(); ++i) {
+        for (UPInt i = 0; i < Categories.size(); ++i) {
             if (category == Categories[i].Category) {
                 categoryIndex = i;
                 break;
             }
         }
 
-        LOG("SetCategory: %s", Categories[categoryIndex].Text.ToCStr());
+        OVR_LOG("SetCategory: %s", Categories[categoryIndex].Text.c_str());
         CurrentCategory = Categories[categoryIndex].Category;
-        for (UPInt i = 0; i < Categories.GetSize(); ++i) {
+        for (UPInt i = 0; i < Categories.size(); ++i) {
             Categories[i].Button->SetHilighted(i == categoryIndex);
         }
 
@@ -1320,25 +1318,25 @@ static const char* Guuid;
         Cinema.AppMgr.LoadPosters();
         SetAppList(Cinema.AppMgr.GetAppList(CurrentCategory),  NULL);
 
-        LOG("%zu movies added", AppList.GetSize());
+        OVR_LOG("%zu movies added", AppList.size());
     }
 
-    void AppSelectionView::SetAppList(const Array<const PcDef *> &movies,
+    void AppSelectionView::SetAppList(const std::vector<const PcDef *> &movies,
                                       const PcDef *nextMovie) {
-        //LOG( "AppSelectionView::SetAppList: %d movies", movies.GetSize());
+        //OVR_LOG( "AppSelectionView::SetAppList: %d movies", movies.size());
 
         AppList = movies;
         DeletePointerArray(MovieBrowserItems);
-        for (UPInt i = 0; i < AppList.GetSize(); i++) {
+        for (UPInt i = 0; i < AppList.size(); i++) {
             const PcDef *movie = AppList[i];
 
-            LOG( "AddMovie: %s", movie->Name.ToCStr());
+            OVR_LOG( "AddMovie: %s", movie->Name.c_str());
 
             CarouselItem *item = new CarouselItem();
             item->Texture = movie->Poster;
             item->TextureWidth = movie->PosterWidth;
             item->TextureHeight = movie->PosterHeight;
-            MovieBrowserItems.PushBack(item);
+            MovieBrowserItems.push_back(item);
         }
         MovieBrowser->SetItems(MovieBrowserItems);
 
@@ -1347,7 +1345,7 @@ static const char* Guuid;
 
         //MoviesIndex = 0;
         if (nextMovie != NULL) {
-            for (UPInt i = 0; i < AppList.GetSize(); i++) {
+            for (UPInt i = 0; i < AppList.size(); i++) {
                 if (movies[i] == nextMovie) {
                     StartTimer();
                     MoviesIndex = i;
@@ -1358,7 +1356,7 @@ static const char* Guuid;
 
         MovieBrowser->SetSelectionIndex(MoviesIndex);
 
-        if (AppList.GetSize() == 0) {
+        if (AppList.size() == 0) {
             if (CurrentCategory == CATEGORY_LIMELIGHT) {
                 SetError("error", false,
                          false);
@@ -1398,7 +1396,7 @@ static const char* Guuid;
         SelectionFrame->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
 
         int selected = MovieBrowser->GetSelection();
-        if ( selected >= 0 && AppList.GetSizeI() > selected && AppList[ selected ]->isRunning ){
+        if ( selected >= 0 && static_cast<int>(AppList.size()) > selected && AppList[ selected ]->isRunning ){
             ResumeIcon->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
             ResumeIcon->SetTextColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
             ResumeIcon->SetVisible(true);
@@ -1421,7 +1419,7 @@ static const char* Guuid;
             int seconds = static_cast<int>( TimerTotalTime - (TimerTotalTime * frac));
             if (TimerValue != seconds) {
                 TimerValue = seconds;
-                const char *text = StringUtils::Va("%d", seconds);
+                const char *text = std::to_string(seconds).c_str();
                 TimerIcon->SetText(text);
             }
             TimerIcon->SetVisible(true);
@@ -1434,7 +1432,7 @@ static const char* Guuid;
     void AppSelectionView::SetError(const char *text, bool showSDCard, bool showErrorIcon) {
         ClearError();
 
-        LOG("SetError: %s", text);
+        OVR_LOG("SetError: %s", text);
         if (showSDCard) {
             SDCardMessage->SetVisible(true);
             SDCardMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f);
@@ -1453,7 +1451,7 @@ static const char* Guuid;
     }
 
     void AppSelectionView::ClearError() {
-        LOG("ClearError");
+        OVR_LOG("ClearError");
         ErrorMessageClicked = false;
         ErrorMessage->SetVisible(false);
         SDCardMessage->SetVisible(false);

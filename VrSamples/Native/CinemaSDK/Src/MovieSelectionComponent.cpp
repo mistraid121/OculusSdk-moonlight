@@ -5,7 +5,7 @@ Content     :   Menu component for the movie selection menu.
 Created     :   October 8, 2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -97,7 +97,7 @@ eMsgStatus MovieSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput con
 eMsgStatus MovieSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
-	LOG( "FocusGained" );
+	OVR_LOG( "FocusGained" );
 
 	OVR_UNUSED( vrFrame );
 	OVR_UNUSED( event );
@@ -116,7 +116,7 @@ eMsgStatus MovieSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInp
 eMsgStatus MovieSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
-	LOG( "FocusLost" );
+	OVR_LOG( "FocusLost" );
 
 	OVR_UNUSED( vrFrame );
 	OVR_UNUSED( event );

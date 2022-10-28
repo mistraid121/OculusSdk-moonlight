@@ -16,8 +16,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( PcManager_h )
 #define PcManager_h
 
-#include "Kernel/OVR_String.h"
-#include "Kernel/OVR_Array.h"
+#include "string"
+#include "vector"
 #include "GlTexture.h"
 #include "Native.h"
 
@@ -48,10 +48,10 @@ enum PcCategory {
 class PcDef
 {
 public:
-	    String            Name;
-    String            PosterFileName;
-    String            UUID;
-    String            Binding;
+	std::string            Name;
+	std::string            PosterFileName;
+	std::string            UUID;
+	std::string            Binding;
     int                Id;
 	bool            isRunning;
 	bool            isRemote;
@@ -82,12 +82,12 @@ public:
     void
     AddPc(const char *name, const char *uuid, Native::PairState pairState, Native::Reachability reachability, const char *binding, const bool isRunning);
 
-	void                    RemovePc(const String &name);
+	void                    RemovePc(const std::string &name);
     void                    LoadPcs();
-    Array<const PcDef *>    GetPcList( PcCategory category ) const;
+	std::vector<const PcDef *>    GetPcList( PcCategory category ) const;
 
 public:
-    Array<PcDef *> 		Movies;
+	std::vector<PcDef *> 		Movies;
 
     static const int 		PosterWidth;
     static const int 		PosterHeight;
@@ -108,7 +108,7 @@ private:
     GLuint                    PcPosterWTF;
 
 
-    PcCategory                 CategoryFromString( const String &categoryString ) const;
+    PcCategory                 CategoryFromString( const std::string &categoryString ) const;
     virtual void             ReadMetaData( PcDef *aPc );
 
 };

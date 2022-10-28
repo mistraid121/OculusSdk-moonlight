@@ -5,7 +5,7 @@ Content     :
 Created     :	9/3/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -44,7 +44,7 @@ ResumeMovieView::~ResumeMovieView()
 
 void ResumeMovieView::OneTimeInit( const char * launchIntent )
 {
-	LOG( "ResumeMovieView::OneTimeInit" );
+	OVR_LOG( "ResumeMovieView::OneTimeInit" );
 
 	OVR_UNUSED( launchIntent );
 
@@ -52,19 +52,19 @@ void ResumeMovieView::OneTimeInit( const char * launchIntent )
 
 	CreateMenu( Cinema.GetGuiSys() );
 
-	LOG( "ResumeMovieView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ResumeMovieView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
 }
 
 void ResumeMovieView::OneTimeShutdown()
 {
-	LOG( "ResumeMovieView::OneTimeShutdown" );
+	OVR_LOG( "ResumeMovieView::OneTimeShutdown" );
 }
 
-void ResumeMovieView::OnOpen()
+void ResumeMovieView::OnOpen( const double currTimeInSeconds )
 {
-	LOG( "OnOpen" );
+	OVR_LOG( "OnOpen" );
 
-	Cinema.SceneMgr.LightsOn( 0.5f );
+	Cinema.SceneMgr.LightsOn( 0.5f, currTimeInSeconds );
 
 	SetPosition( Cinema.GetGuiSys().GetVRMenuMgr(), Cinema.SceneMgr.Scene.GetFootPos() );
 
@@ -76,7 +76,7 @@ void ResumeMovieView::OnOpen()
 
 void ResumeMovieView::OnClose()
 {
-	LOG( "OnClose" );
+	OVR_LOG( "OnClose" );
 
 	Cinema.GetGuiSys().CloseMenu( Menu, false );
 
@@ -111,20 +111,20 @@ void ResumeMovieView::CreateMenu( OvrGuiSys & guiSys )
 	Vector3f up( 0.0f, 1.0f, 0.0f );
 	Vector3f defaultScale( 1.0f );
 
-	Array< VRMenuObjectParms const * > parms;
+	std::vector< VRMenuObjectParms const * > parms;
 
 	VRMenuFontParms fontParms( true, true, false, false, false, 1.3f );
 
 	Quatf orientation( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f );
 	Vector3f centerPos( 0.0f, 0.0f, 0.0f );
 
-	VRMenuObjectParms centerRootParms( VRMENU_CONTAINER, Array< VRMenuComponent* >(), VRMenuSurfaceParms(), "CenterRoot",
+	VRMenuObjectParms centerRootParms( VRMENU_CONTAINER, std::vector< VRMenuComponent* >(), VRMenuSurfaceParms(), "CenterRoot",
 			Posef( orientation, centerPos ), Vector3f( 1.0f, 1.0f, 1.0f ), fontParms,
 			ID_CENTER_ROOT, VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
-	parms.PushBack( &centerRootParms );
+	parms.push_back( &centerRootParms );
 
 	Menu->InitWithItems( guiSys, 0.0f, VRMenuFlags_t(), parms );
-	parms.Clear();
+	parms.clear();
 
 	// the centerroot item will get touch relative and touch absolute events and use them to rotate the centerRoot
 	menuHandle_t centerRootHandle = Menu->HandleForId( guiSys.GetVRMenuMgr(), ID_CENTER_ROOT );
@@ -138,40 +138,40 @@ void ResumeMovieView::CreateMenu( OvrGuiSys & guiSys )
 	{
 		Posef panelPose( Quatf( up, 0.0f ), Vector3f( 0.0f, 2.2f, -3.0f ) );
 
-		VRMenuObjectParms p( VRMENU_STATIC, Array< VRMenuComponent* >(),
-				VRMenuSurfaceParms(), Cinema.GetCinemaStrings().ResumeMenu_Title.ToCStr(), panelPose, defaultScale, fontParms, VRMenuId_t( ID_TITLE.Get() ),
+		VRMenuObjectParms p( VRMENU_STATIC, std::vector< VRMenuComponent* >(),
+				VRMenuSurfaceParms(), Cinema.GetCinemaStrings().ResumeMenu_Title.c_str(), panelPose, defaultScale, fontParms, VRMenuId_t( ID_TITLE.Get() ),
 				VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-		parms.PushBack( &p );
+		parms.push_back( &p );
 
 		Menu->AddItems( guiSys, parms, centerRootHandle, false );
-		parms.Clear();
+		parms.clear();
 	}
 
 	// ==============================================================================
 	//
 	// options
 	//
-	Array<const char *> options;
-	options.PushBack( Cinema.GetCinemaStrings().ResumeMenu_Resume.ToCStr() );
-	options.PushBack( Cinema.GetCinemaStrings().ResumeMenu_Restart.ToCStr() );
+	std::vector<const char *> options;
+	options.push_back( Cinema.GetCinemaStrings().ResumeMenu_Resume.c_str() );
+	options.push_back( Cinema.GetCinemaStrings().ResumeMenu_Restart.c_str() );
 
-	Array<const char *> icons;
-	icons.PushBack( "assets/resume.png" );
-	icons.PushBack( "assets/restart.png" );
+	std::vector<const char *> icons;
+	icons.push_back( "assets/resume.png" );
+	icons.push_back( "assets/restart.png" );
 
-	Array<PanelPose> optionPositions;
-	optionPositions.PushBack( PanelPose( Quatf( up, 0.0f / 180.0f * MATH_FLOAT_PI ), Vector3f( -0.5f, 1.7f, -3.0f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
-	optionPositions.PushBack( PanelPose( Quatf( up, 0.0f / 180.0f * MATH_FLOAT_PI ), Vector3f(  0.5f, 1.7f, -3.0f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
+	std::vector<PanelPose> optionPositions;
+	optionPositions.push_back( PanelPose( Quatf( up, 0.0f / 180.0f * MATH_FLOAT_PI ), Vector3f( -0.5f, 1.7f, -3.0f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
+	optionPositions.push_back( PanelPose( Quatf( up, 0.0f / 180.0f * MATH_FLOAT_PI ), Vector3f(  0.5f, 1.7f, -3.0f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
 
 	int borderWidth = 0, borderHeight = 0;
 	GLuint borderTexture = LoadTextureFromApplicationPackage( "assets/resume_restart_border.png", TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), borderWidth, borderHeight );
 
-	for ( int i = 0; i < optionPositions.GetSizeI(); ++i )
+	for ( int i = 0; i < static_cast< int >( optionPositions.size() ); ++i )
 	{
 		ResumeMovieComponent * resumeMovieComponent = new ResumeMovieComponent( this, i );
-		Array< VRMenuComponent* > optionComps;
-		optionComps.PushBack( resumeMovieComponent );
+		std::vector< VRMenuComponent* > optionComps;
+		optionComps.push_back( resumeMovieComponent );
 
 		VRMenuSurfaceParms panelSurfParms( "",
 				borderTexture, borderWidth, borderHeight, SURFACE_TEXTURE_ADDITIVE,
@@ -183,11 +183,11 @@ void ResumeMovieView::CreateMenu( OvrGuiSys & guiSys )
 				panelSurfParms, options[ i ], panelPose, defaultScale, fontParms, VRMenuId_t( ID_OPTIONS.Get() + i ),
 				VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-		parms.PushBack( p );
+		parms.push_back( p );
 
 		Menu->AddItems( guiSys, parms, centerRootHandle, false );
 		DeletePointerArray( parms );
-		parms.Clear();
+		parms.clear();
 
 		// add icon
 		menuHandle_t optionHandle = centerRoot->ChildHandleForId( guiSys.GetVRMenuMgr(), VRMenuId_t( ID_OPTIONS.Get() + i ) );
@@ -207,15 +207,15 @@ void ResumeMovieView::CreateMenu( OvrGuiSys & guiSys )
 		optionObject->SetTextLocalPosition( Vector3f( iconWidth * VRMenuObject::DEFAULT_TEXEL_SCALE * 0.5f, 0.0f, 0.0f ) );
 
 		Posef iconPose( optionPositions[ i ].Orientation, optionPositions[ i ].Position + Vector3f( textBounds.GetMins().x, 0.0f, 0.01f ) );
-		p = new VRMenuObjectParms( VRMENU_STATIC, Array< VRMenuComponent* >(),
-				iconSurfParms, NULL, iconPose, defaultScale, fontParms, VRMenuId_t( ID_OPTION_ICONS.Get() + i ),
+		p = new VRMenuObjectParms( VRMENU_STATIC, std::vector< VRMenuComponent* >(),
+				iconSurfParms, "", iconPose, defaultScale, fontParms, VRMenuId_t( ID_OPTION_ICONS.Get() + i ),
 				VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
 
-		parms.PushBack( p );
+		parms.push_back( p );
 
 		Menu->AddItems( guiSys, parms, centerRootHandle, false );
 		DeletePointerArray( parms );
-		parms.Clear();
+		parms.clear();
 
 		menuHandle_t iconHandle = centerRoot->ChildHandleForId( guiSys.GetVRMenuMgr(), VRMenuId_t( ID_OPTION_ICONS.Get() + i ) );
 		resumeMovieComponent->Icon = guiSys.GetVRMenuMgr().ToObject( iconHandle );

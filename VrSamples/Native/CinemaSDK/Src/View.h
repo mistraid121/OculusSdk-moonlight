@@ -5,7 +5,7 @@ Content     :
 Created     :	6/17/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -17,7 +17,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define View_h
 
 #include "KeyState.h"
-#include "Kernel/OVR_Math.h"
+#include "OVR_Math.h"
 #include "OVR_Input.h"
 #include "App.h"
 
@@ -44,7 +44,7 @@ public:
 	virtual void 		OneTimeInit( const char * launchIntent ) = 0;
 	virtual void		OneTimeShutdown() = 0;
 
-	virtual void 		OnOpen() = 0;
+	virtual void 		OnOpen( const double currTimeInSeconds ) = 0;
 	virtual void 		OnClose() = 0;
 
 	virtual void		EnteredVrMode();  // By default do nothing.  Subclasses override.

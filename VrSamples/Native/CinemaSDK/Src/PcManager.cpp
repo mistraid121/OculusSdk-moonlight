@@ -13,8 +13,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "Kernel/OVR_String_Utils.h"
-#include "Kernel/OVR_JSON.h"
+#include "OVR_BinaryFile2.h"
+#include "OVR_JSON.h"
+#include "OVR_Std.h"
 
 #include "PcManager.h"
 #include "CinemaApp.h"
@@ -32,6 +33,20 @@ namespace OculusCinema {
 const int PcManager::PosterWidth = 228;
 const int PcManager::PosterHeight = 344;
 
+static void ReplaceExtension(std::string & s, const std::string & newExtension)
+{
+	// find the last .
+	size_t lastDot = s.rfind('.');
+	if (lastDot != std::string::npos)
+	{
+		s.replace( s.begin() + lastDot, s.end(), newExtension );
+	}
+	else
+	{
+		s += newExtension;
+	}
+}
+
 //=======================================================================================
 
 PcManager::PcManager( CinemaApp &cinema ) :
@@ -45,7 +60,7 @@ PcManager::~PcManager()
 
 void PcManager::OneTimeInit( const char * launchIntent )
 {
-	LOG( "PcManager::OneTimeInit" );
+	OVR_LOG( "PcManager::OneTimeInit" );
 
 	OVR_UNUSED( launchIntent );
 
@@ -55,7 +70,7 @@ void PcManager::OneTimeInit( const char * launchIntent )
 
     PcPoster = LoadTextureFromApplicationPackage("assets/default_poster.png",
             TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-    LOG(" Default gluint: %i", PcPoster);
+    OVR_LOG(" Default gluint: %i", PcPoster);
     PcPosterPaired = LoadTextureFromApplicationPackage(
             "assets/generic_paired_poster.png",
             TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
@@ -87,14 +102,14 @@ void PcManager::OneTimeInit( const char * launchIntent )
     MakeTextureTrilinear( GlTexture( PcPosterWTF, width, height ) );
     MakeTextureClamped( GlTexture( PcPosterWTF, width, height ) );
 
-    LOG("PcManager::OneTimeInit: %i movies loaded, %3.1f seconds",
-            Movies.GetSizeI(), vrapi_GetTimeInSeconds() - start);
+    OVR_LOG("PcManager::OneTimeInit: %i movies loaded, %3.1f seconds",
+            static_cast<int>(Movies.size()), vrapi_GetTimeInSeconds() - start);
 
 }
 
 void PcManager::OneTimeShutdown()
 {
-	LOG( "PcManager::OneTimeShutdown" );
+	OVR_LOG( "PcManager::OneTimeShutdown" );
 }
 
 //void PcManager::AddPc(const String &name, const String &uuid, Native::PairState pairState, Native::Reachability reachability, const String &binding, const bool isRunning) {
@@ -102,13 +117,13 @@ void PcManager::AddPc(const char *name, const char *uuid, Native::PairState pair
 	PcDef *movie = NULL;
 	bool isNew = false;
 
-	for (UPInt i = 0; i < Movies.GetSize(); i++) {
-		if (Movies[i]->Name.CompareNoCase(name) == 0)
+	for (UPInt i = 0; i < Movies.size(); i++) {
+		if (OVR_stricmp( Movies[i]->Name.c_str(), name ) == 0)
 			movie = Movies[i];
 	}
 	if (movie == NULL) {
 		movie = new PcDef();
-		Movies.PushBack(movie);
+		Movies.push_back(movie);
 		isNew = true;
 	}
 
@@ -134,74 +149,73 @@ void PcManager::AddPc(const char *name, const char *uuid, Native::PairState pair
 	updated = true;
 }
 
-void PcManager::RemovePc(const String &name) {
-	for (UPInt i = 0; i < Movies.GetSize(); i++) {
-		if (Movies[i]->Name.CompareNoCase(name) == 0)
+void PcManager::RemovePc(const std::string &name) {
+	for (UPInt i = 0; i < Movies.size(); i++) {
+		if (OVR::OVR_stricmp( Movies[i]->Name.c_str(), name.c_str() ) == 0)
 			continue;
-		Movies.RemoveAt(i);
+		Movies.erase( Movies.cbegin() + i );
 		return;
 	}
 }
 
 void PcManager::LoadPcs() {
-	LOG("LoadMovies");
+	OVR_LOG("LoadMovies");
 
 	const double start = vrapi_GetTimeInSeconds();
 
-	Array<String> movieFiles; //TODO: Get enumerated PCs and updates from JNI PCSelector
-	LOG("%i movies scanned, %3.1f seconds", movieFiles.GetSizeI(),
+	std::vector<std::string> movieFiles; //TODO: Get enumerated PCs and updates from JNI PCSelector
+	OVR_LOG("%i movies scanned, %3.1f seconds", static_cast<int>(movieFiles.size()),
 			vrapi_GetTimeInSeconds() - start);
 
-	for (UPInt i = 0; i < movieFiles.GetSize(); i++) {
+	for (UPInt i = 0; i < movieFiles.size(); i++) {
 		PcDef *movie = new PcDef();
-		Movies.PushBack(movie);
+		Movies.push_back(movie);
 
 		movie->Name = movieFiles[i];
 
 		ReadMetaData(movie);
 	}
 
-	LOG("%i movies panels loaded, %3.1f seconds", Movies.GetSizeI(),
+	OVR_LOG("%i movies panels loaded, %3.1f seconds", static_cast<int>(Movies.size()),
 			vrapi_GetTimeInSeconds() - start);
 }
 
-PcCategory PcManager::CategoryFromString(const String &categoryString) const {
+PcCategory PcManager::CategoryFromString(const std::string &categoryString) const {
 	return CATEGORY_LIMELIGHT;
 }
 
 void PcManager::ReadMetaData( PcDef *movie )
 {
-	String filename = movie->Name;
-	filename.StripExtension();
-	filename.AppendString( ".txt" );
+	std::string filename = movie->Name;
+	ReplaceExtension( filename, ".txt" );
 
 	const char* error = NULL;
 
-	if ( !Cinema.FileExists( filename.ToCStr() ) )
+	if ( !Cinema.FileExists( filename.c_str() ) )
 	{
 		return;
 	}
 
-	if (JSON* metadata = JSON::Load(filename.ToCStr(), &error)) {
+	if (auto metadata = JSON::Load(filename.c_str(), &error)) {
 
-		metadata->Release();
+		//metadata->Release();
 
-		LOG("Loaded metadata: %s", filename.ToCStr());
+		OVR_LOG("Loaded metadata: %s", filename.c_str());
 	} else {
-		LOG("Error loading metadata for %s: %s", filename.ToCStr(),
+		OVR_LOG("Error loading metadata for %s: %s", filename.c_str(),
 				(error == NULL) ? "NULL" : error);
 	}
 }
 
-Array<const PcDef *> PcManager::GetPcList(PcCategory category) const {
-	Array<const PcDef *> result;
+std::vector<const PcDef *> PcManager::GetPcList(PcCategory category) const {
+	std::vector<const PcDef *> result;
 
-	for (UPInt i = 0; i < Movies.GetSize(); i++) {
+	for (UPInt i = 0; i < Movies.size(); i++) {
 		if (Movies[i]->Category == category) {
 			if (Movies[i]->Poster != 0) {
-				result.PushBack(Movies[i]);
+				result.push_back(Movies[i]);
 			} else {
-				LOG("Skipping PC with empty poster!");
+				OVR_LOG("Skipping PC with empty poster!");
 			}
 		}
 	}

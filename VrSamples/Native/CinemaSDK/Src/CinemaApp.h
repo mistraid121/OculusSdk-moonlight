@@ -5,7 +5,7 @@ Content     :
 Created     :	6/17/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -29,6 +29,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "GuiSys.h"
 #include "SoundEffectContext.h"
 #include <memory>
+#include <string>
 
 using namespace OVR;
 
@@ -59,27 +60,27 @@ public:
 	const ovrFrameInput &	GetFrame() const { return VrFrame; }
 	ovrFrameResult &		GetFrameResult() { return FrameResult; }
 
-	void                    SetPlaylist( const Array<const PcDef *> &playList, const int nextMovie );
-    void                    SetMovie( const PcDef * nextMovie );
-    void                    SetPc( const PcDef * pc);
+	void                    SetPlaylist( const std::vector<const PcDef *> &playList, const int nextMovie );
+    	void                    SetMovie( const PcDef * nextMovie );
+    	void                    SetPc( const PcDef * pc);
 
 	void 					MovieLoaded( const int width, const int height, const int duration );
 
 	const PcDef *            GetCurrentMovie() const { return CurrentMovie; }
-    const PcDef *            GetCurrentPc() const { return CurrentPc; }
-    const PcDef *            GetNextMovie() const;
-    const PcDef *            GetPreviousMovie() const;
+    	const PcDef *            GetCurrentPc() const { return CurrentPc; }
+   	const PcDef *            GetNextMovie() const;
+    	const PcDef *            GetPreviousMovie() const;
 
 
 	const SceneDef & 		GetCurrentTheater() const;
 
-	void                    StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate);
+	void                   			StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate);
 	void 					ResumeMovieFromSavedLocation();
 	void					PlayMovieFromBeginning();
 	void 					ResumeOrRestartMovie();
 	void 					TheaterSelection();
-	void                    PcSelection( bool inLobby );
-    void                    AppSelection( bool inLobby );
+	void                   			PcSelection( bool inLobby );
+	void   			                AppSelection( bool inLobby );
 
 	void					MovieFinished();
 	void					UnableToPlayMovie();
@@ -87,24 +88,26 @@ public:
 	bool 					AllowTheaterSelection() const;
 	bool 					IsMovieFinished() const;
 
-	const char *			RetailDir( const char *dir ) const;
-	const char *			ExternalRetailDir( const char *dir ) const;
-	const char *			SDCardDir( const char *dir ) const;
-	const char * 			ExternalSDCardDir( const char *dir ) const;
-	const char * 			ExternalCacheDir( const char *dir ) const;
+	const std::string		RetailDir( const char *dir ) const;
+	const std::string		ExternalRetailDir( const char *dir ) const;
+	const std::string		SDCardDir( const char *dir ) const;
+	const std::string 		ExternalSDCardDir( const char *dir ) const;
+	const std::string 		ExternalCacheDir( const char *dir ) const;
 	bool 					IsExternalSDCardDir( const char *dir ) const;
-	bool 					FileExists( const char *filename ) const;
+	bool 					FileExists( const std::string & filename ) const;
 
-    void                    ShowPair( const String& msg );
-    void                    PairSuccess();
-    void                    ShowError( const String& msg );
-    void                    ClearError();
-	void                    MovieScreenUpdated();
+    	void                    		ShowPair( const std::string& msg );
+	void                   			PairSuccess();
+	void                    		ShowError( const std::string& msg );
+	void                    		ClearError();
+	void                    		MovieScreenUpdated();
 
 	bool					HeadsetWasMounted() const { return ( MountState == true ) && ( LastMountState == false ); }
 	bool					HeadsetWasUnmounted() const { return ( MountState == false ) && ( LastMountState == true ); }
 	bool					HeadsetMountStateChanged() const { return ( MountState != LastMountState ); }
 	bool					HeadsetMountState() const { return MountState; }
+
+	bool					GetUseSrgb() const;
 
 	ovrSoundEffectContext & GetSoundEffectContext() { return *SoundEffectContext; }
 	ovrCinemaStrings &		GetCinemaStrings() const;
@@ -120,8 +123,8 @@ public:
 	SceneManager			SceneMgr;
 	ShaderManager 			ShaderMgr;
 	ModelManager 			ModelMgr;
-    PcManager                 PcMgr;
-    AppManager                AppMgr;
+	PcManager                 PcMgr;
+	AppManager                AppMgr;
 
 	bool					InLobby;
 	bool					AllowDebugControls;
@@ -136,7 +139,7 @@ private:
 	ViewManager				ViewMgr;
 	MoviePlayerView			MoviePlayer;
 	PcSelectionView         PcSelectionMenu;
-    AppSelectionView        AppSelectionMenu;
+   	AppSelectionView        AppSelectionMenu;
 
 	TheaterSelectionView	TheaterSelectionMenu;
 	ResumeMovieView			ResumeMovieMenu;
@@ -145,15 +148,17 @@ private:
 
 	int						FrameCount;
 
-    const PcDef *            CurrentMovie;
-    const PcDef *            CurrentPc;
-    Array<const PcDef *>    PlayList;
+    	const PcDef *            CurrentMovie;
+    	const PcDef *            CurrentPc;
+    	std::vector<const PcDef *>    PlayList;
 
 	bool					ShouldResumeMovie;
 	bool					MovieFinishedPlaying;
 
 	bool					MountState;
 	bool					LastMountState;
+
+	bool					UseSrgb;
 
 private:
 	void 					Command( const char * msg );

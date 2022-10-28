@@ -5,7 +5,7 @@ Content     :
 Created     :	6/17/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -26,15 +26,13 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "UI/UIImage.h"
 #include "UI/UIButton.h"
 #include "Settings.h"
-#include "Kernel/OVR_List.h"
+//#include "Kernel/OVR_List.h"
 
 
 
 using namespace OVR;
 
 namespace OculusCinema {
-
-
 
 enum ePlaybackControlsEvent
 {
@@ -72,7 +70,7 @@ public:
 
 	virtual int				GetTypeId() const { return TYPE_ID; }
 
-	void					SetGazeTime();
+	void					SetGazeTime( const double currTimeInSeconds );
 	double					GetLastGazeTime() const { return LastGazeTime; }
 
 	bool					IsFocused() const { return HasFocus; }
@@ -137,13 +135,13 @@ private:
 class MoviePlayerView : public View
 {
 public:
-							MoviePlayerView( CinemaApp &app_ );
+							MoviePlayerView( CinemaApp & app_ );
 	virtual 				~MoviePlayerView();
 
 	virtual void 			OneTimeInit( const char * launchIntent );
 	virtual void			OneTimeShutdown();
 
-	virtual void 			OnOpen();
+	virtual void 			OnOpen( const double currTimeInSeconds );
 	virtual void 			OnClose();
 
 	virtual void			EnteredVrMode();
@@ -207,7 +205,7 @@ private:
 
 
 	UIImage					ControlsBackground;
-	ControlsGazeTimer		GazeTimer;
+	ControlsGazeTimer *		GazeTimer;
 
 	UIButton				RewindButton;
 	UIButton				PlayButton;
@@ -349,11 +347,11 @@ private:
 
 
 	float					settingsVersion;
-	String					defaultSettingsPath;
-	String					settings1Path;
-	String					settings2Path;
-	String					settings3Path;
-	String					appSettingsPath;
+	std::string					defaultSettingsPath;
+	std::string					settings1Path;
+	std::string					settings2Path;
+	std::string					settings3Path;
+	std::string					appSettingsPath;
 	Settings*				defaultSettings;
 	Settings*				settings1;
 	Settings*				settings2;
@@ -397,11 +395,13 @@ private:
 	float					VoidScreenDistanceMax;
 	float					VoidScreenScaleMin;
 	float					VoidScreenScaleMax;
-	class OldScreenPose : public ListNode<OldScreenPose> {
+	//class OldScreenPose : public ListNode<OldScreenPose> {
+class OldScreenPose : public std::list<OldScreenPose> {
 	public: long time;
 		Matrix4f pose;
 	};
-	List<OldScreenPose>        oldPoses;
+	//List<OldScreenPose>        oldPoses;
+	std::list<OldScreenPose>        oldPoses;
 	int                        calibrationStage;
 	Matrix4f                lastPose;
 	float                    trackCalibrationYaw;
@@ -586,7 +586,7 @@ private:
 
     void 					CheckDebugControls( const ovrFrameInput & vrFrame );
 
-	void 					ShowUI();
+	void 					ShowUI(const double currTimeInSeconds);
 	void 					HideUI();
 
 	Matrix4f                InterpolatePoseAtTime(long time);

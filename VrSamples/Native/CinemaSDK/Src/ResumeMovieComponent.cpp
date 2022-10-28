@@ -5,7 +5,7 @@ Content     :
 Created     :   September 4, 2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -106,7 +106,7 @@ eMsgStatus ResumeMovieComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const 
 eMsgStatus ResumeMovieComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
-	//LOG( "FocusGained" );
+	//OVR_LOG( "FocusGained" );
 
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );
@@ -130,7 +130,7 @@ eMsgStatus ResumeMovieComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput 
 eMsgStatus ResumeMovieComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
-	//LOG( "FocusLost" );
+	//OVR_LOG( "FocusLost" );
 
 	OVR_UNUSED( vrFrame );
 	OVR_UNUSED( event );

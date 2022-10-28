@@ -5,7 +5,7 @@ Content     :   A menu for browsing a a group of items on a carousel in front of
 Created     :   July 25, 2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -24,7 +24,7 @@ namespace OculusCinema {
 
 //==============================================================
 // CarouselBrowserComponent
-CarouselBrowserComponent::CarouselBrowserComponent( const Array<CarouselItem *> &items, const Array<PanelPose> &panelPoses ) :
+CarouselBrowserComponent::CarouselBrowserComponent( const std::vector<CarouselItem *> &items, const std::vector<PanelPose> &panelPoses ) :
 	VRMenuComponent( VRMenuEventFlags_t( VRMENU_EVENT_FRAME_UPDATE ) | 	VRMENU_EVENT_TOUCH_DOWN | 
 		VRMENU_EVENT_SWIPE_FORWARD | VRMENU_EVENT_SWIPE_BACK | VRMENU_EVENT_TOUCH_UP | VRMENU_EVENT_OPENED | VRMENU_EVENT_CLOSED ),
 		SelectPressed( false ), PositionScale( 1.0f ), Position( 0.0f ), TouchDownTime( -1.0 ),
@@ -62,18 +62,18 @@ eMsgStatus CarouselBrowserComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameI
 	}
 }
 
-void CarouselBrowserComponent::SetPanelPoses( OvrVRMenuMgr & menuMgr, VRMenuObject * self, const Array<PanelPose> &panelPoses )
+void CarouselBrowserComponent::SetPanelPoses( OvrVRMenuMgr & menuMgr, VRMenuObject * self, const std::vector<PanelPose> &panelPoses )
 {
 	PanelPoses = panelPoses;
 	UpdatePanels( menuMgr, self );
 }
 
-void CarouselBrowserComponent::SetMenuObjects( const Array<VRMenuObject *> &menuObjs, const Array<CarouselItemComponent *> &menuComps )
+void CarouselBrowserComponent::SetMenuObjects( const std::vector<VRMenuObject *> &menuObjs, const std::vector<CarouselItemComponent *> &menuComps )
 {
 	MenuObjs = menuObjs;
 	MenuComps = menuComps;
 
-	OVR_ASSERT( MenuObjs.GetSizeI() == MenuObjs.GetSizeI() );
+	OVR_ASSERT( MenuObjs.size() == MenuObjs.size() );
 }
 
 PanelPose CarouselBrowserComponent::GetPosition( const float t )
@@ -87,11 +87,11 @@ PanelPose CarouselBrowserComponent::GetPosition( const float t )
 	{
 		pose = PanelPoses[ 0 ];
 	}
-	else if ( ( index == PanelPoses.GetSizeI() - 1 ) && ( fabs( frac ) <= 0.00001f ) )
+	else if ( ( index == static_cast< int >( PanelPoses.size() ) - 1 ) && ( fabs( frac ) <= 0.00001f ) )
 	{
-		pose = PanelPoses[ PanelPoses.GetSizeI() - 1 ];
+		pose = PanelPoses[ static_cast< int >( PanelPoses.size() ) - 1 ];
 	}
-	else if ( index >= PanelPoses.GetSizeI() - 1 )
+	else if ( index >= static_cast< int >( PanelPoses.size() ) - 1 )
 	{
 		pose.Orientation = Quatf();
 		pose.Position = Vector3f( 0.0f, 0.0f, 0.0f );
@@ -111,7 +111,7 @@ PanelPose CarouselBrowserComponent::GetPosition( const float t )
 
 void CarouselBrowserComponent::SetSelectionIndex( const int selectedIndex )
 {
-	if ( ( selectedIndex >= 0 ) && ( selectedIndex < Items.GetSizeI() ) )
+	if ( ( selectedIndex >= 0 ) && ( selectedIndex < static_cast< int >( Items.size() ) ) )
 	{
 		Position = static_cast<float>( selectedIndex );
 	}
@@ -128,7 +128,7 @@ void CarouselBrowserComponent::SetSelectionIndex( const int selectedIndex )
 int CarouselBrowserComponent::GetSelection() const
 {
 	int itemIndex = static_cast<int>( floor( Position + 0.5f ) );
-	if ( ( itemIndex >= 0 ) && ( itemIndex < Items.GetSizeI() ) )
+	if ( ( itemIndex >= 0 ) && ( itemIndex < static_cast< int >( Items.size() ) ) )
 	{
 		return itemIndex;
 	}
@@ -138,7 +138,7 @@ int CarouselBrowserComponent::GetSelection() const
 
 bool CarouselBrowserComponent::HasSelection() const
 {
-	if ( Items.GetSize() == 0 )
+	if ( Items.size() == 0 )
 	{
 		return false;
 	}
@@ -155,7 +155,7 @@ bool CarouselBrowserComponent::CanSwipeBack() const
 bool CarouselBrowserComponent::CanSwipeForward() const
 {
 	float nextPos = floorf( Position ) + 1.0f;
-	return ( nextPos < Items.GetSizeI() );
+	return ( nextPos < static_cast< int >( Items.size() ) );
 }
 
 void CarouselBrowserComponent::UpdatePanels( OvrVRMenuMgr & menuMgr, VRMenuObject * self )
@@ -165,13 +165,13 @@ void CarouselBrowserComponent::UpdatePanels( OvrVRMenuMgr & menuMgr, VRMenuObjec
 
 	int centerIndex = static_cast<int>( floor( Position ) );
 	float offset = centerIndex - Position;
-	int leftIndex = centerIndex - PanelPoses.GetSizeI() / 2;
+	int leftIndex = centerIndex - static_cast< int >( PanelPoses.size() ) / 2;
 
 	int itemIndex = leftIndex;
-	for ( int i = 0; i < MenuObjs.GetSizeI(); i++, itemIndex++ )
+	for ( int i = 0; i < static_cast< int >( MenuObjs.size() ); i++, itemIndex++ )
 	{
 		PanelPose pose = GetPosition( ( float )i + offset );
-		if ( ( itemIndex < 0 ) || ( itemIndex >= Items.GetSizeI() ) || ( ( offset < 0.0f ) && ( i == 0 ) ) )
+		if ( ( itemIndex < 0 ) || ( itemIndex >= static_cast< int >( Items.size() ) ) || ( ( offset < 0.0f ) && ( i == 0 ) ) )
 		{
 			MenuComps[ i ]->SetItem( MenuObjs[ i ], NULL, pose );
 		}
@@ -237,7 +237,7 @@ eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrFrameI
 	if ( !Swiping )
 	{
 		float nextPos = floorf( Position ) + 1.0f;
-		if ( nextPos < Items.GetSizeI() )
+		if ( nextPos < static_cast< int >( Items.size() ) )
 		{
 			guiSys.GetSoundEffectPlayer().Play( "carousel_move" );
 			PrevPosition = Position;
@@ -272,13 +272,13 @@ eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrFrameInpu
 
 eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
-	//LOG( "TouchDown" );
+	//OVR_LOG( "TouchDown" );
 
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );
 	OVR_UNUSED( self );
 
-	TouchDownTime = vrapi_GetTimeInSeconds();
+	TouchDownTime = vrFrame.RealTimeInSeconds;
 
 	if ( Swiping )
 	{
@@ -290,19 +290,19 @@ eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrFrameInpu
 
 eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
-	//LOG( "TouchUp" );
+	//OVR_LOG( "TouchUp" );
 
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );
 	OVR_UNUSED( self );
 
-	float const timeTouchHasBeenDown = (float)( vrapi_GetTimeInSeconds() - TouchDownTime );
+	float const timeTouchHasBeenDown = (float)( vrFrame.RealTimeInSeconds - TouchDownTime );
 	TouchDownTime = -1.0;
 
 	float dist = event.FloatValue.LengthSq();
 	if ( !Swiping && ( dist < 20.0f ) && ( timeTouchHasBeenDown < 1.0f ) )
 	{
-		LOG( "Selectmovie" );
+		OVR_LOG( "Selectmovie" );
 		SelectPressed = true;
 	}
 	else if ( Swiping )
@@ -310,7 +310,7 @@ eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrFrameInput 
 		return MSG_STATUS_CONSUMED;
 	}
 
-	//LOG( "Ignore: %f, %f", RotationalVelocity, ( float )timeTouchHasBeenDown );
+	//OVR_LOG( "Ignore: %f, %f", RotationalVelocity, ( float )timeTouchHasBeenDown );
 	return MSG_STATUS_ALIVE; // don't consume -- we are just listening
 }
 
@@ -338,7 +338,7 @@ eMsgStatus CarouselBrowserComponent::Closed( OvrGuiSys & guiSys, ovrFrameInput c
 	return MSG_STATUS_ALIVE;
 }
 
-void CarouselBrowserComponent::SetItems( const Array<CarouselItem *> &items )
+void CarouselBrowserComponent::SetItems( const std::vector<CarouselItem *> &items )
 {
 	Items = items;
 	SelectPressed = false;

@@ -5,7 +5,7 @@ Content     :	Text strings used by app.  Located in one place to make translatio
 Created     :	9/30/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -22,7 +22,7 @@ namespace OculusCinema
 
 void ovrCinemaStrings::OneTimeInit( CinemaApp & cinema )
 {
-	LOG( "ovrCinemaStrings::OneTimeInit" );
+	OVR_LOG( "ovrCinemaStrings::OneTimeInit" );
 
 	cinema.GetLocale().GetString( "@string/Category_Trailers", 		"@string/Category_Trailers", 		Category_Trailers );
 	cinema.GetLocale().GetString( "@string/Category_MyVideos", 		"@string/Category_MyVideos", 		Category_MyVideos );	

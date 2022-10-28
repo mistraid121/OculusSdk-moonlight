@@ -5,10 +5,10 @@ Content     :	Allocates and builds shader programs.
 Created     :	7/3/2014
 Authors     :   Jim Dosé and John Carmack
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
-LICENSE file in the Cinema/ directory. An additional grant 
+LICENSE file in the Cinema/ directory. An additional grant
 of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
@@ -51,35 +51,6 @@ static const char * copyMovieFragmentShaderSource =
 	"void main()\n"
 	"{\n"
 	"	gl_FragColor = texture2D( Texture0, oTexCoord ) *  texture2D( Texture1, oTexCoord );\n"
-	"}\n";
-
-static const char * movieUiVertexShaderSrc =
-	"uniform TextureMatrices\n"
-	"{\n"
-		"highp mat4 Texm[NUM_VIEWS];\n"
-	"};\n"
-	"attribute vec4 Position;\n"
-	"attribute vec2 TexCoord;\n"
-	"uniform lowp vec4 UniformColor;\n"
-	"varying  highp vec2 oTexCoord;\n"
-	"varying  lowp vec4 oColor;\n"
-	"void main()\n"
-	"{\n"
-	"   gl_Position = TransformVertex( Position );\n"
-	"   oTexCoord = vec2( Texm[ VIEW_ID ] * vec4(TexCoord,1,1) );\n"
-	"   oColor = UniformColor;\n"
-	"}\n";
-
-const char * movieUiFragmentShaderSrc =
-	"uniform sampler2D Texture0;\n"
-	"uniform sampler2D Texture1;\n"	// fade / clamp texture
-	"uniform lowp vec4 ColorBias;\n"
-	"varying highp vec2 oTexCoord;\n"
-	"varying lowp vec4	oColor;\n"
-	"void main()\n"
-	"{\n"
-	"	lowp vec4 movieColor = texture2D( Texture0, oTexCoord ) * texture2D( Texture1, oTexCoord );\n"
-	"	gl_FragColor = ColorBias + oColor * movieColor;\n"
 	"}\n";
 
 static const char * SceneStaticVertexShaderSrc =
@@ -158,19 +129,6 @@ static const char * SceneAdditiveFragmentShaderSrc =
 	"	gl_FragColor.w = 1.0;\n"
 	"}\n";
 
-static char const * UniformColorVertexProgSrc =
-	"uniform lowp vec4 UniformColor;\n"
-	"attribute vec4 Position;\n"
-	"void main() {\n"
-	"  gl_Position = TransformVertex( Position );\n"
-	"}\n";
-
-static char const * UniformColorFragmentProgSrc =
-	"uniform lowp vec4 UniformColor;\n"
-	"void main() {\n"
-	"  gl_FragColor = UniformColor;\n"
-	"}\n";
-
 //=======================================================================================
 
 ShaderManager::ShaderManager( CinemaApp &cinema ) :
@@ -180,25 +138,13 @@ ShaderManager::ShaderManager( CinemaApp &cinema ) :
 
 void ShaderManager::OneTimeInit( const char * launchIntent )
 {
-	LOG( "ShaderManager::OneTimeInit" );
+	OVR_LOG( "ShaderManager::OneTimeInit" );
 
 	OVR_UNUSED( launchIntent );
 
 	const double start = SystemClock::GetTimeInSeconds();
 
-	static ovrProgramParm MovieExternalUiUniformParms[] =
-	{
-		{ "TextureMatrices",ovrProgramParmType::BUFFER_UNIFORM	},
-		{ "UniformColor",	ovrProgramParmType::FLOAT_VECTOR4	},
-		{ "Texture0",		ovrProgramParmType::TEXTURE_SAMPLED },
-		{ "Texture1",		ovrProgramParmType::TEXTURE_SAMPLED },
-		{ "ColorBias",		ovrProgramParmType::FLOAT_VECTOR4   },
-	};
-	MovieExternalUiProgram		= GlProgram::Build( movieUiVertexShaderSrc, movieUiFragmentShaderSrc,
-									MovieExternalUiUniformParms, sizeof( MovieExternalUiUniformParms ) / sizeof( ovrProgramParm ) );
-
-	CopyMovieProgram 			= BuildProgram( NULL, copyMovieVertexShaderSrc, ImageExternalDirectives, copyMovieFragmentShaderSource );
-	UniformColorProgram			= BuildProgram( UniformColorVertexProgSrc, UniformColorFragmentProgSrc );
+	CopyMovieProgram = BuildProgramNoMultiview( NULL, copyMovieVertexShaderSrc, ImageExternalDirectives, copyMovieFragmentShaderSource );
 
 	ScenePrograms[SCENE_PROGRAM_BLACK]			= BuildProgram( SceneStaticVertexShaderSrc, SceneBlackFragmentShaderSrc );
 	ScenePrograms[SCENE_PROGRAM_STATIC_ONLY]	= BuildProgram( SceneStaticVertexShaderSrc, SceneStaticFragmentShaderSrc );
@@ -227,18 +173,16 @@ void ShaderManager::OneTimeInit( const char * launchIntent )
 	DefaultPrograms.ProgSkinnedLightMapped		= & ProgSkinnedLightMapped;
 	DefaultPrograms.ProgSkinnedReflectionMapped	= & ProgSkinnedReflectionMapped;
 
-	LOG( "ShaderManager::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ShaderManager::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
 }
 
 void ShaderManager::OneTimeShutdown()
 {
-	LOG( "ShaderManager::OneTimeShutdown" );
+	OVR_LOG( "ShaderManager::OneTimeShutdown" );
 
-	GlProgram::Free( MovieExternalUiProgram );
 	DeleteProgram( CopyMovieProgram );
-	DeleteProgram( UniformColorProgram );
 
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_BLACK] );	
+	DeleteProgram( ScenePrograms[SCENE_PROGRAM_BLACK] );
 	DeleteProgram( ScenePrograms[SCENE_PROGRAM_STATIC_ONLY] );
 	DeleteProgram( ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC] );
 	DeleteProgram( ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY] );
@@ -247,10 +191,10 @@ void ShaderManager::OneTimeShutdown()
 	//TODO: Review DynamicPrograms
 
 	DeleteProgram( ProgVertexColor );
-	DeleteProgram( ProgSingleTexture );		
-	DeleteProgram( ProgLightMapped );		
-	DeleteProgram( ProgReflectionMapped );	
-	DeleteProgram( ProgSkinnedVertexColor );	
+	DeleteProgram( ProgSingleTexture );
+	DeleteProgram( ProgLightMapped );
+	DeleteProgram( ProgReflectionMapped );
+	DeleteProgram( ProgSkinnedVertexColor );
 	DeleteProgram( ProgSkinnedSingleTexture	);
 	DeleteProgram( ProgSkinnedLightMapped );
 	DeleteProgram( ProgSkinnedReflectionMapped );

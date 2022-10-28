@@ -5,7 +5,7 @@ Content     :
 Created     :	6/19/2014
 Authors     :   Jim Dosé
 
-Copyright   :   Copyright 2014 Oculus VR, LLC. All Rights reserved.
+Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
 LICENSE file in the Cinema/ directory. An additional grant 
@@ -16,9 +16,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( TheaterSelectionView_h )
 #define TheaterSelectionView_h
 
-#include "Kernel/OVR_Array.h"
 #include "View.h"
 #include "GuiSys.h"
+
+#include <vector>
 
 namespace OculusCinema {
 
@@ -35,13 +36,13 @@ public:
 	virtual void 				OneTimeInit( const char * launchIntent );
 	virtual void				OneTimeShutdown();
 
-	virtual void 				OnOpen();
+	virtual void 				OnOpen( const double currTimeInSeconds );
 	virtual void 				OnClose();
 	virtual bool 				BackPressed();
 	virtual bool 				OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
 	virtual void 				Frame( const ovrFrameInput & vrFrame );
 
-	void 						SelectPressed( void );
+	void 						SelectPressed( const double currTimeInSeconds );
 	void 						SelectTheater( int theater );
 
 	int							GetSelectedTheater() const { return SelectedTheater; }
@@ -60,7 +61,7 @@ private:
 	VRMenuObject * 				SelectionObject;
 
 	CarouselBrowserComponent *	TheaterBrowser;
-	Array<CarouselItem *> 		Theaters;
+	std::vector<CarouselItem *> Theaters;
 
 	int							SelectedTheater;
 
