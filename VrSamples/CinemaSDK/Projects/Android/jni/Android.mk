@@ -2,12 +2,12 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)					# clean everything up to prepare for a module
 
-include ../../../../../cflags.mk
+include ../../../../cflags.mk
 
 LOCAL_MODULE    := cinema				# generate libcinema.so
 
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../../../../1stParty/OVR/Include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../../../1stParty/OVR/Include
 
 
 LOCAL_SRC_FILES	:= 	../../../Src/CinemaApp.cpp \
