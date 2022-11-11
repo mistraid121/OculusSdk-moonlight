@@ -245,6 +245,14 @@ typedef enum ovrVideoDecoderLimit_
 	VRAPI_VIDEO_DECODER_LIMIT_4K_60FPS	= 1,
 } ovrVideoDecoderLimit;
 
+/// Emulation mode for applications developed on different devices
+/// for determining if running in emulation mode at all test against != VRAPI_DEVICE_EMULATION_MODE_NONE
+typedef enum ovrDeviceEmulationMode_
+{
+	VRAPI_DEVICE_EMULATION_MODE_NONE		= 0,
+	VRAPI_DEVICE_EMULATION_MODE_GO_ON_QUEST	= 1,
+} ovrDeviceEmulationMode;
+
 /// System configuration properties.
 typedef enum ovrSystemProperty_
 {
@@ -328,6 +336,7 @@ typedef enum ovrProperty_
 	VRAPI_BLOCK_REMOTE_BUTTONS_WHEN_NOT_EMULATING_HMT	=19,//< Used to not send the remote back button java events to the apps.
 	VRAPI_EAT_NATIVE_GAMEPAD_EVENTS		= 20,				//< Used to tell the runtime not to eat gamepad events.  If this is false on a native app, the app must be listening for the events.
 	VRAPI_ACTIVE_INPUT_DEVICE_ID		= 24,		//< Used by apps to query which input device is most 'active' or primary, a -1 means no active input device
+	VRAPI_DEVICE_EMULATION_MODE			= 29,		//< Used by apps to determine if they are running in an emulation mode. Is a ovrDeviceEmulationMode value
 } ovrProperty;
 
 
@@ -932,6 +941,7 @@ typedef enum ovrLayerType2_
 	VRAPI_LAYER_TYPE_CUBE2					= 4,
 	VRAPI_LAYER_TYPE_EQUIRECT2				= 5,
 	VRAPI_LAYER_TYPE_LOADING_ICON2			= 6,
+	VRAPI_LAYER_TYPE_FISHEYE2				= 7,
 } ovrLayerType2;
 
 /// Properties shared by any type of layer.
@@ -1130,6 +1140,41 @@ typedef struct ovrLayerLoadingIcon2_
 OVR_VRAPI_ASSERT_TYPE_SIZE_32_BIT( ovrLayerLoadingIcon2, 52 );
 OVR_VRAPI_ASSERT_TYPE_SIZE_64_BIT( ovrLayerLoadingIcon2, 64 );
 
+/// An "equiangular fisheye" or "f-theta" lens can be used to capture photos or video
+/// of around 180 degrees without stitching.
+///
+/// The cameras probably aren't exactly vertical, so a transformation may need to be applied
+/// before performing the fisheye calculation.
+/// A stereo fisheye camera rig will usually have slight misalignments between the two
+/// cameras, so they need independent transformations.
+///
+/// Once in lens space, the ray is transformed into an ideal fisheye projection, where the
+/// 180 degree hemisphere is mapped to a -1 to 1 2D space.
+///
+/// From there it can be mapped into actual texture coordinates, possibly two to an image for stereo.
+///
+typedef struct ovrLayerFishEye2_
+{
+	/// Header.Type must be VRAPI_LAYER_TYPE_FISHEYE2.
+	ovrLayerHeader2	Header;
+	OVR_VRAPI_PADDING_32_BIT( 4 )
+
+	ovrRigidBodyPosef	HeadPose;
+
+	struct
+	{
+		ovrTextureSwapChain * ColorSwapChain;
+		int					SwapChainIndex;
+		ovrMatrix4f			LensFromTanAngles;			//< transforms a tanAngle ray into lens space
+		ovrRectf			TextureRect;				//< packed stereo images will need to clamp at the mid border
+		ovrMatrix4f			TextureMatrix;				//< transform from a -1 to 1 ideal fisheye to the texture
+		ovrVector4f			Distortion;					//< Not currently used.
+	} Textures[VRAPI_FRAME_LAYER_EYE_MAX];
+} ovrLayerFishEye2;
+
+OVR_VRAPI_ASSERT_TYPE_SIZE_32_BIT( ovrLayerFishEye2, 472 );
+OVR_VRAPI_ASSERT_TYPE_SIZE_64_BIT( ovrLayerFishEye2, 488 );
+
 
 /// Union that combines ovrLayer types in a way that allows them
 /// to be used in a polymorphic way.
@@ -1141,6 +1186,7 @@ typedef union ovrLayer_Union2_
 	ovrLayerCube2			Cube;
 	ovrLayerEquirect2		Equirect;
 	ovrLayerLoadingIcon2	LoadingIcon;
+	ovrLayerFishEye2		FishEye;
 } ovrLayer_Union2;
 
 /// Parameters for frame submission.
