@@ -6,7 +6,7 @@
 
     <!-- Help strings -->
     <string name="help_loading_title">Visionneuse d\'aide</string>
-    <string name="help_loading_msg">Chargement de la page d\'aide…</string>
+    <string name="help_loading_msg">Chargement de la page d\'aide...</string>
 
     <!-- PC view menu entries -->
     <string name="pcview_menu_app_list">Afficher la liste des jeux</string>
@@ -16,7 +16,7 @@
     <string name="pcview_menu_delete_pc">Supprimer PC</string>
 
     <!-- Pair messages -->
-    <string name="pairing">Appariement…</string>
+    <string name="pairing">Appariement...</string>
     <string name="pair_pc_offline">L\'ordinateur est hors ligne</string>
     <string name="pair_pc_ingame">L\'ordinateur est actuellement dans un jeu. Vous devez fermer le jeu avant l\'appariement.</string>
     <string name="pair_pairing_title">Appariement</string>
@@ -28,14 +28,14 @@
     <!-- WOL messages -->
     <string name="wol_pc_online">L\'ordinateur est en ligne</string>
     <string name="wol_no_mac">Impossible de réveiller le PC car GFE n\'a pas envoyé d\'adresse MAC</string>
-    <string name="wol_waking_pc">Réveil PC…</string>
+    <string name="wol_waking_pc">Réveil PC...</string>
     <string name="wol_waking_msg">Votre PC peut prendre quelques secondes pour se réveiller.
         Si ce n\'est pas le cas, assurez-vous qu\'il est correctement configuré pour Wake-On-LAN.
     </string>
     <string name="wol_fail">Échec de l\'envoi des paquets Wake-On-LAN</string>
 
     <!-- Unpair messages -->
-    <string name="unpairing">Désappariage…</string>
+    <string name="unpairing">Désappariage...</string>
     <string name="unpair_success">Désapparié avec succès</string>
     <string name="unpair_fail">Échec de désappariement</string>
     <string name="unpair_error">Le périphérique n\'a pas été appareillé</string>
@@ -72,13 +72,13 @@
 
     <!-- AppList activity -->
     <string name="title_applist">Applications sur</string>
-    <string name="applist_connect_msg">Connexion au PC…</string>
+    <string name="applist_connect_msg">Connexion au PC...</string>
     <string name="applist_menu_resume">Reprise de la session</string>
     <string name="applist_menu_quit">Quitter la session</string>
     <string name="applist_menu_quit_and_start">Quitter le jeu actuel et démarrer</string>
     <string name="applist_menu_cancel">Annuler</string>
     <string name="applist_refresh_title">Liste des applications</string>
-    <string name="applist_refresh_msg">Actualisation des applications…</string>
+    <string name="applist_refresh_msg">Actualisation des applications...</string>
     <string name="applist_refresh_error_title">Erreur</string>
     <string name="applist_refresh_error_msg">Impossible d\'obtenir la liste des applications</string>
     <string name="applist_quit_app">Fermeture</string>
@@ -88,7 +88,7 @@
 
     <!-- Add computer manually activity -->
     <string name="title_add_pc">Ajouter un PC manuellement</string>
-    <string name="msg_add_pc">Connexion au PC…</string>
+    <string name="msg_add_pc">Connexion au PC...</string>
     <string name="addpc_fail">Impossible de se connecter à l\'ordinateur spécifié. Assurez-vous que les ports requis sont autorisés par le pare-feu.</string>
     <string name="addpc_success">Ajouté avec succès de l\'ordinateur</string>
     <string name="addpc_unknown_host">Impossible de résoudre l\'adresse du PC. Assurez-vous que vous n\'avez pas fait une faute de frappe dans l\'adresse.</string>
