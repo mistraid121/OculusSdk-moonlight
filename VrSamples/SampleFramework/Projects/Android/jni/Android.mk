@@ -28,6 +28,7 @@ LOCAL_SRC_FILES		:= 	../../../Src/Appl.cpp \
 						../../../Src/OVR_BinaryFile2.cpp \
 						../../../Src/OVR_Lexer2.cpp \
 						../../../Src/MessageQueue.cpp \
+						../../../Src/TalkToJava.cpp \
 						../../../Src/Platform/Android/Android.cpp \
 						../../../Src/Misc/Log.c \
 						../../../Src/Render/Egl.c \
@@ -88,6 +89,9 @@ LOCAL_SRC_FILES		:= 	../../../Src/Appl.cpp \
  						../../../Src/GUI/UI/UIDiscreteSlider.cpp \
  						../../../Src/GUI/UI/UIKeyboard.cpp \
  						../../../Src/GUI/UI/UITextBox.cpp \
+ 						../../../Src/Sound/SoundAssetMapping.cpp \
+						../../../Src/Sound/SoundEffectContext.cpp \
+                    	../../../Src/Sound/SoundPool.cpp
 
 
 LOCAL_STATIC_LIBRARIES += minizip stb android_native_app_glue
