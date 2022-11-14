@@ -15,6 +15,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <vector>
 #include "OVR_Math.h"
+#include "View.h"
 
 #if !defined( ViewManager_h )
 #define ViewManager_h
