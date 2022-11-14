@@ -17,11 +17,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define SceneManager_h
 
 #include "PcManager.h"
-#include "SceneView.h"
-#include "Lerp.h"
-#include "SurfaceTexture.h"
+#include "Model/SceneView.h"
+#include "GUI/Lerp.h"
+#include "Render/SurfaceTexture.h"
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -36,10 +35,10 @@ public:
 	void				OneTimeShutdown();
 
 	bool 				Command( const char * msg );
-	void 				Frame( const ovrFrameInput & vrFrame );
+	void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 				SetSeat( int newSeat );
-	bool 				ChangeSeats( const ovrFrameInput & vrFrame );
+	bool 				ChangeSeats( const OVRFW::ovrApplFrameIn & vrFrame );
 	void                		NextSeat();
 
 	void 				ClearMovie();
@@ -54,14 +53,14 @@ public:
 	void				SetSceneModel( const SceneDef & sceneDef );
 	void				SetSceneProgram( const sceneProgram_t opaqueProgram, const sceneProgram_t additiveProgram );
 
-	Posef				GetScreenPose() const;
-	Vector2f			GetScreenSize() const;
+	OVR::Posef				GetScreenPose() const;
+	OVR::Vector2f			GetScreenSize() const;
 
-	Vector3f			GetFreeScreenScale() const;
+	OVR::Vector3f			GetFreeScreenScale() const;
 
-	Matrix4f			FreeScreenMatrix() const;
-	Matrix4f 			BoundsScreenMatrix( const Bounds3f & bounds, const float movieAspect ) const;
-	Matrix4f 			ScreenMatrix() const;
+	OVR::Matrix4f			FreeScreenMatrix() const;
+	OVR::Matrix4f 			BoundsScreenMatrix( const OVR::Bounds3f & bounds, const float movieAspect ) const;
+	OVR::Matrix4f 			ScreenMatrix() const;
 
 	void				AllowMovement( bool allow ) { AllowMove = allow; }
 	bool				MovementAllowed() const { return AllowMove; }
@@ -70,9 +69,9 @@ public:
 	CinemaApp &			Cinema;
 
 	// Allow static lighting to be faded up or down
-	Lerp				StaticLighting;
+	OVRFW::Lerp				StaticLighting;
 
-	SurfaceTexture	* 	MovieTexture;
+	OVRFW::SurfaceTexture	* 	MovieTexture;
 	long long			MovieTextureTimestamp;
 
 	// FreeScreen mode allows the screen to be oriented arbitrarily, rather
@@ -80,7 +79,7 @@ public:
 	bool				FreeScreenActive;
 	float				FreeScreenScale;
 	float				FreeScreenDistance;
-	Matrix4f			FreeScreenPose;
+	OVR::Matrix4f			FreeScreenPose;
 
 	// don't make these bool, or sscanf %i will trash adjacent memory!
 	int					ForceMono;			// only show the left eye of 3D movies
@@ -98,18 +97,18 @@ public:
 	bool				FrameUpdateNeeded;
 	int					ClearGhostsFrames;
 
-	GlGeometry			UnitSquare;		// -1 to 1
+	OVRFW::GlGeometry			UnitSquare;		// -1 to 1
 
 	// Used to explicitly clear a hole in alpha.
-	ovrSurfaceDef		FadedScreenMaskSquareDef;
+	OVRFW::ovrSurfaceDef		FadedScreenMaskSquareDef;
 
-	ovrSurfaceDef		BlackSceneScreenSurfaceDef;
-	ovrSurfaceDef		SceneScreenSurfaceDef;
+	OVRFW::ovrSurfaceDef		BlackSceneScreenSurfaceDef;
+	OVRFW::ovrSurfaceDef		SceneScreenSurfaceDef;
 
-	ovrSurfaceDef		ScreenSurfaceDef;
-	GlBuffer			ScreenTexMatrices;
-	Vector4f			ScreenColor[2];		// { UniformColor, ScaleBias }
-	GlTexture			ScreenTexture[2];	// { MovieTexture, Fade Texture }
+	OVRFW::ovrSurfaceDef		ScreenSurfaceDef;
+	OVRFW::GlBuffer			ScreenTexMatrices;
+	OVR::Vector4f			ScreenColor[2];		// { UniformColor, ScaleBias }
+	OVRFW::GlTexture			ScreenTexture[2];	// { MovieTexture, Fade Texture }
 
 	// We can't directly create a mip map on the OES_external_texture, so
 	// it needs to be copied to a conventional texture.
@@ -118,23 +117,23 @@ public:
 	ovrTextureSwapChain * MipMappedMovieTextureSwapChain;
 	int					MipMappedMovieTextureSwapChainLength;
 	GLuint *			MipMappedMovieFBOs;
-	Vector2i			BufferSize;						// rebuild if != MovieTextureWidth / Height
+	OVR::Vector2i			BufferSize;						// rebuild if != MovieTextureWidth / Height
 
 	GLuint				ScreenVignetteTexture;
 	GLuint				ScreenVignetteSbsTexture;	// for side by side 3D
 
 	sceneProgram_t		SceneProgramIndex;
 
-	OvrSceneView		Scene;
+	OVRFW::OvrSceneView		Scene;
 	SceneDef			SceneInfo;
-	ovrSurfaceDef *		SceneScreenSurface;		// override this to the movie texture
+	OVRFW::ovrSurfaceDef *		SceneScreenSurface;		// override this to the movie texture
 
 	static const int	MAX_SEATS = 8;
-	Vector3f			SceneSeatPositions[MAX_SEATS];
+	OVR::Vector3f			SceneSeatPositions[MAX_SEATS];
 	int					SceneSeatCount;
 	int					SeatPosition;
 
-	Bounds3f			SceneScreenBounds;
+	OVR::Bounds3f			SceneScreenBounds;
 
 	bool 				AllowMove;
 

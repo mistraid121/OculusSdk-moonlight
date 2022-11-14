@@ -28,6 +28,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <sys/stat.h>
 #include <errno.h>
 
+using namespace OVRFW;
+
 namespace OculusCinema {
 
 const int PcManager::PosterWidth = 228;
@@ -64,7 +66,7 @@ void PcManager::OneTimeInit( const char * launchIntent )
 
 	OVR_UNUSED( launchIntent );
 
-	const double start =  SystemClock::GetTimeInSeconds();
+	const double start =  GetTimeInSeconds();
 
 	    int width, height;
 
@@ -112,13 +114,12 @@ void PcManager::OneTimeShutdown()
 	OVR_LOG( "PcManager::OneTimeShutdown" );
 }
 
-//void PcManager::AddPc(const String &name, const String &uuid, Native::PairState pairState, Native::Reachability reachability, const String &binding, const bool isRunning) {
 void PcManager::AddPc(const char *name, const char *uuid, Native::PairState pairState, Native::Reachability reachability,const char *binding, const bool isRunning) {
 	PcDef *movie = NULL;
 	bool isNew = false;
 
-	for (UPInt i = 0; i < Movies.size(); i++) {
-		if (OVR_stricmp( Movies[i]->Name.c_str(), name ) == 0)
+	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
+		if (OVR::OVR_stricmp( Movies[i]->Name.c_str(), name ) == 0)
 			movie = Movies[i];
 	}
 	if (movie == NULL) {
@@ -140,48 +141,22 @@ void PcManager::AddPc(const char *name, const char *uuid, Native::PairState pair
 	}
 	movie->Poster = PcPosterWTF;
 	switch(pairState) {
-	case Native::NOT_PAIRED:	movie->Poster = PcPosterUnpaired; break;
-	case Native::PAIRED:		movie->Poster = PcPosterPaired; break;
-	case Native::PIN_WRONG:		movie->Poster = PcPosterWTF; break;
-	case Native::FAILED:
-	default: 					movie->Poster = PcPosterUnknown; break;
+		case Native::NOT_PAIRED:	movie->Poster = PcPosterUnpaired; break;
+		case Native::PAIRED:		movie->Poster = PcPosterPaired; break;
+		case Native::PIN_WRONG:		movie->Poster = PcPosterWTF; break;
+		case Native::FAILED:
+		default: 					movie->Poster = PcPosterUnknown; break;
 	}
 	updated = true;
 }
 
 void PcManager::RemovePc(const std::string &name) {
-	for (UPInt i = 0; i < Movies.size(); i++) {
+	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
 		if (OVR::OVR_stricmp( Movies[i]->Name.c_str(), name.c_str() ) == 0)
 			continue;
 		Movies.erase( Movies.cbegin() + i );
 		return;
 	}
-}
-
-void PcManager::LoadPcs() {
-	OVR_LOG("LoadMovies");
-
-	const double start = vrapi_GetTimeInSeconds();
-
-	std::vector<std::string> movieFiles; //TODO: Get enumerated PCs and updates from JNI PCSelector
-	OVR_LOG("%i movies scanned, %3.1f seconds", static_cast<int>(movieFiles.size()),
-			vrapi_GetTimeInSeconds() - start);
-
-	for (UPInt i = 0; i < movieFiles.size(); i++) {
-		PcDef *movie = new PcDef();
-		Movies.push_back(movie);
-
-		movie->Name = movieFiles[i];
-
-		ReadMetaData(movie);
-	}
-
-	OVR_LOG("%i movies panels loaded, %3.1f seconds", static_cast<int>(Movies.size()),
-			vrapi_GetTimeInSeconds() - start);
-}
-
-PcCategory PcManager::CategoryFromString(const std::string &categoryString) const {
-	return CATEGORY_LIMELIGHT;
 }
 
 void PcManager::ReadMetaData( PcDef *movie )
@@ -196,7 +171,7 @@ void PcManager::ReadMetaData( PcDef *movie )
 		return;
 	}
 
-	if (auto metadata = JSON::Load(filename.c_str(), &error)) {
+	if (auto metadata = OVR::JSON::Load(filename.c_str(), &error)) {
 
 		//metadata->Release();
 
@@ -210,7 +185,7 @@ void PcManager::ReadMetaData( PcDef *movie )
 std::vector<const PcDef *> PcManager::GetPcList(PcCategory category) const {
 	std::vector<const PcDef *> result;
 
-	for (UPInt i = 0; i < Movies.size(); i++) {
+	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
 		if (Movies[i]->Category == category) {
 			if (Movies[i]->Poster != 0) {
 				result.push_back(Movies[i]);

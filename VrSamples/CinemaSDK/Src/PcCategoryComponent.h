@@ -13,14 +13,13 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "VRMenuComponent.h"
+#include "GUI/VRMenuComponent.h"
 #include "PcManager.h"
 #include "SelectionView.h"
 
 #if !defined( MovieCategoryComponent_h )
 #define MovieCategoryComponent_h
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -28,36 +27,34 @@ class MovieSelectionView;
 
 //==============================================================
 // MovieCategoryComponent
-class PcCategoryComponent : public VRMenuComponent
+class PcCategoryComponent : public OVRFW::VRMenuComponent
 {
 public:
 							PcCategoryComponent( SelectionView *view, PcCategory category );
 
-	static const Vector4f	HighlightColor;
-	static const Vector4f	FocusColor;
-	static const Vector4f	NormalColor;
+	static const OVR::Vector4f	HighlightColor;
+	static const OVR::Vector4f	FocusColor;
+	static const OVR::Vector4f	NormalColor;
 
 private:
-    ovrSoundLimiter			Sound;
+    OVRFW::ovrSoundLimiter			Sound;
 
 	bool					HasFocus;
-
-	PcCategory			Category;
 
     SelectionView *	CallbackView;
 
 private:
-    virtual eMsgStatus      OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
+    virtual OVRFW::eMsgStatus      OnEvent_Impl( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+                                    OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 
-	void					UpdateColor( VRMenuObject * self );
+	void					UpdateColor( OVRFW::VRMenuObject * self );
 
-    eMsgStatus              Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
-    eMsgStatus              FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
-    eMsgStatus              FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
+    OVRFW::eMsgStatus              Frame( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+                                    OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+    OVRFW::eMsgStatus              FocusGained( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+                                    OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+    OVRFW::eMsgStatus              FocusLost( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+                                    OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 };
 
 } // namespace OculusCinema

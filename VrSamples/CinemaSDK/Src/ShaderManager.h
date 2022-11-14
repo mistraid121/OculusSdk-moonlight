@@ -16,10 +16,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( ShaderManager_h )
 #define ShaderManager_h
 
-#include "GlProgram.h"
-#include "ModelFile.h"
+#include "Model/ModelFile.h"
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -47,21 +45,21 @@ public:
 
 	// Render the external image texture to a conventional texture to allow
 	// mipmap generation.
-	GlProgram				CopyMovieProgram;
+    OVRFW::GlProgram				CopyMovieProgram;
 
-	GlProgram				ProgVertexColor;
-	GlProgram				ProgSingleTexture;
-	GlProgram				ProgLightMapped;
-	GlProgram				ProgReflectionMapped;
-	GlProgram				ProgSkinnedVertexColor;
-	GlProgram				ProgSkinnedSingleTexture;
-	GlProgram				ProgSkinnedLightMapped;
-	GlProgram				ProgSkinnedReflectionMapped;
+    OVRFW::GlProgram				ProgVertexColor;
+    OVRFW::GlProgram				ProgSingleTexture;
+    OVRFW::GlProgram				ProgLightMapped;
+    OVRFW::GlProgram				ProgReflectionMapped;
+    OVRFW::GlProgram				ProgSkinnedVertexColor;
+    OVRFW::GlProgram				ProgSkinnedSingleTexture;
+    OVRFW::GlProgram				ProgSkinnedLightMapped;
+    OVRFW::GlProgram				ProgSkinnedReflectionMapped;
 
-	GlProgram				ScenePrograms[ SCENE_PROGRAM_MAX ];
+    OVRFW::GlProgram				ScenePrograms[ SCENE_PROGRAM_MAX ];
 
-	ModelGlPrograms 		DynamicPrograms;
-	ModelGlPrograms 		DefaultPrograms;
+    OVRFW::ModelGlPrograms 		DynamicPrograms;
+    OVRFW::ModelGlPrograms 		DefaultPrograms;
 
 private:
 	ShaderManager &			operator=( const ShaderManager & );

@@ -16,7 +16,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "ShaderManager.h"
 #include "CinemaApp.h"
 
-using namespace OVR;
+using namespace OVRFW;
 
 namespace OculusCinema {
 
@@ -142,7 +142,7 @@ void ShaderManager::OneTimeInit( const char * launchIntent )
 
 	OVR_UNUSED( launchIntent );
 
-	const double start = SystemClock::GetTimeInSeconds();
+	const double start = GetTimeInSeconds();
 
 	CopyMovieProgram = BuildProgramNoMultiview( NULL, copyMovieVertexShaderSrc, ImageExternalDirectives, copyMovieFragmentShaderSource );
 
@@ -173,7 +173,7 @@ void ShaderManager::OneTimeInit( const char * launchIntent )
 	DefaultPrograms.ProgSkinnedLightMapped		= & ProgSkinnedLightMapped;
 	DefaultPrograms.ProgSkinnedReflectionMapped	= & ProgSkinnedReflectionMapped;
 
-	OVR_LOG( "ShaderManager::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ShaderManager::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
 }
 
 void ShaderManager::OneTimeShutdown()

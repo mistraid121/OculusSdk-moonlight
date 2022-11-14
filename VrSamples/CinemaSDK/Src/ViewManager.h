@@ -15,8 +15,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <vector>
 #include "OVR_Math.h"
-#include "OVR_Input.h"
-#include "View.h"
 
 #if !defined( ViewManager_h )
 #define ViewManager_h
@@ -39,8 +37,8 @@ public:
 	void				EnteredVrMode();
 	void 				LeavingVrMode();
 
-	bool 				OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
-	void 				Frame( const ovrFrameInput & vrFrame );
+	bool 				OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
+	void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 private:
 	std::vector<View *> Views;

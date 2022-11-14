@@ -18,7 +18,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include "string"
 #include "vector"
-#include "GlTexture.h"
 #include "Native.h"
 
 
@@ -26,7 +25,6 @@ namespace OculusCinema {
 
 class CinemaApp;
 
-using namespace OVR;
 
 enum MovieFormat
 {
@@ -83,7 +81,6 @@ public:
     AddPc(const char *name, const char *uuid, Native::PairState pairState, Native::Reachability reachability, const char *binding, const bool isRunning);
 
 	void                    RemovePc(const std::string &name);
-    void                    LoadPcs();
 	std::vector<const PcDef *>    GetPcList( PcCategory category ) const;
 
 public:
@@ -106,9 +103,6 @@ private:
     GLuint                    PcPosterUnpaired;
     GLuint                    PcPosterUnknown;
     GLuint                    PcPosterWTF;
-
-
-    PcCategory                 CategoryFromString( const std::string &categoryString ) const;
     virtual void             ReadMetaData( PcDef *aPc );
 
 };

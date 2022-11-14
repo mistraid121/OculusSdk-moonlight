@@ -16,7 +16,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CinemaApp.h"
 #include "Native.h"
 #include "CinemaStrings.h"
-#include "OVR_Locale.h"
+#include "Locale/OVR_Locale.h"
+
+using namespace OVRFW;
 
 //=======================================================================================
 
@@ -40,8 +42,8 @@ private:
 	ovrSoundEffectContext & SoundEffectContext;
 };
 
-CinemaApp::CinemaApp() :
-	GuiSys( OvrGuiSys::Create() ),
+CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
+					 const int cpuLevel, const int gpuLevel) : ovrAppl( mainThreadTid, renderThreadTid, cpuLevel, gpuLevel, true /* useMutliView */ ),
 	Locale( NULL ),
 	CinemaStrings( NULL ),
 	StartTime( 0 ),
@@ -49,16 +51,16 @@ CinemaApp::CinemaApp() :
 	ShaderMgr( *this ),
 	ModelMgr( *this ),
 	PcMgr( *this ),
-    	AppMgr( *this ),
+	AppMgr( *this ),
 	InLobby( true ),
 	AllowDebugControls( false ),
 	SoundEffectContext( NULL ),
-	SoundEffectPlayer( NULL ),
+	//SoundEffectPlayer( NULL ),
 	VrFrame(),
 	ViewMgr(),
 	MoviePlayer( *this ),
 	PcSelectionMenu( *this ),
-    	AppSelectionMenu( *this ),
+	AppSelectionMenu( *this ),
 	TheaterSelectionMenu( *this ),
 	ResumeMovieMenu( *this ),
 	MessageQueue( 100 ),
@@ -73,6 +75,17 @@ CinemaApp::CinemaApp() :
 {
 }
 
+bool CinemaApp::AppInit( const OVRFW::ovrAppContext * context ) {
+	GuiSys = OvrGuiSys::Create(context);
+	if (nullptr == GuiSys) {
+		ALOGE("Couldn't create GUI");
+		return false;
+	}
+
+	StartTime = GetTimeInSeconds();
+
+	return true;
+}
 /*CinemaApp::~CinemaApp()
 {
 	OVR_LOG( "--------------- ~CinemaApp() ---------------");
@@ -99,7 +112,7 @@ CinemaApp::CinemaApp() :
 
 	OvrGuiSys::Destroy( GuiSys );
 }*/
-
+/*
 void CinemaApp::Configure( ovrSettings & settings )
 {
 	// We need very little CPU for movie playing, but a fair amount of GPU.
@@ -116,7 +129,8 @@ void CinemaApp::Configure( ovrSettings & settings )
 
 	settings.RenderMode = RENDERMODE_MULTIVIEW;
 }
-
+*/
+/*
 void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * intentFromPackage, const char * intentJSON, const char * intentURI )
 {
 	OVR_UNUSED( intentFromPackage );
@@ -125,7 +139,7 @@ void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * inte
 	if ( intentType == INTENT_LAUNCH )
 	{
 		OVR_LOG( "--------------- CinemaApp OneTimeInit ---------------");
-
+//TODO: deplacer dans appinit?
 		const ovrJava * java = app->GetJava();
 		SoundEffectContext = new ovrSoundEffectContext( *java->Env, java->ActivityObject );
 		SoundEffectContext->Initialize( &app->GetFileSys() );
@@ -139,9 +153,9 @@ void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * inte
 
 		GuiSys->GetGazeCursor().ShowCursor();
 	
-		StartTime = SystemClock::GetTimeInSeconds();
+		StartTime = GetTimeInSeconds();
 
-		Native::OneTimeInit( app, ActivityClass );
+		Native::OneTimeInit( ActivityClass );
 
 		CinemaStrings = ovrCinemaStrings::Create( *this );
 
@@ -164,7 +178,7 @@ void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * inte
 
 		PcSelection( true );
 
-		OVR_LOG( "CinemaApp::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - StartTime );
+		OVR_LOG( "CinemaApp::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - StartTime );
 	}
 	else if ( intentType == INTENT_NEW )
 	{
@@ -175,7 +189,7 @@ void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * inte
 	GetGuiSys().GetGazeCursor().HideCursorForFrames( 10 );	
 	ViewMgr.EnteredVrMode();
 }
-
+*/
 void CinemaApp::LeavingVrMode()
 {
 	OVR_LOG( "CinemaApp::LeavingVrMode" );
@@ -204,8 +218,8 @@ const std::string CinemaApp::SDCardDir( const char *dir ) const
 {
 	std::string subDir = "";
 	std::string sdcardPath;
-	const OvrStoragePaths & storagePaths = app->GetStoragePaths();
-	storagePaths.GetPathIfValidPermission( EST_PRIMARY_EXTERNAL_STORAGE, EFT_ROOT, "", permissionFlags_t( PERMISSION_READ ), sdcardPath );
+	const ovrJava & java = *reinterpret_cast< const ovrJava* >( GetContext()->ContextForVrApi() );
+	ovrFileSys::GetPathIfValidPermission( java,EST_PRIMARY_EXTERNAL_STORAGE, EFT_ROOT, "", permissionFlags_t( PERMISSION_READ ), sdcardPath );
 	subDir += sdcardPath;
 	subDir += dir;
 	return subDir;
@@ -215,25 +229,11 @@ const std::string CinemaApp::ExternalSDCardDir( const char *dir ) const
 {
 	std::string subDir = "";
 	std::string externalSdcardPath;
-	const OvrStoragePaths & storagePaths = app->GetStoragePaths();
-	storagePaths.GetPathIfValidPermission( EST_SECONDARY_EXTERNAL_STORAGE, EFT_ROOT, "", permissionFlags_t( PERMISSION_READ ), externalSdcardPath );
+	const ovrJava & java = *reinterpret_cast< const ovrJava* >( GetContext()->ContextForVrApi() );
+	ovrFileSys::GetPathIfValidPermission( java,EST_SECONDARY_EXTERNAL_STORAGE, EFT_ROOT, "", permissionFlags_t( PERMISSION_READ ), externalSdcardPath );
 	subDir += externalSdcardPath;
 	subDir += dir;
 	return subDir;
-}
-
-const std::string CinemaApp::ExternalCacheDir( const char *dir ) const
-{
-	std::string subDir;
-	subDir += Native::GetExternalCacheDirectory( app );
-	subDir += "/";
-	subDir += dir;
-	return subDir;
-}
-
-bool CinemaApp::IsExternalSDCardDir( const char *dir ) const
-{
-	return ( ExternalSDCardDir( "" ) == std::string(dir) );
 }
 
 bool CinemaApp::FileExists( const std::string & filename ) const
@@ -252,7 +252,7 @@ bool CinemaApp::FileExists( const std::string & filename ) const
 
 bool CinemaApp::GetUseSrgb() const
 {
-	return UseSrgb && app->GetFramebufferIsSrgb();
+	return UseSrgb;// && app->GetFramebufferIsSrgb();
 }
 
 void CinemaApp::SetPlaylist( const std::vector<const PcDef *> &playList, const int nextMovie )
@@ -281,61 +281,13 @@ void CinemaApp::MovieLoaded( const int width, const int height, const int durati
 	MoviePlayer.MovieLoaded( width, height, duration );
 }
 
-const PcDef * CinemaApp::GetNextMovie() const
-{
-	const PcDef *next = NULL;
-	if ( static_cast< int >( PlayList.size() ) != 0 )
-	{
-		for ( int i = 0; i < static_cast< int >( PlayList.size() ) - 1; i++ )
-		{
-			if ( PlayList[ i ] == CurrentMovie )
-			{
-				next = PlayList[ i + 1 ];
-				break;
-			}
-		}
-
-		if ( next == NULL )
-		{
-			next = PlayList[ 0 ];
-		}
-	}
-
-	return next;
-}
-
-const PcDef * CinemaApp::GetPreviousMovie() const
-{
-	const PcDef *previous = NULL;
-	if ( static_cast< int >( PlayList.size() ) != 0 )
-	{
-		for( int i = 0; i < static_cast< int >( PlayList.size() ); i++ )
-		{
-			if ( PlayList[ i ] == CurrentMovie )
-			{
-				break;
-			}
-			previous = PlayList[ i ];
-		}
-
-		if ( previous == NULL )
-		{
-			previous = PlayList[ static_cast< int >( PlayList.size() ) - 1 ];
-		}
-	}
-
-	return previous;
-}
-
-
 void CinemaApp::StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate)
 {
 	if ( CurrentMovie != NULL )
 	{
 		MovieFinishedPlaying = false;
-		//Native::StartMovie( app, CurrentPc->UUID.c_str(), CurrentMovie->Name.c_str(), CurrentMovie->Id, CurrentPc->Binding.c_str(), width, height, fps, hostAudio );
 		bool remote = CurrentPc->isRemote;
-		Native::StartMovie( app, CurrentPc->UUID.c_str(), CurrentMovie->Name.c_str(), CurrentMovie->Id, CurrentPc->Binding.c_str(), width, height, fps, hostAudio, customBitrate, remote );
+		Native::StartMovie(CurrentPc->UUID.c_str(), CurrentMovie->Name.c_str(), CurrentMovie->Id, CurrentPc->Binding.c_str(), width, height, fps, hostAudio, customBitrate, remote );
 
 		ShouldResumeMovie = false;
 	}
@@ -368,8 +320,7 @@ void CinemaApp::MovieFinished()
 {
 	InLobby = false;
 	MovieFinishedPlaying = true;
-	AppSelectionMenu.SetAppList( PlayList, GetNextMovie() );
-    	ViewMgr.OpenView( AppSelectionMenu );
+	ViewMgr.OpenView( AppSelectionMenu );
 }
 
 void CinemaApp::UnableToPlayMovie()
@@ -395,7 +346,7 @@ void CinemaApp::PcSelection( bool inLobby )
 void CinemaApp::AppSelection( bool inLobby )
 {
 	InLobby = inLobby;
-    	ViewMgr.OpenView( AppSelectionMenu );
+	ViewMgr.OpenView( AppSelectionMenu );
 }
 
 bool CinemaApp::AllowTheaterSelection() const
@@ -414,14 +365,14 @@ const SceneDef & CinemaApp::GetCurrentTheater() const
 	return ModelMgr.GetTheater( TheaterSelectionMenu.GetSelectedTheater() );
 }
 
-bool CinemaApp::OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType )
+bool CinemaApp::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
 {
-	if ( GuiSys->OnKeyEvent( keyCode, repeatCount, eventType ) )
+	if ( GuiSys->OnKeyEvent( keyCode, repeatCount ) )
 	{
 		return true;
 	}
 
-	return ViewMgr.OnKeyEvent( keyCode, repeatCount, eventType );
+	return ViewMgr.OnKeyEvent( keyCode, repeatCount,eventType );
 }
 
 void CinemaApp::ShowPair( const std::string& msg )
@@ -455,17 +406,18 @@ void CinemaApp::Command( const char * msg )
 	}
 }
 
-ovrFrameResult CinemaApp::Frame( const ovrFrameInput & vrFrame )
+ovrRendererOutput CinemaApp::Frame( const ovrApplFrameIn & vrFrame )
 {
-	FrameResult = ovrFrameResult();
+	//FrameResult = ovrFrameResult();
 
 	// process input events first because this mirrors the behavior when OnKeyEvent was
 	// a virtual function on VrAppInterface and was called by VrAppFramework.
+	/*
 	for ( int i = 0; i < vrFrame.Input.NumKeyEvents; i++ )
 	{
 		const int keyCode = vrFrame.Input.KeyEvents[i].KeyCode;
 		const int repeatCount = vrFrame.Input.KeyEvents[i].RepeatCount;
-		const KeyEventType eventType = vrFrame.Input.KeyEvents[i].EventType;
+		const UIKeyboard::KeyEventType eventType = vrFrame.Input.KeyEvents[i].EventType;
 
 		if ( OnKeyEvent( keyCode, repeatCount, eventType ) )
 		{
@@ -477,7 +429,7 @@ ovrFrameResult CinemaApp::Frame( const ovrFrameInput & vrFrame )
 			app->ShowConfirmQuitSystemUI();
 			continue;
 		}           
-	}
+	}*/
 	// Process incoming messages until the queue is empty.
 	for ( ; ; )
 	{
@@ -495,7 +447,7 @@ ovrFrameResult CinemaApp::Frame( const ovrFrameInput & vrFrame )
 
 	// update mount state
 	LastMountState = MountState;
-	MountState = vrFrame.DeviceStatus.HeadsetIsMounted;
+	MountState = vrFrame.HeadsetMounted();
 	if ( HeadsetWasMounted() )
 	{
 		OVR_LOG( "Headset mounted" );

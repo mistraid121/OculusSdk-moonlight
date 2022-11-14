@@ -15,10 +15,11 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include "CarouselSwipeHintComponent.h"
 #include "CarouselBrowserComponent.h"
-#include "OVR_Input.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
 
 #include <algorithm>
+
+using namespace OVRFW;
 
 namespace OculusCinema {
 
@@ -51,7 +52,7 @@ void CarouselSwipeHintComponent::Reset( VRMenuObject * self )
 	ShouldShow = false;
 	const double now = vrapi_GetTimeInSeconds();
 	TotalAlpha.Set( now, TotalAlpha.Value( now ), now, 0.0f );
-	self->SetColor( Vector4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
+	self->SetColor( OVR::Vector4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 }
 
 //==============================
@@ -86,7 +87,7 @@ void CarouselSwipeHintComponent::Hide( const double now )
 
 //==============================
 //  CarouselSwipeHintComponent::OnEvent_Impl
-eMsgStatus CarouselSwipeHintComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus CarouselSwipeHintComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
     switch( event.EventType )
@@ -103,7 +104,7 @@ eMsgStatus CarouselSwipeHintComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFram
 
 //==============================
 //  CarouselSwipeHintComponent::Opening
-eMsgStatus CarouselSwipeHintComponent::Opening( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselSwipeHintComponent::Opening( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );
@@ -115,23 +116,23 @@ eMsgStatus CarouselSwipeHintComponent::Opening( OvrGuiSys & guiSys, ovrFrameInpu
 
 //==============================
 //  CarouselSwipeHintComponent::Frame
-eMsgStatus CarouselSwipeHintComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselSwipeHintComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	if ( ShowSwipeHints && Carousel->HasSelection() && CanSwipe() )
 	{
-		Show( vrFrame.PredictedDisplayTimeInSeconds );
+		Show( vrFrame.PredictedDisplayTime );
 	}
 	else
 	{
-		Hide( vrFrame.PredictedDisplayTimeInSeconds );
+		Hide( vrFrame.PredictedDisplayTime );
 	}
 
 	IgnoreDelay = false;
 
-	float alpha = static_cast<float>( TotalAlpha.Value( vrFrame.PredictedDisplayTimeInSeconds ) );
+	float alpha = static_cast<float>( TotalAlpha.Value( vrFrame.PredictedDisplayTime ) );
 	if ( alpha > 0.0f )
 	{
-		double time = vrFrame.PredictedDisplayTimeInSeconds - StartTime;
+		double time = vrFrame.PredictedDisplayTime - StartTime;
 		if ( time < 0.0f )
 		{
 			alpha = 0.0f;
@@ -144,7 +145,7 @@ eMsgStatus CarouselSwipeHintComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput 
 		}
 	}
 
-	self->SetColor( Vector4f( 1.0f, 1.0f, 1.0f, alpha ) );
+	self->SetColor( OVR::Vector4f( 1.0f, 1.0f, 1.0f, alpha ) );
 
 	return MSG_STATUS_ALIVE;
 }

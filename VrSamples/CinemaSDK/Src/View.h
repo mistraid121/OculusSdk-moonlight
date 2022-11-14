@@ -16,12 +16,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( View_h )
 #define View_h
 
-#include "KeyState.h"
+//#include "KeyState.h"
 #include "OVR_Math.h"
-#include "OVR_Input.h"
-#include "App.h"
-
-using namespace OVR;
+#include "Appl.h"
+#include "GUI/UI/UIKeyboard.h"
 
 
 namespace OculusCinema {
@@ -50,8 +48,8 @@ public:
 	virtual void		EnteredVrMode();  // By default do nothing.  Subclasses override.
 	virtual void 		LeavingVrMode();  // By default do nothing.  Subclasses override.
 
-	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType ) = 0;
-	virtual void 		Frame( const ovrFrameInput & vrFrame ) = 0;
+	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType ) = 0;
+	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame ) = 0;
     virtual void        SetError( const char *text, bool showSDCard, bool showErrorIcon ) { }
     virtual void        ClearError() { }
 	bool				IsOpen() const { return CurViewState == VIEWSTATE_OPEN; }

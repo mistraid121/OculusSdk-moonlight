@@ -17,7 +17,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define ResumeMovieView_h
 
 #include "View.h"
-#include "VRMenu.h"
+#include "GUI/VRMenu.h"
 
 namespace OculusCinema {
 
@@ -35,26 +35,26 @@ public:
 	virtual void 		OnOpen( const double currTimeInSeconds );
 	virtual void 		OnClose();
 
-	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
-	virtual void 		Frame( const ovrFrameInput & vrFrame );
+	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
+	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 				ResumeChoice( int itemNum );
 
 private:
 	CinemaApp &			Cinema;
 
-	static VRMenuId_t  	ID_CENTER_ROOT;
-	static VRMenuId_t  	ID_TITLE;
-	static VRMenuId_t  	ID_OPTIONS;
-	static VRMenuId_t  	ID_OPTION_ICONS;
+	static OVRFW::VRMenuId_t  	ID_CENTER_ROOT;
+	static OVRFW::VRMenuId_t  	ID_TITLE;
+	static OVRFW::VRMenuId_t  	ID_OPTIONS;
+	static OVRFW::VRMenuId_t  	ID_OPTION_ICONS;
 
-	VRMenu *			Menu;
+	OVRFW::VRMenu *			Menu;
 
 private:
 	ResumeMovieView &	operator=( const ResumeMovieView & );
 
-	void				SetPosition( OvrVRMenuMgr & menuMgr, const Vector3f &pos );
-	void 				CreateMenu( OvrGuiSys & guiSys );
+	void				SetPosition( OVRFW::OvrVRMenuMgr & menuMgr, const OVR::Vector3f &pos );
+	void 				CreateMenu( OVRFW::OvrGuiSys & guiSys );
 };
 
 } // namespace OculusCinema

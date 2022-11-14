@@ -13,7 +13,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "App.h"
+#include "Appl.h"
 #include "ShaderManager.h"
 #include "ModelManager.h"
 #include "SceneManager.h"
@@ -26,14 +26,13 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "AppSelectionView.h"
 #include "TheaterSelectionView.h"
 #include "ResumeMovieView.h"
-#include "GuiSys.h"
-#include "SoundEffectContext.h"
+#include "GUI/GuiSys.h"
+#include "Sound/SoundEffectContext.h"
 #include <memory>
 #include <string>
 
-using namespace OVR;
 
-namespace OVR {
+namespace OVRFW {
 	class ovrLocale;
 }
 
@@ -41,24 +40,32 @@ namespace OculusCinema {
 
 class ovrCinemaStrings;
 
-class CinemaApp : public OVR::VrAppInterface
+class CinemaApp : public OVRFW::ovrAppl
 {
 public:
-							CinemaApp();
-	//virtual					~CinemaApp();
+	CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
+			  const int cpuLevel, const int gpuLevel);
 
-	virtual void			Configure( ovrSettings & settings );
-	virtual void			EnteredVrMode( const ovrIntentType intentType, const char * intentFromPackage, const char * intentJSON, const char * intentURI );
+	virtual ~CinemaApp()
+	{
+	}
+
+    // Called when the application initializes.
+    // Must return true if the application initializes successfully.
+    virtual bool            AppInit( const OVRFW::ovrAppContext * context ) override;
+
+	//virtual void			Configure( ovrSettings & settings );
+	//virtual void			EnteredVrMode( const ovrIntentType intentType, const char * intentFromPackage, const char * intentJSON, const char * intentURI );
 	virtual void			LeavingVrMode();
-	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
-	virtual ovrFrameResult	Frame( const ovrFrameInput & vrFrame );
+	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
+	virtual OVRFW::ovrRendererOutput	Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	OvrGuiSys &				GetGuiSys() { return *GuiSys; }
-	ovrLocale &				GetLocale() { return *Locale; }
-	ovrMessageQueue &		GetMessageQueue() { return MessageQueue; }
+	OVRFW::OvrGuiSys &				GetGuiSys() { return *GuiSys; }
+	OVRFW::ovrLocale &				GetLocale() { return *Locale; }
+    OVRFW::ovrMessageQueue &		GetMessageQueue() { return MessageQueue; }
 
-	const ovrFrameInput &	GetFrame() const { return VrFrame; }
-	ovrFrameResult &		GetFrameResult() { return FrameResult; }
+	const OVRFW::ovrApplFrameIn &	GetFrame() const { return VrFrame; }
+	OVRFW::ovrRendererOutput &		GetFrameResult() { return FrameResult; }
 
 	void                    SetPlaylist( const std::vector<const PcDef *> &playList, const int nextMovie );
     	void                    SetMovie( const PcDef * nextMovie );
@@ -67,11 +74,7 @@ public:
 	void 					MovieLoaded( const int width, const int height, const int duration );
 
 	const PcDef *            GetCurrentMovie() const { return CurrentMovie; }
-    	const PcDef *            GetCurrentPc() const { return CurrentPc; }
-   	const PcDef *            GetNextMovie() const;
-    	const PcDef *            GetPreviousMovie() const;
-
-
+	const PcDef *            GetCurrentPc() const { return CurrentPc; }
 	const SceneDef & 		GetCurrentTheater() const;
 
 	void                   			StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate);
@@ -92,8 +95,6 @@ public:
 	const std::string		ExternalRetailDir( const char *dir ) const;
 	const std::string		SDCardDir( const char *dir ) const;
 	const std::string 		ExternalSDCardDir( const char *dir ) const;
-	const std::string 		ExternalCacheDir( const char *dir ) const;
-	bool 					IsExternalSDCardDir( const char *dir ) const;
 	bool 					FileExists( const std::string & filename ) const;
 
     	void                    		ShowPair( const std::string& msg );
@@ -104,17 +105,17 @@ public:
 
 	bool					HeadsetWasMounted() const { return ( MountState == true ) && ( LastMountState == false ); }
 	bool					HeadsetWasUnmounted() const { return ( MountState == false ) && ( LastMountState == true ); }
-	bool					HeadsetMountStateChanged() const { return ( MountState != LastMountState ); }
-	bool					HeadsetMountState() const { return MountState; }
-
 	bool					GetUseSrgb() const;
 
-	ovrSoundEffectContext & GetSoundEffectContext() { return *SoundEffectContext; }
+	OVRFW::ovrSoundEffectContext & GetSoundEffectContext() { return *SoundEffectContext; }
 	ovrCinemaStrings &		GetCinemaStrings() const;
 
+	float 					GetSuggestedEyeFovDegreesX() const {return SuggestedEyeFovDegreesX;}
+	float 					GetSuggestedEyeFovDegreesY() const {return SuggestedEyeFovDegreesY;}
+
 public:
-	OvrGuiSys *				GuiSys;
-	ovrLocale *				Locale;
+	OVRFW::OvrGuiSys *				GuiSys;
+	OVRFW::ovrLocale *				Locale;
 	ovrCinemaStrings *		CinemaStrings;
 	double					StartTime;
 
@@ -130,11 +131,11 @@ public:
 	bool					AllowDebugControls;
 
 private:
-	ovrSoundEffectContext * SoundEffectContext;
-	OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
+	OVRFW::ovrSoundEffectContext * SoundEffectContext;
+	//OVRFW::OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
 
-	ovrFrameInput			VrFrame;
-	ovrFrameResult			FrameResult;
+	OVRFW::ovrApplFrameIn			VrFrame;
+	OVRFW::ovrRendererOutput			FrameResult;
 
 	ViewManager				ViewMgr;
 	MoviePlayerView			MoviePlayer;
@@ -144,7 +145,7 @@ private:
 	TheaterSelectionView	TheaterSelectionMenu;
 	ResumeMovieView			ResumeMovieMenu;
 
-	ovrMessageQueue			MessageQueue;
+    OVRFW::ovrMessageQueue			MessageQueue;
 
 	int						FrameCount;
 

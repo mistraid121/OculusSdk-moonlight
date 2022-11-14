@@ -14,10 +14,11 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include "MoviePosterComponent.h"
-//#include "MovieManager.h"
-#include "UI/UIContainer.h"
-#include "UI/UIImage.h"
-#include "UI/UILabel.h"
+#include "GUI/UI/UIContainer.h"
+#include "GUI/UI/UIImage.h"
+#include "GUI/UI/UILabel.h"
+
+using namespace OVRFW;
 
 namespace OculusCinema {
 
@@ -37,7 +38,7 @@ MoviePosterComponent::MoviePosterComponent() :
 
 //==============================
 //  MoviePosterComponent::OnEvent_Impl
-eMsgStatus MoviePosterComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus MoviePosterComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );

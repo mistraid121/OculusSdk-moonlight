@@ -15,7 +15,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include "TheaterSelectionComponent.h"
 #include "TheaterSelectionView.h"
-#include "OVR_Input.h"
+
+using namespace OVRFW;
+using OVR::Vector4f;
 
 namespace OculusCinema {
 
@@ -61,7 +63,7 @@ void TheaterSelectionComponent::SetItem( VRMenuObject * self, const CarouselItem
 
 //==============================
 //  TheaterSelectionComponent::OnEvent_Impl
-eMsgStatus TheaterSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus TheaterSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
     switch( event.EventType )
@@ -80,7 +82,8 @@ eMsgStatus TheaterSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrame
         	}
         	return MSG_STATUS_ALIVE;
         case VRMENU_EVENT_TOUCH_UP:
-        	if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
+        	//if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
+        	if ( CallbackView != NULL )
         	{
                 Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
                 CallbackView->SelectPressed( vrFrame.RealTimeInSeconds );
@@ -95,7 +98,7 @@ eMsgStatus TheaterSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrame
 
 //==============================
 //  TheaterSelectionComponent::FocusGained
-eMsgStatus TheaterSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus TheaterSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( vrFrame );
@@ -114,7 +117,7 @@ eMsgStatus TheaterSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameI
 
 //==============================
 //  TheaterSelectionComponent::FocusLost
-eMsgStatus TheaterSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus TheaterSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
@@ -134,7 +137,7 @@ eMsgStatus TheaterSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInp
 
 //==============================
 //  TheaterSelectionComponent::Frame
-eMsgStatus TheaterSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus TheaterSelectionComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );

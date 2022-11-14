@@ -16,19 +16,18 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( PcSelectionView_h )
 #define PcSelectionView_h
 
-#include <UI/UIButton.h>
+#include <GUI/UI/UIButton.h>
 #include "vector"
-#include "Lerp.h"
+#include "GUI/Lerp.h"
 #include "SelectionView.h"
 #include "CarouselBrowserComponent.h"
 #include "PcManager.h"
-#include "UI/UITexture.h"
-#include "UI/UIMenu.h"
-#include "UI/UIContainer.h"
-#include "UI/UILabel.h"
-#include "UI/UIImage.h"
+#include "GUI/UI/UITexture.h"
+#include "GUI/UI/UIMenu.h"
+#include "GUI/UI/UIContainer.h"
+#include "GUI/UI/UILabel.h"
+#include "GUI/UI/UIImage.h"
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -48,8 +47,8 @@ public:
 	virtual void 		OnOpen(const double currTimeInSeconds );
 	virtual void 		OnClose();
 
-	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
-	virtual void 		Frame( const ovrFrameInput & vrFrame );
+	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
+	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 				SetPcList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie );
 
@@ -65,7 +64,7 @@ private:
 	public:
 		PcCategory 	Category;
 		std::string			Text;
-		UILabel *		Button;
+		OVRFW::UILabel *		Button;
 		float			Width;
 		float			Height;
 
@@ -76,56 +75,56 @@ private:
 private:
 	CinemaApp &							Cinema;
 
-	UITexture 							SelectionTexture;
-	UITexture							Is3DIconTexture;
-	UITexture							ShadowTexture;
-	UITexture							BorderTexture;
-	UITexture							SwipeIconLeftTexture;
-	UITexture							SwipeIconRightTexture;
-	UITexture							ResumeIconTexture;
-	UITexture							ErrorIconTexture;
-	UITexture							SDCardTexture;
-	UITexture							CloseIconTexture;
+	OVRFW::UITexture 							SelectionTexture;
+	OVRFW::UITexture							Is3DIconTexture;
+	OVRFW::UITexture							ShadowTexture;
+	OVRFW::UITexture							BorderTexture;
+	OVRFW::UITexture							SwipeIconLeftTexture;
+	OVRFW::UITexture							SwipeIconRightTexture;
+	OVRFW::UITexture							ResumeIconTexture;
+	OVRFW::UITexture							ErrorIconTexture;
+	OVRFW::UITexture							SDCardTexture;
+	OVRFW::UITexture							CloseIconTexture;
 
-	UIMenu *							Menu;
+	OVRFW::UIMenu *							Menu;
 
-	UIContainer *						CenterRoot;
+	OVRFW::UIContainer *						CenterRoot;
 
-	UILabel * 							ErrorMessage;
-	UILabel * 							SDCardMessage;
-	UILabel * 							PlainErrorMessage;
+	OVRFW::UILabel * 							ErrorMessage;
+	OVRFW::UILabel * 							SDCardMessage;
+	OVRFW::UILabel * 							PlainErrorMessage;
 	
 	bool								ErrorMessageClicked;
 
-	UIContainer *						MovieRoot;
-	UIContainer *						CategoryRoot;
-	UIContainer *						TitleRoot;
+	OVRFW::UIContainer *						MovieRoot;
+	OVRFW::UIContainer *						CategoryRoot;
+	OVRFW::UIContainer *						TitleRoot;
 
-	UILabel	*							MovieTitle;
+	OVRFW::UILabel	*							MovieTitle;
 
-	UIImage *							SelectionFrame;
+	OVRFW::UIImage *							SelectionFrame;
 
-	UIImage *							CenterPoster;
-	UPInt								CenterIndex;
-	Vector3f							CenterPosition;
+	OVRFW::UIImage *							CenterPoster;
+	OVR::UPInt								CenterIndex;
+	OVR::Vector3f							CenterPosition;
 
-	UIImage *							LeftSwipes[ 3 ];
-	UIImage * 							RightSwipes[ 3 ];
+	OVRFW::UIImage *							LeftSwipes[ 3 ];
+	OVRFW::UIImage * 							RightSwipes[ 3 ];
 
-	UILabel	*							ResumeIcon;
-	UIButton *                            CloseAppButton;
+	OVRFW::UILabel	*							ResumeIcon;
+	OVRFW::UIButton *                            CloseAppButton;
 
 
-	UILabel *							TimerIcon;
-	UILabel *							TimerText;
+	OVRFW::UILabel *							TimerIcon;
+	OVRFW::UILabel *							TimerText;
 	double								TimerStartTime;
 	int									TimerValue;
 	bool								ShowTimer;
 
-	UILabel *							MoveScreenLabel;
-	Lerp								MoveScreenAlpha;
+	OVRFW::UILabel *							MoveScreenLabel;
+	OVRFW::Lerp								MoveScreenAlpha;
 
-	Lerp								SelectionFader;
+	OVRFW::Lerp								SelectionFader;
 
 	CarouselBrowserComponent *			MovieBrowser;
 	std::vector<CarouselItem *> 				MovieBrowserItems;
@@ -147,15 +146,15 @@ private:
 	int                                    newPCHeight;
 	GLuint                                newPCTex;
 
-    UITexture                ButtonTexture;
-    UITexture                ButtonHoverTexture;
-    UITexture                ButtonPressedTexture;
+    OVRFW::UITexture                ButtonTexture;
+    OVRFW::UITexture                ButtonHoverTexture;
+    OVRFW::UITexture                ButtonPressedTexture;
 
-	UIContainer *                        newPCMenu;
-	UITexture                            bgTintTexture;
-	UIImage                                newPCbg;
-	UILabel                                newPCIPLabel;
-	std::vector<UIButton*>                newPCIPButtons;
+	OVRFW::UIContainer *                        newPCMenu;
+	OVRFW::UITexture                            bgTintTexture;
+	OVRFW::UIImage                                newPCbg;
+	OVRFW::UILabel                                newPCIPLabel;
+	std::vector<OVRFW::UIButton*>                newPCIPButtons;
 	int                                 IPoctets[4];
 	int                                    currentOctet;
 	std::string                                IPString;
@@ -167,20 +166,20 @@ private:
 
 	const PcDef *					GetSelectedPc() const;
 
-	void 								CreateMenu( OvrGuiSys & guiSys );
-	Vector3f 							ScalePosition( const Vector3f &startPos, const float scale, const float menuOffset ) const;
+	void 								CreateMenu( OVRFW::OvrGuiSys & guiSys );
+	OVR::Vector3f 							ScalePosition( const OVR::Vector3f &startPos, const float scale, const float menuOffset ) const;
 	void 								UpdateMenuPosition();
 
 	void								StartTimer();
 
 	void								UpdatePcTitle();
-	void								UpdateSelectionFrame( const ovrFrameInput & vrFrame );
+	void								UpdateSelectionFrame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	bool								ErrorShown() const;
-	friend void                         NewPCIPButtonCallback( UIButton *button, void *object );
-	void                                NewPCIPButtonPressed( UIButton *button );
+	friend void                         NewPCIPButtonCallback( OVRFW::UIButton *button, void *object );
+	void                                NewPCIPButtonPressed( OVRFW::UIButton *button );
 
-	friend void                         CloseAppButtonCallback( UIButton *button, void *object );
+	friend void                         CloseAppButtonCallback( OVRFW::UIButton *button, void *object );
 	void                                CloseAppButtonPressed();
 
 

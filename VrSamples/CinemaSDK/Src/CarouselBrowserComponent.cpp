@@ -14,11 +14,15 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include "CarouselBrowserComponent.h"
-#include "App.h"
-#include "GuiSys.h"
-#include "VRMenuMgr.h"
+#include "Appl.h"
+#include "GUI/GuiSys.h"
+#include "GUI/VRMenuMgr.h"
+#include "OVR_LogUtils.h"
 
-using namespace OVR;
+using namespace OVRFW;
+using OVR::Vector3f;
+using OVR::Vector4f;
+using OVR::Quatf;
 
 namespace OculusCinema {
 
@@ -35,7 +39,7 @@ CarouselBrowserComponent::CarouselBrowserComponent( const std::vector<CarouselIt
 	SetItems( items );
 }
 
-eMsgStatus CarouselBrowserComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus CarouselBrowserComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
 	VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_ASSERT( HandlesEvent( VRMenuEventFlags_t( event.EventType ) ) );
@@ -184,33 +188,33 @@ void CarouselBrowserComponent::UpdatePanels( OvrVRMenuMgr & menuMgr, VRMenuObjec
 	PanelsNeedUpdate = false;
 }
 
-void CarouselBrowserComponent::CheckGamepad( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self )
+void CarouselBrowserComponent::CheckGamepad( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self )
 {
 	if ( Swiping )
 	{
 		return;
 	}
-
-	if ( CanSwipeBack() && ( ( vrFrame.Input.buttonState & BUTTON_DPAD_LEFT ) || ( vrFrame.Input.sticks[0][0] < -0.5f ) ) )
+/*
+	if ( CanSwipeBack() && ( ( vrFrame.AllButtons & BUTTON_DPAD_LEFT ) || ( vrFrame.GamePad.LeftJoystick.x < -0.5f ) ) )
 	{
 		SwipeBack( guiSys, vrFrame, self );
 		return;
 	}
 
-	if ( CanSwipeForward() && ( ( vrFrame.Input.buttonState & BUTTON_DPAD_RIGHT ) || ( vrFrame.Input.sticks[0][0] > 0.5f ) ) )
+	if ( CanSwipeForward() && ( ( vrFrame.AllButtons & BUTTON_DPAD_LEFT ) || ( vrFrame.GamePad.LeftJoystick.x > 0.5f ) ) )
 	{
 		SwipeForward( guiSys, vrFrame, self );
 		return;
-	}
+	}*/
 }
 
-eMsgStatus CarouselBrowserComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselBrowserComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( event );
 
 	if ( Swiping )
 	{
-		float frac = static_cast<float>( ( vrFrame.PredictedDisplayTimeInSeconds - StartTime ) / ( EndTime - StartTime ) );
+		float frac = static_cast<float>( ( vrFrame.PredictedDisplayTime - StartTime ) / ( EndTime - StartTime ) );
 		if ( frac >= 1.0f )
 		{
 			frac = 1.0f;
@@ -232,7 +236,7 @@ eMsgStatus CarouselBrowserComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput co
 	return MSG_STATUS_ALIVE;
 }
 
-eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self )
+eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self )
 {
 	if ( !Swiping )
 	{
@@ -241,7 +245,7 @@ eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrFrameI
 		{
 			guiSys.GetSoundEffectPlayer().Play( "carousel_move" );
 			PrevPosition = Position;
-			StartTime = vrFrame.PredictedDisplayTimeInSeconds;
+			StartTime = vrFrame.PredictedDisplayTime;
 			EndTime = StartTime + 0.25;
 			NextPosition = nextPos;
 			Swiping = true;
@@ -251,7 +255,7 @@ eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrFrameI
 	return MSG_STATUS_CONSUMED;
 }
 
-eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self )
+eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self )
 {
 	if ( !Swiping )
 	{
@@ -260,7 +264,7 @@ eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrFrameInpu
 		{
 			guiSys.GetSoundEffectPlayer().Play( "carousel_move" );
 			PrevPosition = Position;
-			StartTime = vrFrame.PredictedDisplayTimeInSeconds;
+			StartTime = vrFrame.PredictedDisplayTime;
 			EndTime = StartTime + 0.25;
 			NextPosition = nextPos;
 			Swiping = true;
@@ -270,7 +274,7 @@ eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrFrameInpu
 	return MSG_STATUS_CONSUMED;
 }
 
-eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	//OVR_LOG( "TouchDown" );
 
@@ -288,7 +292,7 @@ eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrFrameInpu
 	return MSG_STATUS_ALIVE;	// don't consume -- we're just listening
 }
 
-eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	//OVR_LOG( "TouchUp" );
 
@@ -314,7 +318,7 @@ eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrFrameInput 
 	return MSG_STATUS_ALIVE; // don't consume -- we are just listening
 }
 
-eMsgStatus CarouselBrowserComponent::Opened( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselBrowserComponent::Opened( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );
@@ -327,7 +331,7 @@ eMsgStatus CarouselBrowserComponent::Opened( OvrGuiSys & guiSys, ovrFrameInput c
 	return MSG_STATUS_ALIVE;
 }
 
-eMsgStatus CarouselBrowserComponent::Closed( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
+eMsgStatus CarouselBrowserComponent::Closed( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
 	OVR_UNUSED( vrFrame );

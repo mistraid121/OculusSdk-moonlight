@@ -51,18 +51,18 @@ class Settings::IVariable {
 public:
 	virtual ~IVariable() { free(name); name = NULL;  }
 	virtual IVariable* Clone() = 0;
-	// The three basic types of JSON values, since we don't know what type we're storing in this instance
-	// Could have template<typename T> Load(T), but this way we don't really have to save type info to json
+	// The three basic types of OVR::JSON values, since we don't know what type we're storing in this instance
+	// Could have template<typename T> Load(T), but this way we don't really have to save type info to OVR::JSON
 	virtual void LoadNumber(double num) = 0;
 	virtual void LoadCStr(const char* str) = 0;
 	virtual void LoadBool(bool b) = 0;
-	virtual std::shared_ptr<JSON> Serialize() = 0;
+	virtual std::shared_ptr<OVR::JSON> Serialize() = 0;
 	virtual bool IsChanged() = 0;
 	virtual void SaveValue() = 0;
 
 public:
 	char* name;
-	std::shared_ptr<JSON> json;
+	std::shared_ptr<OVR::JSON> json;
 };
 
 
@@ -90,9 +90,9 @@ public:
 	virtual void LoadNumber(double num) { initialValue = (T)num; *varPtr = (T)num; }
 	virtual void LoadCStr(const char* str) { OVR_LOG("Loaded the wrong type! %s is not text.", name);}
 	virtual void LoadBool(bool b) { initialValue = (T)b; *varPtr = (T)b;}
-	virtual std::shared_ptr<JSON> Serialize()
+	virtual std::shared_ptr<OVR::JSON> Serialize()
 	{
-		std::shared_ptr<JSON> newJSON = JSON::CreateNumber((double)(*varPtr));
+		std::shared_ptr<OVR::JSON> newJSON = OVR::JSON::CreateNumber((double)(*varPtr));
 		newJSON->Name = name;
 		json = NULL; // can't be sure we'll be pointing to the right thing soon
 		return newJSON;
@@ -143,9 +143,9 @@ public:
 		*varPtr = strdup(str);
 	}
 	virtual void LoadBool(bool b) { OVR_LOG("Loaded the wrong type! %s is text.", name);}
-	virtual std::shared_ptr<JSON> Serialize()
+	virtual std::shared_ptr<OVR::JSON> Serialize()
 	{
-		std::shared_ptr<JSON> newJSON = JSON::CreateString(*varPtr);
+		std::shared_ptr<OVR::JSON> newJSON = OVR::JSON::CreateString(*varPtr);
 		newJSON->Name = name;
 		json = NULL; // can't be sure we'll be pointing to the right thing soon
 		return newJSON;
@@ -193,9 +193,9 @@ public:
 		varPtr=new std::string(str);
 	}
 	virtual void LoadBool(bool b) { OVR_LOG("Loaded the wrong type! %s is text.", name); }
-	virtual std::shared_ptr<JSON> Serialize()
+	virtual std::shared_ptr<OVR::JSON> Serialize()
 	{
-		std::shared_ptr<JSON> newJSON = JSON::CreateString(varPtr->c_str());
+		std::shared_ptr<OVR::JSON> newJSON = OVR::JSON::CreateString(varPtr->c_str());
 		newJSON->Name = name;
 		json = NULL; // can't be sure we'll be pointing to the right thing soon
 		return newJSON;
@@ -216,19 +216,19 @@ public:
  */
 template<typename T> void SetHelper(T* source, T* toSet) { *toSet = *source; }
 template<> 			 void SetHelper(char** source, char** toSet) { *toSet = strdup(*source); }
-template<typename T> void JSONToTypeHelper(JSON* json, T* toSet)
+template<typename T> void JSONToTypeHelper(OVR::JSON* json, T* toSet)
 {
 	*toSet = (T) json->GetDoubleValue();
 }
-template<> void JSONToTypeHelper(JSON* json, bool* toSet)
+template<> void JSONToTypeHelper(OVR::JSON* json, bool* toSet)
 {
 	*toSet = json->GetBoolValue();
 }
-template<> void JSONToTypeHelper(JSON* json, char** toSet)
+template<> void JSONToTypeHelper(OVR::JSON* json, char** toSet)
 {
 	*toSet = strdup(json->GetStringValue().c_str());
 }
-template<> void JSONToTypeHelper(JSON* json, std::string* toSet)
+template<> void JSONToTypeHelper(OVR::JSON* json, std::string* toSet)
 {
 	*toSet = json->GetStringValue();
 }
@@ -268,12 +268,12 @@ Settings::~Settings()
 void Settings::OpenOrCreate(const char* filename)
 {
 	settingsFileName = strdup(filename);
-	if(!(rootSettingsJSON = JSON::Load(filename)))
+	if(!(rootSettingsJSON = OVR::JSON::Load(filename)))
 	{
 		OVR_LOG("Creating new settings file: %s", filename);
-		rootSettingsJSON = JSON::CreateObject();
+		rootSettingsJSON = OVR::JSON::CreateObject();
 		rootSettingsJSON->AddNumberItem("SettingsVersion",SETTINGS_VERSION);
-		rootSettingsJSON->AddItem("Settings",JSON::CreateObject());
+		rootSettingsJSON->AddItem("Settings",OVR::JSON::CreateObject());
 		if(!rootSettingsJSON->Save(filename))
 		{
 			OVR_LOG("Error creating settings file: %s", filename);
@@ -420,13 +420,13 @@ void Settings::Load()
 			var->json = varJSON;
 			switch(varJSON->Type)
 			{
-			case JSON_Bool:
+			case OVR::JSON_Bool:
 				var->LoadBool(varJSON->GetBoolValue());
 				break;
-			case JSON_Number:
+			case OVR::JSON_Number:
 				var->LoadNumber(varJSON->GetDoubleValue());
 				break;
-			case JSON_String:
+			case OVR::JSON_String:
 				var->LoadCStr(varJSON->GetStringValue().c_str());
 				break;
 			default:
@@ -546,7 +546,7 @@ void	Settings::SaveVarNames()
 		}
 		if(varJSON == NULL)
 		{
-			settingsJSON->AddItem(var->name,JSON::CreateNull());
+			settingsJSON->AddItem(var->name,OVR::JSON::CreateNull());
 		}
 	}
 	rootSettingsJSON->Save(settingsFileName);
@@ -567,7 +567,7 @@ void SettingsTest(std::string packageName)
 	appFileStoragePath += packageName;
 	appFileStoragePath += "/files/";
 
-    std::string FilePath = appFileStoragePath + "settingstest.json";
+    std::string FilePath = appFileStoragePath + "settingstest.OVR::JSON";
 
 	OVR_LOG("Opening file");
 	Settings* s = new Settings(FilePath.c_str());

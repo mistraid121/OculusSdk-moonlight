@@ -16,9 +16,25 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CinemaApp.h"
 #include "Native.h"
 #include "SceneManager.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
 
 #include <algorithm>
+
+
+// Returns true if head equals check plus zero or more characters.
+inline bool MatchesHead( const char * head, const char * check )
+{
+	const int l = static_cast<int>( OVR::OVR_strlen( head ) );
+	return 0 == OVR::OVR_strncmp( head, check, l );
+}
+
+using namespace OVRFW;
+using OVR::Matrix4f;
+using OVR::Vector2f;
+using OVR::Vector3f;
+using OVR::Posef;
+using OVR::Quatf;
+using OVR::Bounds3f;
 
 namespace OculusCinema
 {
@@ -97,14 +113,14 @@ namespace OculusCinema
             }
         }
 
-        std::vector< OVR::TriangleIndex > indices;
+        std::vector< TriangleIndex > indices;
         indices.resize( 25 * 6 );
 
         // Should we flip the triangulation on the corners?
         int index = 0;
-        for ( OVR::TriangleIndex x = 0; x < 5; x++ )
+        for ( TriangleIndex x = 0; x < 5; x++ )
         {
-            for ( OVR::TriangleIndex y = 0; y < 5; y++ )
+            for ( TriangleIndex y = 0; y < 5; y++ )
             {
                 indices[index + 0] = y * 6 + x;
                 indices[index + 1] = y * 6 + x + 1;
@@ -142,7 +158,7 @@ void SceneManager::OneTimeInit( const char * launchIntent )
 
         OVR_UNUSED( launchIntent );
 
-        const double start = SystemClock::GetTimeInSeconds();
+        const double start = GetTimeInSeconds();
 
         UnitSquare = BuildTesselatedQuad( 1, 1 );
 
@@ -168,7 +184,7 @@ void SceneManager::OneTimeInit( const char * launchIntent )
 	//BlackSceneScreenSurfaceDef.geo = ; // Determined by the scene model loaded
 	BlackSceneScreenSurfaceDef.graphicsCommand.Program = Cinema.ShaderMgr.ScenePrograms[0];
 
-        OVR_LOG( "SceneManager::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+        OVR_LOG( "SceneManager::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
     }
 
     void SceneManager::OneTimeShutdown()
@@ -516,7 +532,7 @@ Matrix4f SceneManager::ScreenMatrix() const
 
 void SceneManager::ClearMovie()
 {
-	Native::StopMovie( Cinema.app );
+	Native::StopMovie();
 
 	SetSceneProgram( SCENE_PROGRAM_DYNAMIC_ONLY, SCENE_PROGRAM_ADDITIVE );
 
@@ -533,7 +549,7 @@ void SceneManager::ClearMovie()
 void SceneManager::PutScreenInFront()
 {
 	FreeScreenPose = Scene.GetCenterEyeTransform();
-	Cinema.app->RecenterYaw( false );
+	//Cinema.app->RecenterYaw( false );
 }
 
 void SceneManager::ClearGazeCursorGhosts()
@@ -638,7 +654,7 @@ GLuint SceneManager::BuildScreenVignetteTexture( const int horizontalTile ) cons
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
 	delete[] buffer;
-	GL_CheckErrors( "screenVignette" );
+	GLCheckErrorsWithTitle( "screenVignette" );
 	return texId;
 }
 
@@ -662,28 +678,34 @@ void SceneManager::SetSeat( int newSeat )
 	Scene.SetFootPos( SceneSeatPositions[ SeatPosition ] );
 }
 
-bool SceneManager::ChangeSeats( const ovrFrameInput & vrFrame )
+bool SceneManager::ChangeSeats( const ovrApplFrameIn & vrFrame )
 {
 	bool changed = false;
 	if ( SceneSeatCount > 0 )
 	{
+		unsigned int controllerInput = vrFrame.AllButtons;
+		bool rightPressed 	= ( controllerInput & ( ovrButton_Right ) ) != 0;
+		bool leftPressed 	= ( controllerInput & ( ovrButton_Left ) ) != 0;
+		bool downPressed 	= ( controllerInput & ( ovrButton_Down ) ) != 0;
+		bool upPressed 		= ( controllerInput & ( ovrButton_Up ) ) != 0;
+
 		Vector3f direction( 0.0f );
-		if ( vrFrame.Input.buttonPressed & BUTTON_LSTICK_UP )
+		if ( upPressed )
 		{
 			changed = true;
 			direction[2] += 1.0f;
 		}
-		if ( vrFrame.Input.buttonPressed & BUTTON_LSTICK_DOWN )
+		if ( downPressed )
 		{
 			changed = true;
 			direction[2] -= 1.0f;
 		}
-		if ( vrFrame.Input.buttonPressed & BUTTON_LSTICK_RIGHT )
+		if ( rightPressed )
 		{
 			changed = true;
 			direction[0] += 1.0f;
 		}
-		if ( vrFrame.Input.buttonPressed & BUTTON_LSTICK_LEFT )
+		if ( leftPressed )
 		{
 			changed = true;
 			direction[0] -= 1.0f;
@@ -752,7 +774,8 @@ bool SceneManager::Command( const char * msg )
 	if ( MatchesHead( "newVideo ", msg ) )
 	{
 		delete MovieTexture;
-		MovieTexture = new SurfaceTexture( Cinema.app->GetJava()->Env );
+		const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( Cinema.GetContext()->ContextForVrApi() ) );
+		MovieTexture = new SurfaceTexture( ctx.Env );
 		OVR_LOG( "RC_NEW_VIDEO texId %i", MovieTexture->GetTextureId() );
 
 		ovrMessageQueue * receiver;
@@ -938,14 +961,14 @@ static void GetTextureMatrix( const MovieFormat format, const int movieRotation,
  *
  * App override
  */
-void SceneManager::Frame( const ovrFrameInput & vrFrame )
+void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 {
 	// disallow player movement
-	ovrFrameInput vrFrameWithoutMove = vrFrame;
+	ovrApplFrameIn vrFrameWithoutMove = vrFrame;
 	if ( !AllowMove )
 	{
-		vrFrameWithoutMove.Input.sticks[0][0] = 0.0f;
-		vrFrameWithoutMove.Input.sticks[0][1] = 0.0f;
+		vrFrameWithoutMove.LeftRemote.Joystick.x = 0.0f;
+		vrFrameWithoutMove.LeftRemote.Joystick.y = 0.0f;
 	}
 
 	// Suppress scene surfaces when Free Screen is active.
@@ -1106,24 +1129,14 @@ void SceneManager::Frame( const ovrFrameInput & vrFrame )
 		}
 	}
 
-	ovrFrameResult & res = Cinema.GetFrameResult();
-	Scene.GetFrameMatrices( vrFrame.FovX, vrFrame.FovY, res.FrameMatrices );
+	ovrRendererOutput & res = Cinema.GetFrameResult();
+	Scene.GetFrameMatrices( Cinema.GetSuggestedEyeFovDegreesX(), Cinema.GetSuggestedEyeFovDegreesY(), res.FrameMatrices );
 	Scene.GenerateFrameSurfaceList( res.FrameMatrices, res.Surfaces );
 
 	//-------------------------------
 	// Rendering
 	//-------------------------------
-
-	// otherwise cracks would show overlay texture
-	res.ClearColorBuffer = true;
-	res.ClearColor = Vector4f( 0.0f, 0.0f, 0.0f, 1.0f );
-
-	res.FrameIndex = vrFrame.FrameNumber;
-	res.DisplayTime = vrFrame.PredictedDisplayTimeInSeconds;
-	res.SwapInterval = Cinema.app->GetSwapInterval();
-
 	res.FrameFlags = 0;
-	res.LayerCount = 0;
 
 	const bool drawScreen = ( ( SceneScreenSurface != NULL ) || SceneInfo.UseFreeScreen ) && MovieTexture && ( CurrentMovieWidth > 0 );
 
@@ -1146,7 +1159,7 @@ void SceneManager::Frame( const ovrFrameInput & vrFrame )
 
 		// Draw the movie texture layer
 		{
-			ovrLayerProjection2 & overlayLayer = res.Layers[ res.LayerCount++ ].Projection;
+			ovrLayerProjection2 & overlayLayer = res.Layers[ res.NumLayers++ ].Projection;
 			overlayLayer = vrapi_DefaultLayerProjection2();
 
 			overlayLayer.Header.SrcBlend = VRAPI_FRAME_LAYER_BLEND_ONE;
@@ -1170,20 +1183,20 @@ void SceneManager::Frame( const ovrFrameInput & vrFrame )
 		}
 	}
 
-	ovrLayerProjection2 & worldLayer = res.Layers[ res.LayerCount++ ].Projection;
+	ovrLayerProjection2 & worldLayer = res.Layers[ res.NumLayers++ ].Projection;
 	worldLayer = vrapi_DefaultLayerProjection2();
 
 	worldLayer.Header.SrcBlend = ( drawScreen ) ? VRAPI_FRAME_LAYER_BLEND_SRC_ALPHA : VRAPI_FRAME_LAYER_BLEND_ONE;
 	worldLayer.Header.DstBlend = ( drawScreen ) ? VRAPI_FRAME_LAYER_BLEND_ONE_MINUS_SRC_ALPHA : VRAPI_FRAME_LAYER_BLEND_ZERO;
 	worldLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
 
-	worldLayer.HeadPose = Cinema.GetFrame().Tracking.HeadPose;
+	worldLayer.HeadPose = Cinema.GetFrame().Tracking.HeadPose;/*
 	for ( int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++ )
 	{
 		worldLayer.Textures[eye].ColorSwapChain = Cinema.GetFrame().ColorTextureSwapChain[eye];
 		worldLayer.Textures[eye].SwapChainIndex = Cinema.GetFrame().TextureSwapChainIndex;
 		worldLayer.Textures[eye].TexCoordsFromTanAngles = Cinema.GetFrame().TexCoordsFromTanAngles;
-	}
+	}*/
 }
 
 } // namespace OculusCinema

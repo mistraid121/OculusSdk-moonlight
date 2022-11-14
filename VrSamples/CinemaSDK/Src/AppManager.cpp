@@ -29,6 +29,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <sys/stat.h>
 #include <errno.h>
 
+using namespace OVRFW;
+
 namespace OculusCinema {
 
 
@@ -95,14 +97,14 @@ namespace OculusCinema {
     void AppManager::LoadApps() {
         OVR_LOG("LoadApps");
 
-        const double start = SystemClock::GetTimeInSeconds();
+        const double start = GetTimeInSeconds();
 
         std::vector<std::string> appNames; // TODO: Get app list from JNI AppSelector
         OVR_LOG("%i movies scanned, %3.1f seconds", static_cast<int>(appNames.size()),
             vrapi_GetTimeInSeconds() - start);
 
 
-        for (UPInt i = 0; i < appNames.size(); i++) {
+        for (OVR::UPInt i = 0; i < appNames.size(); i++) {
             AppDef *app = new AppDef();
             Apps.push_back(app);
 
@@ -125,7 +127,7 @@ namespace OculusCinema {
         OVR_LOG("App %s with id %i added!", name.c_str(), id);
         AppDef *anApp = NULL;
         bool isNew = false;
-        for (UPInt i = 0; i < Apps.size(); i++) {
+        for (OVR::UPInt i = 0; i < Apps.size(); i++) {
             if (OVR::OVR_stricmp(Apps[i]->Name.c_str(),name.c_str()) == 0)
                 anApp = Apps[i];
         }
@@ -147,7 +149,7 @@ namespace OculusCinema {
     }
 
     void AppManager::RemoveApp(int id) {
-        for (UPInt i = 0; i < Apps.size(); i++)
+        for (OVR::UPInt i = 0; i < Apps.size(); i++)
             if (Apps[i]->Id == id) {
                 Apps.erase( Apps.cbegin() + i );
                 i--;
@@ -170,7 +172,7 @@ namespace OculusCinema {
             return;
         }
 
-        if ( auto metadata = JSON::Load( filename.c_str(), &error ) )
+        if ( auto metadata = OVR::JSON::Load( filename.c_str(), &error ) )
         {
 
            // metadata->Release();
@@ -205,7 +207,7 @@ namespace OculusCinema {
 
     void AppManager::LoadPosters()
     {
-        for(UPInt i=0; i < Apps.size(); i++)
+        for(OVR::UPInt i=0; i < Apps.size(); i++)
         {
             /*if( Apps[i]->Poster == 0 || Apps[i]->Poster == DefaultPoster )
             {
@@ -220,7 +222,7 @@ namespace OculusCinema {
     {
         std::vector<const PcDef *> result;
 
-        for( UPInt i = 0; i < Apps.size(); i++ )
+        for( OVR::UPInt i = 0; i < Apps.size(); i++ )
         {
             OVR_LOG("App: %s Poster %i", Apps[i]->Name.c_str(), Apps[i]->Poster);
             if ( Apps[ i ]->Category == category && Apps[i]->Poster != 0)

@@ -17,7 +17,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define TheaterSelectionView_h
 
 #include "View.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
 
 #include <vector>
 
@@ -39,8 +39,8 @@ public:
 	virtual void 				OnOpen( const double currTimeInSeconds );
 	virtual void 				OnClose();
 	virtual bool 				BackPressed();
-	virtual bool 				OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType );
-	virtual void 				Frame( const ovrFrameInput & vrFrame );
+	virtual bool 				OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
+	virtual void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 						SelectPressed( const double currTimeInSeconds );
 	void 						SelectTheater( int theater );
@@ -50,15 +50,15 @@ public:
 private:
 	CinemaApp &					Cinema;
 
-	static VRMenuId_t  			ID_CENTER_ROOT;
-	static VRMenuId_t			ID_ICONS;
-	static VRMenuId_t  			ID_TITLE_ROOT;
-	static VRMenuId_t 			ID_SWIPE_ICON_LEFT;
-	static VRMenuId_t 			ID_SWIPE_ICON_RIGHT;
+	static OVRFW::VRMenuId_t  			ID_CENTER_ROOT;
+	static OVRFW::VRMenuId_t			ID_ICONS;
+	static OVRFW::VRMenuId_t  			ID_TITLE_ROOT;
+	static OVRFW::VRMenuId_t 			ID_SWIPE_ICON_LEFT;
+	static OVRFW::VRMenuId_t 			ID_SWIPE_ICON_RIGHT;
 
-	VRMenu *					Menu;
-	VRMenuObject * 				CenterRoot;
-	VRMenuObject * 				SelectionObject;
+	OVRFW::VRMenu *					Menu;
+	OVRFW::VRMenuObject * 				CenterRoot;
+	OVRFW::VRMenuObject * 				SelectionObject;
 
 	CarouselBrowserComponent *	TheaterBrowser;
 	std::vector<CarouselItem *> Theaters;
@@ -70,8 +70,8 @@ private:
 private:
 	TheaterSelectionView &		operator=( const TheaterSelectionView & );
 
-	void						SetPosition( OvrVRMenuMgr & menuMgr, const Vector3f &pos );
-	void 						CreateMenu( OvrGuiSys & guiSys );
+	void						SetPosition( OVRFW::OvrVRMenuMgr & menuMgr, const OVR::Vector3f &pos );
+	void 						CreateMenu( OVRFW::OvrGuiSys & guiSys );
 };
 
 } // namespace OculusCinema

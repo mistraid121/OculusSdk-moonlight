@@ -20,8 +20,6 @@ LICENSE file in the StreamTheater/ directory.
 
 namespace OculusCinema {
 
-using namespace OVR;
-
 class Settings
 {
 public:
@@ -76,8 +74,8 @@ private:
 
 private:
 	char* settingsFileName;
-	std::shared_ptr<JSON> rootSettingsJSON;
-	std::shared_ptr<JSON> settingsJSON;
+	std::shared_ptr<OVR::JSON> rootSettingsJSON;
+	std::shared_ptr<OVR::JSON> settingsJSON;
 	std::vector<IVariable*> variables;
 
 };

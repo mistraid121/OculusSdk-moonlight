@@ -14,12 +14,12 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include <android/keycodes.h>
-#include "OVR_Input.h"
-#include "App.h"
+//#include "OVR_Input.h"
+//#include "App.h"
 #include "PcSelectionView.h"
 #include "CinemaApp.h"
-#include "VRMenuMgr.h"
-#include "GuiSys.h"
+#include "GUI/VRMenuMgr.h"
+#include "GUI/GuiSys.h"
 #include "PcCategoryComponent.h"
 #include "MoviePosterComponent.h"
 #include "MovieSelectionComponent.h"
@@ -27,6 +27,14 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "PackageFiles.h"
 #include "CinemaStrings.h"
 #include "Native.h"
+
+using namespace OVRFW;
+using OVR::Vector2f;
+using OVR::Vector3f;
+using OVR::Vector4f;
+using OVR::Matrix4f;
+using OVR::Quatf;
+using OVR::Bounds3f;
 
 namespace OculusCinema {
 
@@ -120,15 +128,15 @@ void PcSelectionView::OneTimeInit( const char * launchIntent )
 
 	OVR_LOG( "PcSelectionView::OneTimeInit" );
 
-	const double start = SystemClock::GetTimeInSeconds();
+	const double start = GetTimeInSeconds();
 
 	CreateMenu( Cinema.GetGuiSys() );
 
 	SetCategory( CATEGORY_LIMELIGHT );
 
-    Native::InitPcSelector( Cinema.app );
+    Native::InitPcSelector();
 
-	OVR_LOG( "PcSelectionView::OneTimeInit %3.1f seconds",  SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "PcSelectionView::OneTimeInit %3.1f seconds",  GetTimeInSeconds() - start );
 }
 
 void PcSelectionView::OneTimeShutdown()
@@ -214,17 +222,17 @@ bool PcSelectionView::BackPressed()
 }
 
 
-bool PcSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType )
+bool PcSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
 {
 	switch ( keyCode )
 	{
 		case AKEYCODE_BACK:
 		{
 			switch ( eventType )
-			{
+			{/*
 				case KEY_EVENT_SHORT_PRESS:
 					return BackPressed();
-					break;
+					break;*/
 				default:
 					break;
 			}
@@ -376,7 +384,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	// add shadow and 3D icon to movie poster panels
 	//
 	std::vector<VRMenuObject *> menuObjs;
-	for ( UPInt i = 0; i < MoviePanelPositions.size(); ++i )
+	for ( OVR::UPInt i = 0; i < MoviePanelPositions.size(); ++i )
 	{
 		UIContainer *posterContainer = new UIContainer( Cinema.GetGuiSys() );
 		posterContainer->AddToMenu( Menu, MovieRoot );
@@ -441,7 +449,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	// create the buttons and calculate their size
 	const float itemWidth = 1.10f;
 	float categoryBarWidth = 0.0f;
-	for ( UPInt i = 0; i < Categories.size(); ++i )
+	for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
 	{
 		Categories[ i ].Button = new UILabel( Cinema.GetGuiSys() );
 		Categories[ i ].Button->AddToMenu( Menu, CategoryRoot );
@@ -457,7 +465,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 	// reposition the buttons and set the background and border
 	float startX = categoryBarWidth * -0.5f;
-	for ( UPInt i = 0; i < Categories.size(); ++i )
+	for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
 	{
 		VRMenuSurfaceParms panelSurfParms( "",
 				BorderTexture.Texture, BorderTexture.Width, BorderTexture.Height, SURFACE_TEXTURE_ADDITIVE,
@@ -632,76 +640,76 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 }
 
-	void PcSelectionView::NewPCIPButtonPressed( UIButton *button)
+void PcSelectionView::NewPCIPButtonPressed( UIButton *button)
+{
+	VRMenuObject *object = button->GetMenuObject();
+	char bLabel = object->GetText()[0];
+	//char bLabel = '.';
+	int error=0;
+	switch(bLabel)
 	{
-
-		char bLabel = button->GetText()[0];
-        //char bLabel = '.';
-        int error=0;
-        switch(bLabel)
-		{
-			case '<':
-				if( IPoctets[currentOctet] == 0 && currentOctet > 0) currentOctet--;
-				IPoctets[currentOctet] /= 10;
-				break;
-			case '.':
+		case '<':
+			if( IPoctets[currentOctet] == 0 && currentOctet > 0) currentOctet--;
+			IPoctets[currentOctet] /= 10;
+			break;
+		case '.':
+			currentOctet++;
+			if(currentOctet > 3) currentOctet = 3;
+			break;
+		case 'E':
+			newPCMenu->SetVisible(false);
+			IPString = "";
+			for(int i=0;i<=3;i++)
+			{
+				if( i != 0 ) IPString += ".";
+				IPString +=std::to_string( IPoctets[i] ).c_str();
+			}
+			error = Native::addPCbyIP(IPString.c_str());
+			if ( error == 2 )
+			{
+				SetError( "Error_UnknownHost", false, false );
+			}
+			else if( error == 1 )
+			{
+				SetError( "Error_AddPCFailed", false, false );
+			}
+			IPoctets[0] = IPoctets[1] = IPoctets[2] = IPoctets[3] = 0;
+			currentOctet = 0;
+			break;
+		case '0':
+			if(IPoctets[currentOctet]==0)
+			{
 				currentOctet++;
 				if(currentOctet > 3) currentOctet = 3;
-				break;
-			case 'E':
-				newPCMenu->SetVisible(false);
-                IPString = "";
-                for(int i=0;i<=3;i++)
-				{
-					if( i != 0 ) IPString += ".";
-					IPString +=std::to_string( IPoctets[i] ).c_str();
-                }
-                error = Native::addPCbyIP(Cinema.app, IPString.c_str());
-                if ( error == 2 )
-                {
-                    SetError( "Error_UnknownHost", false, false );
-                }
-                else if( error == 1 )
-                {
-                    SetError( "Error_AddPCFailed", false, false );
-				}
-				IPoctets[0] = IPoctets[1] = IPoctets[2] = IPoctets[3] = 0;
-				currentOctet = 0;
-				break;
-			case '0':
-				if(IPoctets[currentOctet]==0)
-				{
-					currentOctet++;
-					if(currentOctet > 3) currentOctet = 3;
-				}
-			default: // numbers
-				int number = bLabel - '0';
-				if(IPoctets[currentOctet] * 10 + number > 255)
-				{
-					currentOctet++;
-					if(currentOctet > 3) currentOctet = 3;
-				}
-				if(IPoctets[currentOctet] * 10 + number <= 255)
-				{
-					IPoctets[currentOctet] = IPoctets[currentOctet] * 10 + number;
-				}
-				if(IPoctets[currentOctet] >= 26)
-				{
-					currentOctet++;
-					if(currentOctet > 3) currentOctet = 3;
-				}
-				break;
-		}
-		IPString = "";
-		for(int i=0;i<=3;i++)
-		{
-			if( i != 0 ) IPString += ".";
-			if( i != currentOctet || IPoctets[i] != 0) IPString += std::to_string(IPoctets[i] );
-			if( i == currentOctet ) IPString += "_";
-		}
-		newPCIPLabel.SetText( IPString );
-
+			}
+		default: // numbers
+			int number = bLabel - '0';
+			if(IPoctets[currentOctet] * 10 + number > 255)
+			{
+				currentOctet++;
+				if(currentOctet > 3) currentOctet = 3;
+			}
+			if(IPoctets[currentOctet] * 10 + number <= 255)
+			{
+				IPoctets[currentOctet] = IPoctets[currentOctet] * 10 + number;
+			}
+			if(IPoctets[currentOctet] >= 26)
+			{
+				currentOctet++;
+				if(currentOctet > 3) currentOctet = 3;
+			}
+			break;
 	}
+	IPString = "";
+	for(int i=0;i<=3;i++)
+	{
+		if( i != 0 ) IPString += ".";
+		if( i != currentOctet || IPoctets[i] != 0) IPString += std::to_string(IPoctets[i] );
+		if( i == currentOctet ) IPString += "_";
+	}
+	newPCIPLabel.SetText( IPString );
+
+}
 
 void PcSelectionView::CloseAppButtonPressed()
 {
@@ -709,7 +717,7 @@ void PcSelectionView::CloseAppButtonPressed()
 
 	if(pc)
 	{
-		Native::closeApp( Cinema.app, pc->UUID.c_str(), 0);
+		Native::closeApp(pc->UUID.c_str(), 0);
 	}
 }
 
@@ -813,7 +821,7 @@ void PcSelectionView::SetPcList( const std::vector<const PcDef *> &movies, const
 
 	MovieList = movies;
 	DeletePointerArray( MovieBrowserItems );
-	for ( UPInt i = 0; i < MovieList.size(); i++ )
+	for ( OVR::UPInt i = 0; i < MovieList.size(); i++ )
 	{
 		const PcDef *movie = MovieList[ i ];
 
@@ -881,8 +889,8 @@ void PcSelectionView::SetPcList( const std::vector<const PcDef *> &movies, const
 void PcSelectionView::SetCategory( const PcCategory category )
 {
     // default to category in index 0
-    UPInt categoryIndex = 0;
-    for ( UPInt i = 0; i < Categories.size(); ++i )
+    OVR::UPInt categoryIndex = 0;
+    for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
     {
         if ( category == Categories[ i ].Category )
         {
@@ -893,7 +901,7 @@ void PcSelectionView::SetCategory( const PcCategory category )
 
     OVR_LOG( "SetCategory: %s", Categories[ categoryIndex ].Text.c_str() );
     CurrentCategory = Categories[ categoryIndex ].Category;
-    for ( UPInt i = 0; i < Categories.size(); ++i )
+    for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
     {
         Categories[ i ].Button->SetHilighted( i == categoryIndex );
     }
@@ -944,7 +952,7 @@ void PcSelectionView::SelectionHighlighted( bool isHighlighted )
     }
 }
 
-void PcSelectionView::UpdateSelectionFrame( const ovrFrameInput & vrFrame )
+void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
 {
     const double now = vrapi_GetTimeInSeconds();
     if ( !MovieBrowser->HasSelection() )
@@ -1053,13 +1061,13 @@ bool PcSelectionView::ErrorShown() const
     return ErrorMessage->GetVisible() || SDCardMessage->GetVisible() || PlainErrorMessage->GetVisible();
 }
 
-void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
-{
+void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
+{/*
     // We want 4x MSAA in the lobby
     ovrEyeBufferParms eyeBufferParms = Cinema.app->GetEyeBufferParms();
     eyeBufferParms.multisamples = 4;
     Cinema.app->SetEyeBufferParms( eyeBufferParms );
-
+*/
 #if 0
     if ( !Cinema.InLobby && Cinema.SceneMgr.ChangeSeats( vrFrame ) )
     {
@@ -1067,7 +1075,7 @@ void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
     }
 #endif
 
-    if ( vrFrame.Input.buttonPressed & BUTTON_B )
+    //if ( vrFrame.AllButtons & BUTTON_B )
     {
         /*
         if ( Cinema.InLobby )
@@ -1104,21 +1112,21 @@ void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
     }
 
     if ( !Cinema.InLobby && ErrorShown() )
-    {
+    {/*
         CarouselSwipeHintComponent::ShowSwipeHints = false;
-        if ( vrFrame.Input.buttonPressed & ( BUTTON_TOUCH | BUTTON_A ) )
+        if ( vrFrame.AllButtons & ( BUTTON_TOUCH | BUTTON_A ) )
         {
             Cinema.GetGuiSys().GetSoundEffectPlayer().Play( "touch_down" );
         }
-        else if ( vrFrame.Input.buttonReleased & ( BUTTON_TOUCH | BUTTON_A ) )
+        else if ( vrFrame.LastFrameAllButtons & ( BUTTON_TOUCH | BUTTON_A ) )
         {
             Cinema.GetGuiSys().GetSoundEffectPlayer().Play( "touch_up" );
             ErrorMessageClicked = true;
         }
-        else if ( ErrorMessageClicked && ( ( vrFrame.Input.buttonState & ( BUTTON_TOUCH | BUTTON_A ) ) == 0 ) )
+        else if ( ErrorMessageClicked && ( ( vrFrame.AllButtons & ( BUTTON_TOUCH | BUTTON_A ) ) == 0 ) )
         {
 			ClearError();
-		}
+		}*/
     }
 
     if ( Cinema.SceneMgr.FreeScreenActive && !ErrorShown() )
@@ -1133,13 +1141,13 @@ void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
                 MoveScreenLabel->SetVisible( true );
                 MoveScreenLabel->SetTextColor( Vector4f( alpha ) );
             }
-
-            if ( vrFrame.Input.buttonPressed & ( BUTTON_A | BUTTON_TOUCH ) )
+/*
+            if ( vrFrame.AllButtons & ( BUTTON_A | BUTTON_TOUCH ) )
             {
                 // disable hit detection on selection frame
                 SelectionFrame->GetMenuObject()->AddFlags( VRMENUOBJECT_DONT_HIT_ALL );
                 RepositionScreen = true;
-            }
+            }*/
         }
         else
         {
@@ -1166,8 +1174,8 @@ void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
 
     // while we're holding down the button or touchpad, reposition screen
     if ( RepositionScreen )
-    {
-        if ( vrFrame.Input.buttonState & ( BUTTON_A | BUTTON_TOUCH ) )
+    {/*
+        if ( vrFrame.AllButtons & ( BUTTON_A | BUTTON_TOUCH ) )
         {
             Cinema.SceneMgr.PutScreenInFront();
             Quatf orientation = Quatf( Cinema.SceneMgr.FreeScreenPose );
@@ -1175,7 +1183,7 @@ void PcSelectionView::Frame( const ovrFrameInput & vrFrame )
             CenterRoot->GetMenuObject()->SetLocalPosition( Cinema.SceneMgr.FreeScreenPose.Transform( Vector3f( 0.0f, -1.76f * 0.55f, 0.0f ) ) );
 
         }
-        else
+        else*/
         {
             RepositionScreen = false;
         }

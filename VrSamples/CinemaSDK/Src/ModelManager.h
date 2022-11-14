@@ -16,11 +16,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( ModelManager_h )
 #define ModelManager_h
 
-#include "ModelFile.h"
+#include "Model/ModelFile.h"
 #include <vector>
 #include <string>
-
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -39,9 +37,9 @@ public:
 							UseVRScreen( false ) { }
 
 
-	ModelFile *			SceneModel;
+    OVRFW::ModelFile *			SceneModel;
 	std::string			Filename;
-	GlTexture			IconTexture;
+    OVRFW::GlTexture			IconTexture;
 	bool				UseFreeScreen;
 	bool 				UseSeats;
 	bool 				UseDynamicProgram;
@@ -72,7 +70,7 @@ public:
 
 	std::string			LaunchIntent;
 
-	ModelFile *			DefaultSceneModel;
+    OVRFW::ModelFile *			DefaultSceneModel;
 
 private:
 	ModelManager &		operator=( const ModelManager & );

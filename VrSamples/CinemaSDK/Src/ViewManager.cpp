@@ -14,7 +14,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include "ViewManager.h"
-#include "App.h"
+#include "Appl.h"
+#include "OVR_LogUtils.h"
+
+using namespace OVRFW;
 
 namespace OculusCinema {
 
@@ -35,7 +38,7 @@ void ViewManager::AddView( View * view )
 
 void ViewManager::RemoveView( View * view )
 {
-	for ( UPInt i = 0; i < static_cast< UPInt >( Views.size() ); i++ )
+	for ( OVR::UPInt i = 0; i < static_cast< OVR::UPInt >( Views.size() ); i++ )
 	{
 		if ( Views[ i ] == view )
 		{
@@ -83,7 +86,7 @@ void ViewManager::LeavingVrMode()
 	}
 }
 
-bool ViewManager::OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType )
+bool ViewManager::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
 {
 	if ( ( CurrentView != NULL ) && !CurrentView->IsClosed() )
 	{
@@ -95,7 +98,7 @@ bool ViewManager::OnKeyEvent( const int keyCode, const int repeatCount, const Ke
 	}
 }
 
-void ViewManager::Frame( const ovrFrameInput & vrFrame )
+void ViewManager::Frame( const ovrApplFrameIn & vrFrame )
 {
 	if ( ( NextView != NULL ) && ( CurrentView != NULL ) && !ClosedCurrent )
 	{

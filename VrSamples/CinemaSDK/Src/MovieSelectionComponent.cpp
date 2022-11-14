@@ -14,9 +14,11 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include "MovieSelectionComponent.h"
-#include "OVR_Input.h"
 #include "SelectionView.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
+#include "OVR_LogUtils.h"
+
+using namespace OVRFW;
 
 namespace OculusCinema {
 
@@ -35,7 +37,7 @@ MovieSelectionComponent::MovieSelectionComponent( SelectionView *view ) :
 
 //==============================
 //  MovieSelectionComponent::OnEvent_Impl
-eMsgStatus MovieSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus MovieSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
     switch( event.EventType )
@@ -49,13 +51,13 @@ eMsgStatus MovieSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameIn
         case VRMENU_EVENT_TOUCH_DOWN:
        		Sound.PlaySoundEffect( guiSys, "touch_down", 0.1 );
        		return MSG_STATUS_CONSUMED;
-        case VRMENU_EVENT_TOUCH_UP:
-        	if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) )
+        case VRMENU_EVENT_TOUCH_UP:/*
+        	if ( !( vrFrame.AllTouches & BUTTON_TOUCH_WAS_SWIPE ) )
 			{
         		Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
         		CallbackView->Select();
         		return MSG_STATUS_CONSUMED;
-        	}
+        	}*/
             return MSG_STATUS_ALIVE;
         default:
             OVR_ASSERT( !"Event flags mismatch!" );
@@ -65,7 +67,7 @@ eMsgStatus MovieSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameIn
 
 //==============================
 //  MovieSelectionComponent::Frame
-eMsgStatus MovieSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus MovieSelectionComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
@@ -94,7 +96,7 @@ eMsgStatus MovieSelectionComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput con
 
 //==============================
 //  MovieSelectionComponent::FocusGained
-eMsgStatus MovieSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus MovieSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_LOG( "FocusGained" );
@@ -113,7 +115,7 @@ eMsgStatus MovieSelectionComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInp
 
 //==============================
 //  MovieSelectionComponent::FocusLost
-eMsgStatus MovieSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus MovieSelectionComponent::FocusLost( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_LOG( "FocusLost" );

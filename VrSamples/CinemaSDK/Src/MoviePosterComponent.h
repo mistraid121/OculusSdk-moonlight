@@ -17,10 +17,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #define MoviePosterComponent_h
 
 #include "CarouselBrowserComponent.h"
-#include "UI/UIImage.h"
-#include "UI/UIContainer.h"
-
-using namespace OVR;
+#include "GUI/UI/UIImage.h"
+#include "GUI/UI/UIContainer.h"
 
 namespace OculusCinema {
 
@@ -35,22 +33,22 @@ public:
 
 	static bool 			ShowShadows;
 
-	void 					SetMenuObjects( const int width, const int height, UIContainer * poster, UIImage * posterImage, UIImage * is3DIcon, UIImage * shadow );
-	virtual void 			SetItem( VRMenuObject * self, const CarouselItem * item, const PanelPose &pose );
+	void 					SetMenuObjects( const int width, const int height, OVRFW::UIContainer * poster, OVRFW::UIImage * posterImage, OVRFW::UIImage * is3DIcon, OVRFW::UIImage * shadow );
+	virtual void 			SetItem( OVRFW::VRMenuObject * self, const CarouselItem * item, const PanelPose &pose );
 
 private:
-    virtual eMsgStatus      OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
+    virtual OVRFW::eMsgStatus      OnEvent_Impl( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+												 OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 
     const MovieDef *	 	Movie;
 
     int						Width;
     int						Height;
 
-    UIContainer * 			Poster;
-    UIImage * 				PosterImage;
-    UIImage * 				Is3DIcon;
-    UIImage * 				Shadow;
+    OVRFW::UIContainer * 			Poster;
+    OVRFW::UIImage * 				PosterImage;
+    OVRFW::UIImage * 				Is3DIcon;
+    OVRFW::UIImage * 				Shadow;
 };
 
 } // namespace OculusCinema

@@ -16,7 +16,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "ResumeMovieComponent.h"
 #include "ResumeMovieView.h"
 #include "CinemaApp.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
+
+using namespace OVRFW;
+using OVR::Vector4f;
 
 namespace OculusCinema {
 
@@ -36,7 +39,7 @@ ResumeMovieComponent::ResumeMovieComponent( ResumeMovieView * view, int itemNum 
     Icon( NULL ),
     Sound(),
 	HasFocus( false ),
-    ItemNum( itemNum ),
+    //ItemNum( itemNum ),
     CallbackView( view )
 {
 }
@@ -55,7 +58,7 @@ void ResumeMovieComponent::UpdateColor( VRMenuObject * self )
 
 //==============================
 //  ResumeMovieComponent::OnEvent_Impl
-eMsgStatus ResumeMovieComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus ResumeMovieComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
     switch( event.EventType )
@@ -73,13 +76,13 @@ eMsgStatus ResumeMovieComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput
         		return MSG_STATUS_CONSUMED;
         	}
         	return MSG_STATUS_ALIVE;
-        case VRMENU_EVENT_TOUCH_UP:
-        	if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
+        case VRMENU_EVENT_TOUCH_UP:/*
+        	if ( !( vrFrame.AllButtons & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
         	{
                 Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
                	CallbackView->ResumeChoice( ItemNum );
         		return MSG_STATUS_CONSUMED;
-        	}
+        	}*/
             return MSG_STATUS_ALIVE;
         default:
             OVR_ASSERT( !"Event flags mismatch!" );
@@ -89,7 +92,7 @@ eMsgStatus ResumeMovieComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput
 
 //==============================
 //  ResumeMovieComponent::Frame
-eMsgStatus ResumeMovieComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus ResumeMovieComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
@@ -103,7 +106,7 @@ eMsgStatus ResumeMovieComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const 
 
 //==============================
 //  ResumeMovieComponent::FocusGained
-eMsgStatus ResumeMovieComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus ResumeMovieComponent::FocusGained( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	//OVR_LOG( "FocusGained" );
@@ -127,7 +130,7 @@ eMsgStatus ResumeMovieComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput 
 
 //==============================
 //  ResumeMovieComponent::FocusLost
-eMsgStatus ResumeMovieComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus ResumeMovieComponent::FocusLost( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	//OVR_LOG( "FocusLost" );

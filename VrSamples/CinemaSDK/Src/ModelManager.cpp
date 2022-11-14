@@ -24,6 +24,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <dirent.h>
 #endif
 
+using namespace OVRFW;
+
 namespace OculusCinema {
 
 static const char * TheatersDirectory = "Oculus/Cinema/Theaters";
@@ -48,14 +50,14 @@ ModelManager::~ModelManager()
 void ModelManager::OneTimeInit( const char * launchIntent )
 {
 	OVR_LOG( "ModelManager::OneTimeInit" );
-	const double start = SystemClock::GetTimeInSeconds();
+	const double start = GetTimeInSeconds();
 	LaunchIntent = launchIntent;
 
 	DefaultSceneModel = new ModelFile( "default" );
 
 	LoadModels();
 
-	OVR_LOG( "ModelManager::OneTimeInit: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ModelManager::OneTimeInit: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  GetTimeInSeconds() - start );
 }
 
 void ModelManager::OneTimeShutdown()
@@ -64,7 +66,7 @@ void ModelManager::OneTimeShutdown()
 
 	// Free GL resources
 
-	for( UPInt i = 0; i < static_cast< UPInt >( Theaters.size() ); i++ )
+	for( OVR::UPInt i = 0; i < static_cast< OVR::UPInt >( Theaters.size() ); i++ )
 	{
 		delete Theaters[ i ];
 	}
@@ -73,7 +75,7 @@ void ModelManager::OneTimeShutdown()
 void ModelManager::LoadModels()
 {
 	OVR_LOG( "ModelManager::LoadModels" );
-	const double start =  SystemClock::GetTimeInSeconds();
+	const double start =  GetTimeInSeconds();
 
 	BoxOffice = LoadScene( "assets/scenes/BoxOffice.ovrscene", false, true );
 	BoxOffice->UseSeats = false;
@@ -131,13 +133,13 @@ void ModelManager::LoadModels()
 		ScanDirectoryForScenes( Cinema.SDCardDir( TheatersDirectory ), true, Theaters );
 	}
 
-	OVR_LOG( "ModelManager::LoadModels: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "ModelManager::LoadModels: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  GetTimeInSeconds() - start );
 }
 
 void ModelManager::ScanDirectoryForScenes( const std::string & directoryString, bool useDynamicProgram, std::vector<SceneDef *> &scenes ) const
 {
 	const char * directory = directoryString.c_str();
-#if defined( OVR_OS_ANDROID )
+
 	DIR * dir = opendir( directory );
 	if ( dir != NULL )
 	{
@@ -158,35 +160,6 @@ void ModelManager::ScanDirectoryForScenes( const std::string & directoryString, 
 
 		closedir( dir );
 	}
-#else
-    WIN32_FIND_DATA ffd;
-    HANDLE hFind = INVALID_HANDLE_VALUE;
-
-    std::string scanDirectory = std::string( directory );
-    scanDirectory.AppendChar( '*' );
-
-    hFind = FindFirstFile( scanDirectory.c_str(), &ffd );
-    if ( INVALID_HANDLE_VALUE != hFind )
-    {
-        do
-        {
-            if ( !( ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
-            {
-                std::string filename = ffd.cFileName;
-
-                std::string ext = filename.GetExtension().ToLower();
-                if ( ( ext == ".ovrscene" ) )
-                {
-                    std::string fullpath = directory;
-                    fullpath.AppendString( "/" );
-                    fullpath.AppendString( filename.c_str() );
-					SceneDef *def = LoadScene( fullpath.c_str(), useDynamicProgram, false );
-					scenes.push_back( def );
-                }
-            }
-        } while ( FindNextFile( hFind, &ffd ) != 0 );
-    }
-#endif
 }
 
 SceneDef * ModelManager::LoadScene( const char *sceneFilename, bool useDynamicProgram, bool loadFromApplicationPackage ) const

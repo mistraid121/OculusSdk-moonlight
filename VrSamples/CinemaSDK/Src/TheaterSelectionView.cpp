@@ -13,9 +13,9 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "GazeCursor.h"
-#include "VRMenuMgr.h"
-#include "GuiSys.h"
+#include "GUI/GazeCursor.h"
+#include "GUI/VRMenuMgr.h"
+#include "GUI/GuiSys.h"
 #include "CarouselBrowserComponent.h"
 #include "TheaterSelectionComponent.h"
 #include "TheaterSelectionView.h"
@@ -24,6 +24,12 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "PackageFiles.h"
 #include "CinemaStrings.h"
 #include "Native.h"
+
+using namespace OVRFW;
+using OVR::Vector4f;
+using OVR::Vector3f;
+using OVR::Posef;
+using OVR::Quatf;
 
 
 namespace OculusCinema {
@@ -61,12 +67,12 @@ void TheaterSelectionView::OneTimeInit( const char * launchIntent )
 
 	OVR_LOG( "TheaterSelectionView::OneTimeInit" );
 
-	const double start = SystemClock::GetTimeInSeconds();
+	const double start = GetTimeInSeconds();
 
 	// Start with "Home theater" selected
 	SelectedTheater = 0;
 
-	OVR_LOG( "TheaterSelectionView::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "TheaterSelectionView::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
 }
 
 void TheaterSelectionView::OneTimeShutdown()
@@ -119,12 +125,12 @@ bool TheaterSelectionView::BackPressed()
 	return false;
 }
 
-bool TheaterSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const KeyEventType eventType )
+bool TheaterSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
 {
 	OVR_UNUSED( keyCode );
 	OVR_UNUSED( repeatCount );
 	OVR_UNUSED( eventType );
-	switch ( keyCode ) {
+	switch ( keyCode ) {/*
 		case OVR_KEY_BACK: {
 			switch (eventType) {
 				case KEY_EVENT_SHORT_PRESS:
@@ -136,7 +142,7 @@ bool TheaterSelectionView::OnKeyEvent( const int keyCode, const int repeatCount,
 					//OVR_LOG( "unexpected back key state %i", eventType );
 					break;
 			}
-		}
+		}*/
 	}
 	return false;
 }
@@ -370,13 +376,13 @@ void TheaterSelectionView::SelectPressed( const double currTimeInSeconds )
 	}
 }
 
-void TheaterSelectionView::Frame( const ovrFrameInput & vrFrame )
-{
+void TheaterSelectionView::Frame( const ovrApplFrameIn & vrFrame )
+{/*
 	// We want 4x MSAA in the selection screen
 	ovrEyeBufferParms eyeBufferParms = Cinema.app->GetEyeBufferParms();
 	eyeBufferParms.multisamples = 4;
 	Cinema.app->SetEyeBufferParms( eyeBufferParms );
-
+*/
 	if ( SelectionObject->IsHilighted() )
 	{
 		TheaterBrowser->CheckGamepad( Cinema.GetGuiSys(), vrFrame, CenterRoot );
@@ -398,15 +404,15 @@ void TheaterSelectionView::Frame( const ovrFrameInput & vrFrame )
 
 		Cinema.AppSelection( false );
 	}
-
-	if ( vrFrame.Input.buttonPressed & BUTTON_B )
+/*
+	if (vrFrame.AllButtons & BUTTON_B )
 	{
 		Cinema.GetSoundEffectContext().Play( "touch_up" );
 
 
         Cinema.AppSelection( false );
 	}
-
+*/
 	Cinema.SceneMgr.Frame( vrFrame );
 }
 

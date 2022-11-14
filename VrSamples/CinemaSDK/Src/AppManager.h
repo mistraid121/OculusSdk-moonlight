@@ -18,14 +18,12 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <vector>
 #include <string>
-#include "GlTexture.h"
 #include "PcManager.h"
 
 namespace OculusCinema {
 
 class CinemaApp;
 
-using namespace OVR;
 
 class AppDef : public PcDef
 {

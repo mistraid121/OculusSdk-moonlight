@@ -19,7 +19,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "OVR_Types.h"
 #include <string>
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -32,12 +31,9 @@ public:
 
 	void		OneTimeInit( CinemaApp &cinema );
 
-	std::string		Category_Trailers;
-	std::string		Category_MyVideos;
 	std::string     Category_LimeLight;
 	std::string     Category_RemoteDesktop;
-	std::string     Category_VNC;
-	
+
 
 	std::string		MovieSelection_Resume;
 	std::string		MovieSelection_Next;
@@ -48,8 +44,7 @@ public:
 
 	std::string		TheaterSelection_Title;
 
-	std::string		Error_NoVideosOnPhone;
-	std::string		Error_NoVideosInMyVideos;
+
 	std::string      Error_NoVideosInLimeLight;
 
 	std::string	ButtonText_ButtonSaveApp;
@@ -63,8 +58,6 @@ public:
 	std::string	ButtonText_ButtonLoadSettings3;
 
 	std::string    ButtonText_ButtonMapKeyboard;
-	std::string    ButtonText_ButtonSpeed;
-	std::string    ButtonText_ButtonComfortMode;
 	std::string    ButtonText_ButtonHostAudio;
 	std::string    ButtonText_ButtonBitrate;
 	std::string    ButtonText_ButtonApply;

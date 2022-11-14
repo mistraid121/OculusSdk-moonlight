@@ -13,13 +13,12 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 *************************************************************************************/
 
-#include "VRMenuComponent.h"
-#include "Lerp.h"
+#include "GUI/VRMenuComponent.h"
+#include "GUI/Lerp.h"
 
 #if !defined( CAROUSELSWIPEHINTCOMPONENT_H )
 #define CAROUSELSWIPEHINTCOMPONENT_H
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -27,7 +26,7 @@ class CarouselBrowserComponent;
 
 //==============================================================
 // CarouselSwipeHintComponent
-class CarouselSwipeHintComponent : public VRMenuComponent
+class CarouselSwipeHintComponent : public OVRFW::VRMenuComponent
 {
 public:
 	static const char *			TYPE_NAME;
@@ -38,7 +37,7 @@ public:
 
 	virtual const char *		GetTypeName( ) const { return TYPE_NAME; }
 
-	void						Reset( VRMenuObject * self );
+	void						Reset( OVRFW::VRMenuObject * self );
 
 private:
     CarouselBrowserComponent *	Carousel;
@@ -49,18 +48,18 @@ private:
     double 						StartTime;
     bool						ShouldShow;
     bool						IgnoreDelay;
-    Lerp						TotalAlpha;
+	OVRFW::Lerp						TotalAlpha;
 
 private:
     bool 						CanSwipe() const;
     void 						Show( const double now );
     void 						Hide( const double now );
-    virtual eMsgStatus      	OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
-    eMsgStatus              	Opening( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
-    eMsgStatus              	Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
+    virtual OVRFW::eMsgStatus      	OnEvent_Impl( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+												   OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+	OVRFW::eMsgStatus              	Opening( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+											  OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+	OVRFW::eMsgStatus              	Frame( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame,
+											OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 };
 
 } // namespace OculusCinema

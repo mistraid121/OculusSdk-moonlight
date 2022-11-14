@@ -15,8 +15,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include "PcCategoryComponent.h"
 #include "CinemaApp.h"
-#include "GuiSys.h"
+#include "GUI/GuiSys.h"
 
+using namespace OVRFW;
+using OVR::Vector4f;
 
 namespace OculusCinema {
 
@@ -34,7 +36,7 @@ PcCategoryComponent::PcCategoryComponent( SelectionView * view, PcCategory categ
             VRMENU_EVENT_FRAME_UPDATE ),
     Sound(),
 	HasFocus( false ),
-	Category( category ),
+	//Category( category ),
     CallbackView( view )
 {
 }
@@ -49,7 +51,7 @@ void PcCategoryComponent::UpdateColor( VRMenuObject * self )
 
 //==============================
 //  PcCategoryComponent::OnEvent_Impl
-eMsgStatus PcCategoryComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus PcCategoryComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
     switch( event.EventType )
@@ -67,13 +69,13 @@ eMsgStatus PcCategoryComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput 
         		return MSG_STATUS_CONSUMED;
         	}
         	return MSG_STATUS_ALIVE;
-        case VRMENU_EVENT_TOUCH_UP:
-        	if ( !( vrFrame.Input.buttonState & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
+        case VRMENU_EVENT_TOUCH_UP:/*
+        	if ( !(vrFrame.AllButtons & BUTTON_TOUCH_WAS_SWIPE ) && ( CallbackView != NULL ) )
         	{
                 Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
                	CallbackView->SetCategory( Category );
         		return MSG_STATUS_CONSUMED;
-        	}
+        	}*/
             return MSG_STATUS_ALIVE;
         default:
             OVR_ASSERT( !"Event flags mismatch!" );
@@ -83,7 +85,7 @@ eMsgStatus PcCategoryComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput 
 
 //==============================
 //  PcCategoryComponent::Frame
-eMsgStatus PcCategoryComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus PcCategoryComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
@@ -97,7 +99,7 @@ eMsgStatus PcCategoryComponent::Frame( OvrGuiSys & guiSys, ovrFrameInput const &
 
 //==============================
 //  PcCategoryComponent::FocusGained
-eMsgStatus PcCategoryComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus PcCategoryComponent::FocusGained( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	//LOG( "FocusGained" );
@@ -115,7 +117,7 @@ eMsgStatus PcCategoryComponent::FocusGained( OvrGuiSys & guiSys, ovrFrameInput c
 
 //==============================
 //  PcCategoryComponent::FocusLost
-eMsgStatus PcCategoryComponent::FocusLost( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame,
+eMsgStatus PcCategoryComponent::FocusLost( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
         VRMenuObject * self, VRMenuEvent const & event )
 {
 	//LOG( "FocusLost" );

@@ -18,28 +18,27 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 #include <string>
 
-#include "App.h"
+#include "Appl.h"
 
-using namespace OVR;
 
 namespace OculusCinema {
 
 class Native {
 public:
-	static void			OneTimeInit( App *app, jclass mainActivityClass );
+	static void			OneTimeInit(jclass mainActivityClass );
 	static void			OneTimeShutdown();
 
-	static std::string	GetExternalCacheDirectory( App *app );  	// returns path to app specific writable directory
-	static bool 		CreateVideoThumbnail( App *app, const char *uuid, int appId, const char *outputFilePath, const int width, const int height );
+	static std::string	GetExternalCacheDirectory();  	// returns path to app specific writable directory
+	static bool 		CreateVideoThumbnail( const char *uuid, int appId, const char *outputFilePath, const int width, const int height );
 
-	static bool			IsPlaying( App *app );
-	static bool 		IsPlaybackFinished( App *app );
-	static bool 		HadPlaybackError( App *app );
+	static bool			IsPlaying();
+	static bool 		IsPlaybackFinished();
+	static bool 		HadPlaybackError();
 
-	static void         StartMovie( App *app, const char * uuid, const char * appName, int id, const char * binder, int width, int height, int fps, bool hostAudio, int customBitrate, bool remote );
+	static void         StartMovie(const char * uuid, const char * appName, int id, const char * binder, int width, int height, int fps, bool hostAudio, int customBitrate, bool remote );
 
 
-	static void 		StopMovie( App *app );
+	static void 		StopMovie();
 	
     enum PairState {
         NOT_PAIRED = 0,
@@ -61,19 +60,19 @@ public:
         UNKNOWN_REACH
     };
 
-    static void            InitPcSelector( App *app );
-    static void            InitAppSelector( App *app, const char* uuid);
-    static PairState       GetPairState( App *app, const char* uuid);
-    static void            Pair( App *app, const char* uuid);
-	static void            MouseMove(App *app, int deltaX, int deltaY);
-	static void            MouseClick(App *app, int buttonId, bool down);
-	static void            MouseScroll(App *app, signed char amount);
-	static void            closeApp(App *app, const char* uuid, int appID);
+    static void            InitPcSelector();
+    static void            InitAppSelector(const char* uuid);
+    static PairState       GetPairState(const char* uuid);
+    static void            Pair(const char* uuid);
+	static void            MouseMove(int deltaX, int deltaY);
+	static void            MouseClick(int buttonId, bool down);
+	static void            MouseScroll(signed char amount);
+	static void            closeApp(const char* uuid, int appID);
 
-	static long            getLastFrameTimestamp(App *app);
-	static long            currentTimeMillis(App *app);
+	static long            getLastFrameTimestamp();
+	static long            currentTimeMillis();
 
-	static int             addPCbyIP(App *app, const char* ip);
+	static int             addPCbyIP(const char* ip);
 
 
 

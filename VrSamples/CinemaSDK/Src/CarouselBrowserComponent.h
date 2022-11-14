@@ -16,12 +16,11 @@ of patent rights can be found in the PATENTS file in the same directory.
 #if !defined( OVR_CarouselBrowser_h )
 #define OVR_CarouselBrowser_h
 
-#include "VRMenu.h"
-#include "VRMenuComponent.h"
+#include "GUI/VRMenu.h"
+#include "GUI/VRMenuComponent.h"
 
 #include <string>
 
-using namespace OVR;
 
 namespace OculusCinema {
 
@@ -40,35 +39,35 @@ public:
 class PanelPose
 {
 public:
-	Quatf    	Orientation;
-	Vector3f 	Position;
-	Vector4f	Color;
+	OVR::Quatf    	Orientation;
+	OVR::Vector3f 	Position;
+	OVR::Vector4f	Color;
 
 				PanelPose() {};
-				PanelPose( Quatf orientation, Vector3f position, Vector4f color ) :
+				PanelPose( OVR::Quatf orientation, OVR::Vector3f position, OVR::Vector4f color ) :
 					Orientation( orientation ), Position( position ), Color( color ) {}
 };
 
-class CarouselItemComponent : public VRMenuComponent
+class CarouselItemComponent : public OVRFW::VRMenuComponent
 {
 public:
-	explicit						CarouselItemComponent( VRMenuEventFlags_t const & eventFlags ) :
-										VRMenuComponent( eventFlags )
+	explicit						CarouselItemComponent( OVRFW::VRMenuEventFlags_t const & eventFlags ) :
+										OVRFW::VRMenuComponent( eventFlags )
 									{
 									}
 
 	virtual							~CarouselItemComponent() { }
 
-	virtual void 					SetItem( VRMenuObject * self, const CarouselItem * item, const PanelPose &pose ) = 0;
+	virtual void 					SetItem( OVRFW::VRMenuObject * self, const CarouselItem * item, const PanelPose &pose ) = 0;
 };
 
-class CarouselBrowserComponent : public VRMenuComponent
+class CarouselBrowserComponent : public OVRFW::VRMenuComponent
 {
 public:
 									CarouselBrowserComponent( const std::vector<CarouselItem *> &items, const std::vector<PanelPose> &panelPoses );
 
-	void							SetPanelPoses( OvrVRMenuMgr & menuMgr, VRMenuObject * self, const std::vector<PanelPose> &panelPoses );
-	void 							SetMenuObjects( const std::vector<VRMenuObject *> &menuObjs, const std::vector<CarouselItemComponent *> &menuComps );
+	void							SetPanelPoses( OVRFW::OvrVRMenuMgr & menuMgr, OVRFW::VRMenuObject * self, const std::vector<PanelPose> &panelPoses );
+	void 							SetMenuObjects( const std::vector<OVRFW::VRMenuObject *> &menuObjs, const std::vector<CarouselItemComponent *> &menuComps );
 	void							SetItems( const std::vector<CarouselItem *> &items );
 	void							SetSelectionIndex( const int selectedIndex );
     int 							GetSelection() const;
@@ -77,31 +76,31 @@ public:
 	bool							CanSwipeBack() const;
 	bool							CanSwipeForward() const;
 
-	void 							CheckGamepad( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self );
+	void 							CheckGamepad( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
 
 private:
-    virtual eMsgStatus 				OnEvent_Impl( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
+    virtual OVRFW::eMsgStatus 				OnEvent_Impl( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
     PanelPose 						GetPosition( const float t );
-    void 							UpdatePanels( OvrVRMenuMgr & menuMgr, VRMenuObject * self );
+    void 							UpdatePanels( OVRFW::OvrVRMenuMgr & menuMgr, OVRFW::VRMenuObject * self );
 
-    eMsgStatus 						Frame( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
-    eMsgStatus 						SwipeForward( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self );
-    eMsgStatus 						SwipeBack( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self );
-	eMsgStatus 						TouchDown( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
-	eMsgStatus 						TouchUp( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
-	eMsgStatus 						Opened( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
-	eMsgStatus 						Closed( OvrGuiSys & guiSys, ovrFrameInput const & vrFrame, VRMenuObject * self, VRMenuEvent const & event );
+    OVRFW::eMsgStatus 						Frame( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+    OVRFW::eMsgStatus 						SwipeForward( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
+    OVRFW::eMsgStatus 						SwipeBack( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
+	OVRFW::eMsgStatus 						TouchDown( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+	OVRFW::eMsgStatus 						TouchUp( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+	OVRFW::eMsgStatus 						Opened( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+	OVRFW::eMsgStatus 						Closed( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 
 public:
     bool							SelectPressed;
 
 private:
-	Vector3f						PositionScale;
+	OVR::Vector3f						PositionScale;
     float							Position;
 	double							TouchDownTime;			// the time in second when a down even was received, < 0 if touch is not down
 
     std::vector<CarouselItem *> 			Items;
-    std::vector<VRMenuObject *> 			MenuObjs;
+    std::vector<OVRFW::VRMenuObject *> 			MenuObjs;
     std::vector<CarouselItemComponent *> 	MenuComps;
 	std::vector<PanelPose>					PanelPoses;
 

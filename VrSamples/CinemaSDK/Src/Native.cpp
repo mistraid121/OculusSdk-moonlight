@@ -16,29 +16,35 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <VrApi_Types.h>
 #include "CinemaApp.h"
 #include "Native.h"
+#include "System.h"
 #include <JniUtils.h>
+#include <android_native_app_glue.h>
+
+using namespace OVRFW;
 
 #if defined( OVR_OS_ANDROID )
 extern "C" {
 
-long Java_com_oculus_cinemasdk_MainActivity_nativeSetAppInterface( JNIEnv *jni, jclass clazz, jobject activity,
-		jstring fromPackageName, jstring commandString, jstring uriString )
+OculusCinema::CinemaApp * appPtr = NULL;
+
+long Java_com_oculus_cinemasdk_MainActivity_nativeSetAppInterface( JNIEnv *jni, jclass clazz, jobject activity)
 {
-	OVR_LOG( "nativeSetAppInterface" );
-	return (new OculusCinema::CinemaApp())->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
+	ALOG( "nativeSetAppInterface %p", appPtr );
+	return reinterpret_cast<jlong>( appPtr );
 }
 
 void Java_com_oculus_cinemasdk_MainActivity_nativeSetVideoSize( JNIEnv *jni, jclass clazz, jlong interfacePtr, int width, int height, int rotation, int duration )
 {
 	OVR_LOG( "nativeSetVideoSizes: width=%i height=%i rotation=%i duration=%i", width, height, rotation, duration );
 
-	OculusCinema::CinemaApp * cinema = static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
+	OculusCinema::CinemaApp * cinema = appPtr;//static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
 	cinema->GetMessageQueue().PostPrintf( "video %i %i %i %i", width, height, rotation, duration );
+
 }
 
 jobject Java_com_oculus_cinemasdk_MainActivity_nativePrepareNewVideo( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
-	OculusCinema::CinemaApp * cinema = static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
+	OculusCinema::CinemaApp * cinema = appPtr;//static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
 
 	// set up a message queue to get the return message
 	// TODO: make a class that encapsulates this work
@@ -52,11 +58,13 @@ jobject Java_com_oculus_cinemasdk_MainActivity_nativePrepareNewVideo( JNIEnv *jn
 	free( (void *)msg );
 
 	return texobj;
+
 }
+
 void Java_com_oculus_cinemasdk_MainActivity_nativeDisplayMessage( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring text, int time, bool isError ) {}
 void Java_com_oculus_cinemasdk_MainActivity_nativeAddPc( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name, jstring uuid, int psi, int reach, jstring binding, bool isRunning)
 {
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     JavaUTFChars utfName( jni, name );
     JavaUTFChars utfUUID( jni, uuid );
     JavaUTFChars utfBind( jni, binding );
@@ -69,14 +77,14 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeAddPc( JNIEnv *jni, jclass cla
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeRemovePc( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name)
 {
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     JavaUTFChars utfName( jni, name );
     cinema->PcMgr.RemovePc(utfName.ToStr());
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeAddApp( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name, jstring posterfilename, int id, bool isRunning)
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     JavaUTFChars utfName( jni, name );
     JavaUTFChars utfPosterFileName( jni, posterfilename );
     cinema->AppMgr.AddApp(utfName.ToStr(), utfPosterFileName.ToStr(), id, isRunning);
@@ -85,7 +93,7 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeAddApp( JNIEnv *jni, jclass cl
 void Java_com_oculus_cinemasdk_MainActivity_nativeRemoveApp( JNIEnv *jni, jclass clazz, jlong interfacePtr, int id)
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     cinema->AppMgr.RemoveApp( id);
 
 }
@@ -94,7 +102,7 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeRemoveApp( JNIEnv *jni, jclass
 void Java_com_oculus_cinemasdk_MainActivity_nativeShowPair( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring message )
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     JavaUTFChars utfMessage( jni, message );
     cinema->ShowPair(utfMessage.ToStr());
 
@@ -102,14 +110,14 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeShowPair( JNIEnv *jni, jclass 
 void Java_com_oculus_cinemasdk_MainActivity_nativePairSuccess( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     cinema->PairSuccess();
 
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeShowError( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring message )
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     JavaUTFChars utfMessage( jni, message );
     cinema->ShowError(utfMessage.ToStr());
 
@@ -117,13 +125,25 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeShowError( JNIEnv *jni, jclass
 void Java_com_oculus_cinemasdk_MainActivity_nativeClearError( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
 
-    OculusCinema::CinemaApp *cinema = ( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
     cinema->ClearError();
 
 }
 
 }	// extern "C"
 #endif
+
+
+//==============================================================
+// android_main
+//==============================================================
+void android_main( struct android_app * app )
+{
+	//return (new OculusCinema::CinemaApp())->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
+	std::unique_ptr< OculusCinema::CinemaApp > appl = std::unique_ptr< OculusCinema::CinemaApp >( new OculusCinema::CinemaApp( 0, 0, 0, 0 ) );
+	appPtr = appl.get();
+	appl->Run( app );
+}
 
 //==============================================================
 
@@ -157,9 +177,12 @@ static jmethodID    closeAppMethodId = NULL;
 
 #if defined( OVR_OS_ANDROID )
 // Error checks and exits on failure
-static jmethodID GetMethodID( App * app, jclass cls, const char * name, const char * signature )
+static jmethodID GetMethodID( jclass cls, const char * name, const char * signature )
 {
-	jmethodID mid = app->GetJava()->Env->GetMethodID( cls, name, signature );
+    const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	JNIEnv *env;
+	ctx.Vm->AttachCurrentThread(&env, 0);
+	jmethodID mid = env->GetMethodID( cls, name, signature );
 	if ( !mid )
 	{
     	OVR_FAIL( "Couldn't find %s methodID", name );
@@ -169,38 +192,38 @@ static jmethodID GetMethodID( App * app, jclass cls, const char * name, const ch
 }
 #endif
 
-void Native::OneTimeInit( App *app, jclass mainActivityClass )
+void Native::OneTimeInit( jclass mainActivityClass )
 {
 	OVR_LOG( "Native::OneTimeInit" );
 
-	const double start = SystemClock::GetTimeInSeconds();
+	const double start = GetTimeInSeconds();
 
 #if defined( OVR_OS_ANDROID )
-	getExternalCacheDirectoryMethodId 	= GetMethodID( app, mainActivityClass, "getExternalCacheDirectory", "()Ljava/lang/String;" );
-	createVideoThumbnailMethodId        = GetMethodID( app, mainActivityClass, "createVideoThumbnail", "(Ljava/lang/String;ILjava/lang/String;II)Z" );
-	isPlayingMethodId 					= GetMethodID( app, mainActivityClass, "isPlaying", "()Z" );
-	isPlaybackFinishedMethodId			= GetMethodID( app, mainActivityClass, "isPlaybackFinished", "()Z" );
-	hadPlaybackErrorMethodId			= GetMethodID( app, mainActivityClass, "hadPlaybackError", "()Z" );
-	startMovieMethodId                     = GetMethodID( app, mainActivityClass, "startMovie", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IIIZIZ)V" );
-	stopMovieMethodId 					= GetMethodID( app, mainActivityClass, "stopMovie", "()V" );
-	initPcSelectorMethodId                 = GetMethodID( app, mainActivityClass, "initPcSelector", "()V" );
-    pairPcMethodId                         = GetMethodID( app, mainActivityClass, "pairPc", "(Ljava/lang/String;)V" );
-    getPcPairStateMethodId                 = GetMethodID( app, mainActivityClass, "getPcPairState", "(Ljava/lang/String;)I" );
-    getPcStateMethodId                     = GetMethodID( app, mainActivityClass, "getPcState", "(Ljava/lang/String;)I" );
-    getPcReachabilityMethodId             = GetMethodID( app, mainActivityClass, "getPcReachability", "(Ljava/lang/String;)I" );
-	addPCbyIPMethodId                    = GetMethodID( app, mainActivityClass, "addPCbyIP", "(Ljava/lang/String;)I" );
-	initAppSelectorMethodId             = GetMethodID( app, mainActivityClass, "initAppSelector", "(Ljava/lang/String;)V" );
-    mouseMoveMethodId                     = GetMethodID( app, mainActivityClass, "mouseMove", "(II)V" );
-    mouseClickMethodId                     = GetMethodID( app, mainActivityClass, "mouseClick", "(IZ)V" );
-    mouseScrollMethodId                 = GetMethodID( app, mainActivityClass, "mouseScroll", "(B)V" );
-	getLastFrameTimestampMethodId        = GetMethodID( app, mainActivityClass, "getLastFrameTimestamp", "()J" );
-	currentTimeMillisMethodId            = GetMethodID( app, mainActivityClass, "currentTimeMillis", "()J" );
-	closeAppMethodId                    = GetMethodID( app, mainActivityClass, "closeApp", "(Ljava/lang/String;I)V" );
+	getExternalCacheDirectoryMethodId 	= GetMethodID(  mainActivityClass, "getExternalCacheDirectory", "()Ljava/lang/String;" );
+	createVideoThumbnailMethodId        = GetMethodID(  mainActivityClass, "createVideoThumbnail", "(Ljava/lang/String;ILjava/lang/String;II)Z" );
+	isPlayingMethodId 					= GetMethodID(  mainActivityClass, "isPlaying", "()Z" );
+	isPlaybackFinishedMethodId			= GetMethodID(  mainActivityClass, "isPlaybackFinished", "()Z" );
+	hadPlaybackErrorMethodId			= GetMethodID(  mainActivityClass, "hadPlaybackError", "()Z" );
+	startMovieMethodId                     = GetMethodID(  mainActivityClass, "startMovie", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IIIZIZ)V" );
+	stopMovieMethodId 					= GetMethodID(  mainActivityClass, "stopMovie", "()V" );
+	initPcSelectorMethodId                 = GetMethodID(  mainActivityClass, "initPcSelector", "()V" );
+    pairPcMethodId                         = GetMethodID(  mainActivityClass, "pairPc", "(Ljava/lang/String;)V" );
+    getPcPairStateMethodId                 = GetMethodID(  mainActivityClass, "getPcPairState", "(Ljava/lang/String;)I" );
+    getPcStateMethodId                     = GetMethodID(  mainActivityClass, "getPcState", "(Ljava/lang/String;)I" );
+    getPcReachabilityMethodId             = GetMethodID(  mainActivityClass, "getPcReachability", "(Ljava/lang/String;)I" );
+	addPCbyIPMethodId                    = GetMethodID(  mainActivityClass, "addPCbyIP", "(Ljava/lang/String;)I" );
+	initAppSelectorMethodId             = GetMethodID(  mainActivityClass, "initAppSelector", "(Ljava/lang/String;)V" );
+    mouseMoveMethodId                     = GetMethodID(  mainActivityClass, "mouseMove", "(II)V" );
+    mouseClickMethodId                     = GetMethodID(  mainActivityClass, "mouseClick", "(IZ)V" );
+    mouseScrollMethodId                 = GetMethodID(  mainActivityClass, "mouseScroll", "(B)V" );
+	getLastFrameTimestampMethodId        = GetMethodID(  mainActivityClass, "getLastFrameTimestamp", "()J" );
+	currentTimeMillisMethodId            = GetMethodID(  mainActivityClass, "currentTimeMillis", "()J" );
+	closeAppMethodId                    = GetMethodID(  mainActivityClass, "closeApp", "(Ljava/lang/String;I)V" );
 
 
 
 #endif
-	OVR_LOG( "Native::OneTimeInit: %3.1f seconds", SystemClock::GetTimeInSeconds() - start );
+	OVR_LOG( "Native::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
 }
 
 void Native::OneTimeShutdown()
@@ -208,16 +231,17 @@ void Native::OneTimeShutdown()
 	OVR_LOG( "Native::OneTimeShutdown" );
 }
 
-std::string Native::GetExternalCacheDirectory( App * app )
+std::string Native::GetExternalCacheDirectory()
 {
 #if defined( OVR_OS_ANDROID )
-	jstring externalCacheDirectoryString = (jstring)app->GetJava()->Env->CallObjectMethod( app->GetJava()->ActivityObject, getExternalCacheDirectoryMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring externalCacheDirectoryString = (jstring)ctx.Env->CallObjectMethod( ctx.ActivityObject, getExternalCacheDirectoryMethodId );
 
-	const char *externalCacheDirectoryStringUTFChars = app->GetJava()->Env->GetStringUTFChars( externalCacheDirectoryString, NULL );
+	const char *externalCacheDirectoryStringUTFChars = ctx.Env->GetStringUTFChars( externalCacheDirectoryString, NULL );
 	std::string externalCacheDirectory = externalCacheDirectoryStringUTFChars;
 
-	app->GetJava()->Env->ReleaseStringUTFChars( externalCacheDirectoryString, externalCacheDirectoryStringUTFChars );
-	app->GetJava()->Env->DeleteLocalRef( externalCacheDirectoryString );
+	ctx.Env->ReleaseStringUTFChars( externalCacheDirectoryString, externalCacheDirectoryStringUTFChars );
+	ctx.Env->DeleteLocalRef( externalCacheDirectoryString );
 
 	return externalCacheDirectory;
 #else
@@ -225,22 +249,23 @@ std::string Native::GetExternalCacheDirectory( App * app )
 #endif
 }
 
-bool Native::CreateVideoThumbnail( App *app, const char *uuid, int appId, const char *outputFilePath, const int width, const int height )
+bool Native::CreateVideoThumbnail( const char *uuid, int appId, const char *outputFilePath, const int width, const int height )
 {
 	OVR_LOG( "CreateVideoThumbnail( %s, %i, %s )", uuid, appId, outputFilePath );
 #if defined( OVR_OS_ANDROID )
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
 
-	jstring jstrOutputFilePath = app->GetJava()->Env->NewStringUTF( outputFilePath );
+	jstring jstrOutputFilePath = ctx.Env->NewStringUTF( outputFilePath );
 
 
     //todo rafa
 
-    jboolean result = app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, createVideoThumbnailMethodId, jstrUUID, appId, jstrOutputFilePath, width, height );
+    jboolean result = ctx.Env->CallBooleanMethod( ctx.ActivityObject, createVideoThumbnailMethodId, jstrUUID, appId, jstrOutputFilePath, width, height );
     OVR_LOG( "Done creating thumbnail!");
-    app->GetJava()->Env->DeleteLocalRef( jstrUUID );
+    ctx.Env->DeleteLocalRef( jstrUUID );
 
-	app->GetJava()->Env->DeleteLocalRef( jstrOutputFilePath );
+	ctx.Env->DeleteLocalRef( jstrOutputFilePath );
 
 	//OVR_LOG( "CreateVideoThumbnail( %s, %s )", videoFilePath, outputFilePath );
 
@@ -250,126 +275,138 @@ bool Native::CreateVideoThumbnail( App *app, const char *uuid, int appId, const 
 #endif
 }
 
-bool Native::IsPlaying( App * app )
+bool Native::IsPlaying()
 {
 	OVR_LOG( "IsPlaying()" );
 #if defined( OVR_OS_ANDROID )
-	return app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, isPlayingMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	return ctx.Env->CallBooleanMethod( ctx.ActivityObject, isPlayingMethodId );
 #else
 	return false;
 #endif
 }
 
-bool Native::IsPlaybackFinished( App * app )
+bool Native::IsPlaybackFinished(  )
 {
 #if defined( OVR_OS_ANDROID )
-	jboolean result = app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, isPlaybackFinishedMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jboolean result = ctx.Env->CallBooleanMethod( ctx.ActivityObject, isPlaybackFinishedMethodId );
 	return ( result != 0 );
 #else
 	return false;
 #endif
 }
 
-bool Native::HadPlaybackError( App * app )
+bool Native::HadPlaybackError(  )
 {
 #if defined( OVR_OS_ANDROID )
-	jboolean result = app->GetJava()->Env->CallBooleanMethod( app->GetJava()->ActivityObject, hadPlaybackErrorMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jboolean result = ctx.Env->CallBooleanMethod( ctx.ActivityObject, hadPlaybackErrorMethodId );
 	return ( result != 0 );
 #else
 	return false;
 #endif
 }
 
-void Native::StartMovie( App *app, const char * uuid, const char * appName, int id, const char * binder, int width, int height, int fps, bool hostAudio, int customBitrate, bool remote )
+void Native::StartMovie(  const char * uuid, const char * appName, int id, const char * binder, int width, int height, int fps, bool hostAudio, int customBitrate, bool remote )
 
 {
 	OVR_LOG( "StartMovie( %s )", appName );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
+	jstring jstrAppName = ctx.Env->NewStringUTF( appName );
+	jstring jstrBinder = ctx.Env->NewStringUTF( binder );
 
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
-	jstring jstrAppName = app->GetJava()->Env->NewStringUTF( appName );
-	jstring jstrBinder = app->GetJava()->Env->NewStringUTF( binder );
 
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, startMovieMethodId, jstrUUID, jstrAppName, id, jstrBinder, width, height, fps, hostAudio, customBitrate, remote );
 
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, startMovieMethodId, jstrUUID, jstrAppName, id, jstrBinder, width, height, fps, hostAudio, customBitrate, remote );
-
-	app->GetJava()->Env->DeleteLocalRef( jstrUUID );
-	app->GetJava()->Env->DeleteLocalRef( jstrAppName );
-	app->GetJava()->Env->DeleteLocalRef( jstrBinder );
+	ctx.Env->DeleteLocalRef( jstrUUID );
+	ctx.Env->DeleteLocalRef( jstrAppName );
+	ctx.Env->DeleteLocalRef( jstrBinder );
 }
 
-void Native::StopMovie( App *app )
+void Native::StopMovie( )
 {
 	OVR_LOG( "StopMovie()" );
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, stopMovieMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, stopMovieMethodId );
 }
 
-void Native::InitPcSelector( App *app )
+void Native::InitPcSelector( )
 {
 	OVR_LOG( "InitPcSelector()" );
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, initPcSelectorMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, initPcSelectorMethodId );
 }
 
-void Native::InitAppSelector( App *app, const char* uuid)
+void Native::InitAppSelector( const char* uuid)
 {
 	OVR_LOG( "InitAppSelector()" );
-
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, initAppSelectorMethodId, jstrUUID );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, initAppSelectorMethodId, jstrUUID );
 }
 
-Native::PairState Native::GetPairState( App *app, const char* uuid)
+Native::PairState Native::GetPairState(  const char* uuid)
 {
 	OVR_LOG( "GetPairState()" );
-
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
-	return (PairState)app->GetJava()->Env->CallIntMethod( app->GetJava()->ActivityObject, getPcPairStateMethodId, jstrUUID );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
+	return (PairState)ctx.Env->CallIntMethod( ctx.ActivityObject, getPcPairStateMethodId, jstrUUID );
 }
 
-void Native::Pair( App *app, const char* uuid)
+void Native::Pair( const char* uuid)
 {
 	OVR_LOG( "Pair()" );
-
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, pairPcMethodId, jstrUUID );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, pairPcMethodId, jstrUUID );
 }
 
-void Native::MouseMove(App *app, int deltaX, int deltaY)
+void Native::MouseMove(int deltaX, int deltaY)
 {
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, mouseMoveMethodId, deltaX, deltaY );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, mouseMoveMethodId, deltaX, deltaY );
 }
 
-void Native::MouseClick(App *app, int buttonId, bool down)
+void Native::MouseClick( int buttonId, bool down)
 {
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, mouseClickMethodId, buttonId, down );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, mouseClickMethodId, buttonId, down );
 }
 
-void Native::MouseScroll(App *app, signed char amount)
+void Native::MouseScroll( signed char amount)
 {
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, mouseScrollMethodId, amount );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, mouseScrollMethodId, amount );
 }
 
-void Native::closeApp(App *app, const char* uuid, int appID)
+void Native::closeApp( const char* uuid, int appID)
 {
-	jstring jstrUUID = app->GetJava()->Env->NewStringUTF( uuid );
-	app->GetJava()->Env->CallVoidMethod( app->GetJava()->ActivityObject, closeAppMethodId, jstrUUID, appID );
-	app->GetJava()->Env->DeleteLocalRef( jstrUUID );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrUUID = ctx.Env->NewStringUTF( uuid );
+	ctx.Env->CallVoidMethod( ctx.ActivityObject, closeAppMethodId, jstrUUID, appID );
+	ctx.Env->DeleteLocalRef( jstrUUID );
 }
 
-long Native::getLastFrameTimestamp(App *app)
+long Native::getLastFrameTimestamp()
 {
-	return app->GetJava()->Env->CallLongMethod( app->GetJava()->ActivityObject, getLastFrameTimestampMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	return ctx.Env->CallLongMethod( ctx.ActivityObject, getLastFrameTimestampMethodId );
 }
-long Native::currentTimeMillis(App *app)
+long Native::currentTimeMillis()
 {
-	return app->GetJava()->Env->CallLongMethod( app->GetJava()->ActivityObject, currentTimeMillisMethodId );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	return ctx.Env->CallLongMethod( ctx.ActivityObject, currentTimeMillisMethodId );
 }
 
 
-int Native::addPCbyIP(App *app, const char* ip)
+int Native::addPCbyIP( const char* ip)
 {
-	jstring jstrIP = app->GetJava()->Env->NewStringUTF( ip );
-	int result = app->GetJava()->Env->CallIntMethod( app->GetJava()->ActivityObject, addPCbyIPMethodId, jstrIP );
-	app->GetJava()->Env->DeleteLocalRef( jstrIP );
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appPtr->GetContext()->ContextForVrApi() ) );
+	jstring jstrIP = ctx.Env->NewStringUTF( ip );
+	int result = ctx.Env->CallIntMethod( ctx.ActivityObject, addPCbyIPMethodId, jstrIP );
+	ctx.Env->DeleteLocalRef( jstrIP );
 	return result;
 }
 
