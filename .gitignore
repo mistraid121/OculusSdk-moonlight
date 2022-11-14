@@ -81,3 +81,5 @@ VrAppSupport/VrSound/Projects/Android/build
 VrSamples/CinemaSDK/Projects/Android/.idea/libraries
 /build/
 VrSamples/CinemaSDK/Projects/Android/build
+VrSamples/CinemaSDK/Projects/Android/.idea
+VrSamples/SampleFramework/Projects/Android/build
