@@ -280,19 +280,19 @@ public class PcSelector {
     private void doPair(final ComputerDetails computer) {
         if (computer.state == ComputerDetails.State.OFFLINE ||
                 ServerHelper.getCurrentAddressFromComputer(computer) == null) {
-            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.pair_pc_offline));
+            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.pair_pc_offline));
             return;
         }
         if (computer.runningGameId != 0) {
-            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.pair_pc_ingame));
+            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.pair_pc_ingame));
             return;
         }
         if (managerBinder == null) {
-            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.error_manager_not_running));
+            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.error_manager_not_running));
             return;
         }
 
-        MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.pairing));
+        MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.pairing));
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -318,7 +318,7 @@ public class PcSelector {
                         // Spin the dialog off in a thread because it blocks
 
 
-                        MainActivity.nativeShowPair(activity.getAppPtr(), activity.getResources().getString(R.string.pair_pairing_msg) + " " + pinStr);
+                        MainActivity.nativeShowPair(activity.appPtr, activity.getResources().getString(R.string.pair_pairing_msg) + " " + pinStr);
 
                         PairingManager.PairState pairState = httpConn.pair(httpConn.getServerInfo(), pinStr);
                         if (pairState == PairingManager.PairState.PIN_WRONG) {
@@ -354,11 +354,11 @@ public class PcSelector {
                 }
 
                 if (success == true)
-                    MainActivity.nativePairSuccess( activity.getAppPtr() );
+                    MainActivity.nativePairSuccess( activity.appPtr );
 
                 if (message != null)
                 {
-                    MainActivity.nativeShowError(activity.getAppPtr(), message);
+                    MainActivity.nativeShowError(activity.appPtr, message);
                 }
                 // Start polling again
                 startComputerUpdates();
@@ -418,9 +418,9 @@ public class PcSelector {
         else if(details.reachability == ComputerDetails.Reachability.OFFLINE) reachInt = RS_OFFLINE;
         else reachInt = RS_UNKNOWN;*/
         reachInt = RS_UNKNOWN;
-        //MainActivity.nativeAddPc(activity.getAppPtr(), details.name, details.uuid.toString(), pairInt, reachInt, managerBinder.getUniqueId(), details.runningGameId != 0);
+        //MainActivity.nativeAddPc(activity.appPtr, details.name, details.uuid.toString(), pairInt, reachInt, managerBinder.getUniqueId(), details.runningGameId != 0);
 
-        MainActivity.nativeAddPc(activity.getAppPtr(), details.name, details.uuid.toString(), pairInt, reachInt, managerBinder.getUniqueId(),details.runningGameId != 0);
+        MainActivity.nativeAddPc(activity.appPtr, details.name, details.uuid.toString(), pairInt, reachInt, managerBinder.getUniqueId(),details.runningGameId != 0);
     }
 
     public void closeApp(final String compUUID)

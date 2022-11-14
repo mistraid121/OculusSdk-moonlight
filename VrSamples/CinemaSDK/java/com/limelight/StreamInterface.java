@@ -1240,7 +1240,7 @@ public class StreamInterface implements SurfaceHolder.Callback,
             displayedFailureDialog = true;
             LimeLog.severe("Connection terminated: "+errorCode);
             stopConnection();
-            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.conn_error_title)
+            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.conn_error_title)
                     + " - " + activity.getResources().getString(R.string.conn_error_msg));
 
             /*Dialog.displayDialog(this, activity.getResources().getString(R.string.conn_terminated_title),

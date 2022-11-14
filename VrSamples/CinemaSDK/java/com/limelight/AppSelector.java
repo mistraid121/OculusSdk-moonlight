@@ -155,7 +155,7 @@ public class AppSelector {
                         @Override
                         public void run() {
                             // Display a toast to the user and quit the activity
-                            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.lost_connection));
+                            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.lost_connection));
                         }
                     });
 
@@ -172,7 +172,7 @@ public class AppSelector {
                                     activity.getResources().getString(R.string.scut_not_paired));
 
                             // Display a toast to the user and quit the activity
-                            MainActivity.nativeShowError(activity.getAppPtr(), activity.getResources().getString(R.string.lost_connection));
+                            MainActivity.nativeShowError(activity.appPtr, activity.getResources().getString(R.string.lost_connection));
                         }
                     });
 
@@ -373,7 +373,7 @@ public class AppSelector {
 //		    	activity.createVideoThumbnail(computer.uuid.toString(), app.getAppId(), fileName, 228, 344);
 //		    }
 
-                    MainActivity.nativeAddApp(activity.getAppPtr(), app.getAppName(), fileName, app.getAppId());
+                    MainActivity.nativeAddApp(activity.appPtr, app.getAppName(), fileName, app.getAppId());
             }
             });
         }
@@ -438,7 +438,7 @@ public class AppSelector {
                     }*/
 
 
-                    MainActivity.nativeAddApp(activity.getAppPtr(), app.getAppName(), fileName, app.getAppId(), app.isInitialized());
+                    MainActivity.nativeAddApp(activity.appPtr, app.getAppName(), fileName, app.getAppId(), app.isInitialized());
 
                 }
 
@@ -459,7 +459,7 @@ public class AppSelector {
                     // This app was removed in the latest app list
                     if (!foundExistingApp) {
                         appList.remove(existingApp);
-                        MainActivity.nativeRemoveApp(activity.getAppPtr(), existingApp.getAppId());
+                        MainActivity.nativeRemoveApp(activity.appPtr, existingApp.getAppId());
                         updated = true;
 
                         // Check this same index again because the item at i+1 is now at i after
