@@ -36,7 +36,7 @@ LOCAL_SRC_FILES	:= 	../../../Src/CinemaApp.cpp \
 					../../../Src/CinemaStrings.cpp \
 					../../../Src/Settings.cpp
 
-LOCAL_LDLIBS 			:= -lGLESv3 -lEGL
+LOCAL_LDLIBS 			:= -llog -landroid -lGLESv3 -lEGL -lz
 LOCAL_STATIC_LIBRARIES += sampleframework # a voir si necessaire android_native_app_glue
 LOCAL_SHARED_LIBRARIES += vrapi
 

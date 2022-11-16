@@ -17,6 +17,8 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "Native.h"
 #include "CinemaStrings.h"
 #include "Locale/OVR_Locale.h"
+#include "Render/DebugLines.h"
+#include "PackageFiles.h"
 
 using namespace OVRFW;
 
@@ -55,7 +57,7 @@ CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
 	InLobby( true ),
 	AllowDebugControls( false ),
 	SoundEffectContext( NULL ),
-	//SoundEffectPlayer( NULL ),
+	SoundEffectPlayer( NULL ),
 	VrFrame(),
 	ViewMgr(),
 	MoviePlayer( *this ),
@@ -75,14 +77,130 @@ CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
 {
 }
 
-bool CinemaApp::AppInit( const OVRFW::ovrAppContext * context ) {
-	GuiSys = OvrGuiSys::Create(context);
+bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
+	ALOGV( "--------------- CinemaApp AppInit ---------------");
+	StartTime = GetTimeInSeconds();
+
+	/// Init File System / APK services
+	const ovrJava & ctx = *( reinterpret_cast< const ovrJava* >( appContext->ContextForVrApi() ) );
+	JNIEnv *env;
+	ctx.Vm->AttachCurrentThread(&env, 0);
+	jobject me = ctx.ActivityObject;
+	jclass acl = env->GetObjectClass(me); //class pointer of NativeActivity
+
+	FileSys = OVRFW::ovrFileSys::Create( ctx );
+	if ( nullptr == FileSys )
+	{
+		ALOGE( "AppInit - could not create FileSys" );
+		return false;
+	}
+
+    /// Check to see if we can load resources from APK
+    void * zipFile = ovr_GetApplicationPackageFile();
+    if ( nullptr == zipFile )
+    {
+        char curPackageCodePath[OVRFW::ovrFileSys::OVR_MAX_PATH_LEN];
+        ovr_GetPackageCodePath( ctx.Env, ctx.ActivityObject, curPackageCodePath, sizeof( curPackageCodePath ) );
+        ovr_OpenApplicationPackage( curPackageCodePath, nullptr );
+        ALOG( "curPackageCodePath = '%s' zipFile = %p", curPackageCodePath, zipFile );
+        zipFile = nullptr;
+    }
+
+	GuiSys = OvrGuiSys::Create(appContext);
 	if (nullptr == GuiSys) {
 		ALOGE("Couldn't create GUI");
 		return false;
 	}
 
-	StartTime = GetTimeInSeconds();
+	Locale = ovrLocale::Create( *ctx.Env, ctx.ActivityObject, "default" );
+	if ( nullptr == Locale )
+	{
+		ALOGE( "Couldn't create Locale" );
+		return false;
+	}
+
+	SoundEffectContext = new ovrSoundEffectContext( *ctx.Env, ctx.ActivityObject );
+	if ( nullptr == SoundEffectContext )
+	{
+		ALOGE( "Couldn't create SoundEffectContext" );
+		return false;
+	}
+	SoundEffectContext->Initialize( FileSys );
+
+	SoundEffectPlayer = new ovrGuiSoundEffectPlayer( *SoundEffectContext );
+	if ( nullptr == SoundEffectPlayer )
+	{
+		ALOGE( "Couldn't create SoundEffectPlayer" );
+		return false;
+	}
+
+	DebugLines = OvrDebugLines::Create();
+	if ( nullptr == DebugLines )
+	{
+		ALOGE( "Couldn't create DebugLines" );
+		return false;
+	}
+	DebugLines->Init();
+
+	std::string fontName;//="efigs.fnt";
+	GetLocale().GetLocalizedString( "@string/font_name", "efigs.fnt", fontName );
+	GuiSys->Init( FileSys, *SoundEffectPlayer, fontName.c_str(), DebugLines );
+	GuiSys->GetGazeCursor().ShowCursor();
+
+	Native::OneTimeInit( acl );
+
+	CinemaStrings = ovrCinemaStrings::Create( *this );
+
+	/// Check launch intents for file override
+	std::string intentURI;
+	{
+		jmethodID giid = env->GetMethodID(acl, "getIntent", "()Landroid/content/Intent;");
+		jobject intent = env->CallObjectMethod(me, giid); //Got our intent
+		jclass icl = env->GetObjectClass(intent); //class pointer of Intent
+
+		// Get Uri
+		jmethodID igd = env->GetMethodID(icl, "getData", "()Landroid/net/Uri;");
+		jobject uri = env->CallObjectMethod(intent, igd);
+		if ( uri != NULL )
+		{
+			jclass ucl = env->FindClass("android/net/Uri"); //class pointer of Uri
+			jmethodID uts = env->GetMethodID(ucl, "toString", "()Ljava/lang/String;");
+			jstring uristr = (jstring) env->CallObjectMethod(uri, uts);
+			if ( uristr )
+			{
+				const char * uristr_ch = env->GetStringUTFChars(uristr, 0);
+				ALOGV( "AppInit - uristr_ch = `%s`", uristr_ch ) ;
+				intentURI += uristr_ch;
+				env->ReleaseStringUTFChars(uristr, uristr_ch);
+			}
+		}
+	}
+	ALOGV( "AppInit - intent = `%s`", intentURI.c_str() );
+
+	ShaderMgr.OneTimeInit( intentURI.c_str() );
+	ModelMgr.OneTimeInit( intentURI.c_str() );
+	SceneMgr.OneTimeInit( intentURI.c_str() );
+	PcMgr.OneTimeInit( intentURI.c_str() );
+	AppMgr.OneTimeInit( intentURI.c_str());
+	MoviePlayer.OneTimeInit( intentURI.c_str() );
+
+	ViewMgr.AddView( &MoviePlayer );
+	PcSelectionMenu.OneTimeInit( intentURI.c_str() );
+	ViewMgr.AddView( &PcSelectionMenu );
+	AppSelectionMenu.OneTimeInit( intentURI.c_str() );
+	ViewMgr.AddView( &AppSelectionMenu );
+	TheaterSelectionMenu.OneTimeInit( intentURI.c_str() );
+
+	ViewMgr.AddView( &TheaterSelectionMenu );
+	ResumeMovieMenu.OneTimeInit( intentURI.c_str() );
+
+	PcSelection( true );
+
+	ALOGV( "CinemaApp::AppInit: %3.1f seconds", GetTimeInSeconds() - StartTime );
+
+	// Clear cursor trails.
+	GetGuiSys().GetGazeCursor().HideCursorForFrames( 10 );
+	ViewMgr.EnteredVrMode();
 
 	return true;
 }
@@ -130,71 +248,7 @@ void CinemaApp::Configure( ovrSettings & settings )
 	settings.RenderMode = RENDERMODE_MULTIVIEW;
 }
 */
-/*
-void CinemaApp::EnteredVrMode( const ovrIntentType intentType, const char * intentFromPackage, const char * intentJSON, const char * intentURI )
-{
-	OVR_UNUSED( intentFromPackage );
-	OVR_UNUSED( intentJSON );
 
-	if ( intentType == INTENT_LAUNCH )
-	{
-		OVR_LOG( "--------------- CinemaApp OneTimeInit ---------------");
-//TODO: deplacer dans appinit?
-		const ovrJava * java = app->GetJava();
-		SoundEffectContext = new ovrSoundEffectContext( *java->Env, java->ActivityObject );
-		SoundEffectContext->Initialize( &app->GetFileSys() );
-		SoundEffectPlayer = new ovrGuiSoundEffectPlayer( *SoundEffectContext );
-
-		Locale = ovrLocale::Create( *java->Env, java->ActivityObject, "default", &app->GetFileSys() );
-
-		std::string fontName;
-		GetLocale().GetString( "@string/font_name", "efigs.fnt", fontName );
-		GuiSys->Init( this->app, *SoundEffectPlayer, fontName.c_str(), &app->GetDebugLines() );
-
-		GuiSys->GetGazeCursor().ShowCursor();
-	
-		StartTime = GetTimeInSeconds();
-
-		Native::OneTimeInit( ActivityClass );
-
-		CinemaStrings = ovrCinemaStrings::Create( *this );
-
-		ShaderMgr.OneTimeInit( intentURI );
-		ModelMgr.OneTimeInit( intentURI );
-		SceneMgr.OneTimeInit( intentURI );
-	    	PcMgr.OneTimeInit( intentURI );
-    		AppMgr.OneTimeInit( intentURI);
-		MoviePlayer.OneTimeInit( intentURI );
-		
-		ViewMgr.AddView( &MoviePlayer );
-		PcSelectionMenu.OneTimeInit( intentURI );
-	    	ViewMgr.AddView( &PcSelectionMenu );
-	    	AppSelectionMenu.OneTimeInit( intentURI );
-	    	ViewMgr.AddView( &AppSelectionMenu );
-	    	TheaterSelectionMenu.OneTimeInit( intentURI );
-
-		ViewMgr.AddView( &TheaterSelectionMenu );
-  		ResumeMovieMenu.OneTimeInit( intentURI );
-
-		PcSelection( true );
-
-		OVR_LOG( "CinemaApp::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - StartTime );
-	}
-	else if ( intentType == INTENT_NEW )
-	{
-	}
-
-	OVR_LOG( "CinemaApp::EnteredVrMode" );
-	// Clear cursor trails.
-	GetGuiSys().GetGazeCursor().HideCursorForFrames( 10 );	
-	ViewMgr.EnteredVrMode();
-}
-*/
-void CinemaApp::LeavingVrMode()
-{
-	OVR_LOG( "CinemaApp::LeavingVrMode" );
-	ViewMgr.LeavingVrMode();
-}
 
 const std::string CinemaApp::RetailDir( const char *dir ) const
 {

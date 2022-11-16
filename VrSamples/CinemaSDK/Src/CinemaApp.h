@@ -52,11 +52,9 @@ public:
 
     // Called when the application initializes.
     // Must return true if the application initializes successfully.
-    virtual bool            AppInit( const OVRFW::ovrAppContext * context ) override;
+    virtual bool            AppInit( const OVRFW::ovrAppContext * appContext ) override;
 
 	//virtual void			Configure( ovrSettings & settings );
-	//virtual void			EnteredVrMode( const ovrIntentType intentType, const char * intentFromPackage, const char * intentJSON, const char * intentURI );
-	virtual void			LeavingVrMode();
 	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual OVRFW::ovrRendererOutput	Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
@@ -119,8 +117,6 @@ public:
 	ovrCinemaStrings *		CinemaStrings;
 	double					StartTime;
 
-	jclass					MainActivityClass;	// need to look up from main thread
-
 	SceneManager			SceneMgr;
 	ShaderManager 			ShaderMgr;
 	ModelManager 			ModelMgr;
@@ -132,10 +128,13 @@ public:
 
 private:
 	OVRFW::ovrSoundEffectContext * SoundEffectContext;
-	//OVRFW::OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
+	OVRFW::OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
 
 	OVRFW::ovrApplFrameIn			VrFrame;
 	OVRFW::ovrRendererOutput			FrameResult;
+
+	OVRFW::ovrFileSys *				FileSys;
+	OVRFW::OvrDebugLines *				DebugLines;
 
 	ViewManager				ViewMgr;
 	MoviePlayerView			MoviePlayer;

@@ -139,7 +139,6 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeClearError( JNIEnv *jni, jclas
 //==============================================================
 void android_main( struct android_app * app )
 {
-	//return (new OculusCinema::CinemaApp())->SetActivity( jni, clazz, activity, fromPackageName, commandString, uriString );
 	std::unique_ptr< OculusCinema::CinemaApp > appl = std::unique_ptr< OculusCinema::CinemaApp >( new OculusCinema::CinemaApp( 0, 0, 0, 0 ) );
 	appPtr = appl.get();
 	appl->Run( app );
