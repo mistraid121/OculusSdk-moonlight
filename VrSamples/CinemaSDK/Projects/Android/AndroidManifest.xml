@@ -37,6 +37,7 @@
         android:screenOrientation="landscape"
         android:excludeFromRecents="false"
         android:configChanges="screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode">
+        <meta-data android:name="android.app.lib_name" android:value="cinema" />
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
