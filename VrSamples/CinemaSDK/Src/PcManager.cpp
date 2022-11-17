@@ -32,8 +32,6 @@ using namespace OVRFW;
 
 namespace OculusCinema {
 
-const int PcManager::PosterWidth = 228;
-const int PcManager::PosterHeight = 344;
 
 static void ReplaceExtension(std::string & s, const std::string & newExtension)
 {
@@ -52,7 +50,7 @@ static void ReplaceExtension(std::string & s, const std::string & newExtension)
 //=======================================================================================
 
 PcManager::PcManager( CinemaApp &cinema ) :
-	Movies(), updated(false), Cinema(cinema)
+	Pcs(), updated(false), Cinema(cinema)
 {
 }
 
@@ -67,45 +65,38 @@ void PcManager::OneTimeInit( const char * launchIntent )
 	OVR_UNUSED( launchIntent );
 
 	const double start =  GetTimeInSeconds();
+	int width, height;
 
-	    int width, height;
-
-    PcPoster = LoadTextureFromApplicationPackage("assets/default_poster.png",
-            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-    OVR_LOG(" Default gluint: %i", PcPoster);
     PcPosterPaired = LoadTextureFromApplicationPackage(
             "assets/generic_paired_poster.png",
             TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-    PcPosterUnpaired = LoadTextureFromApplicationPackage(
-            "assets/generic_unpaired_poster.png",
-            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-    PcPosterUnknown = LoadTextureFromApplicationPackage(
-            "assets/generic_unknown_poster.png",
-            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-    PcPosterWTF = LoadTextureFromApplicationPackage(
-            "assets/generic_wtf_poster.png",
-            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
-
-
 	BuildTextureMipmaps( GlTexture( PcPosterPaired, width, height ) );
 	MakeTextureTrilinear( GlTexture( PcPosterPaired, width, height ) );
 	MakeTextureClamped( GlTexture( PcPosterPaired, width, height ) );
 
 
-    BuildTextureMipmaps( GlTexture( PcPosterUnpaired, width, height ) );
-    MakeTextureTrilinear( GlTexture( PcPosterUnpaired, width, height ) );
-    MakeTextureClamped( GlTexture( PcPosterUnpaired, width, height ) );
+    PcPosterUnpaired = LoadTextureFromApplicationPackage(
+            "assets/generic_unpaired_poster.png",
+            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
+	BuildTextureMipmaps( GlTexture( PcPosterUnpaired, width, height ) );
+	MakeTextureTrilinear( GlTexture( PcPosterUnpaired, width, height ) );
+	MakeTextureClamped( GlTexture( PcPosterUnpaired, width, height ) );
 
-    BuildTextureMipmaps( GlTexture( PcPosterUnknown, width, height ) );
-    MakeTextureTrilinear( GlTexture( PcPosterUnknown, width, height ) );
-    MakeTextureClamped( GlTexture( PcPosterUnknown, width, height ) );
+	PcPosterUnknown = LoadTextureFromApplicationPackage(
+            "assets/generic_unknown_poster.png",
+            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
+	BuildTextureMipmaps( GlTexture( PcPosterUnknown, width, height ) );
+	MakeTextureTrilinear( GlTexture( PcPosterUnknown, width, height ) );
+	MakeTextureClamped( GlTexture( PcPosterUnknown, width, height ) );
 
+    PcPosterWTF = LoadTextureFromApplicationPackage(
+            "assets/generic_wtf_poster.png",
+            TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), width, height);
     BuildTextureMipmaps( GlTexture( PcPosterWTF, width, height ) );
     MakeTextureTrilinear( GlTexture( PcPosterWTF, width, height ) );
     MakeTextureClamped( GlTexture( PcPosterWTF, width, height ) );
 
-    OVR_LOG("PcManager::OneTimeInit: %i movies loaded, %3.1f seconds",
-            static_cast<int>(Movies.size()), vrapi_GetTimeInSeconds() - start);
+    OVR_LOG("PcManager::OneTimeInit: %3.1f seconds",GetTimeInSeconds() - start);
 
 }
 
@@ -115,53 +106,51 @@ void PcManager::OneTimeShutdown()
 }
 
 void PcManager::AddPc(const char *name, const char *uuid, Native::PairState pairState, Native::Reachability reachability,const char *binding, const bool isRunning) {
-	PcDef *movie = NULL;
+	PcDef *pc = NULL;
 	bool isNew = false;
 
-	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
-		if (OVR::OVR_stricmp( Movies[i]->Name.c_str(), name ) == 0)
-			movie = Movies[i];
+	for (OVR::UPInt i = 0; i < Pcs.size(); i++) {
+		if (OVR::OVR_stricmp( Pcs[i]->Name.c_str(), name ) == 0)
+			pc = Pcs[i];
 	}
-	if (movie == NULL) {
-		movie = new PcDef();
-		Movies.push_back(movie);
+	if (pc == NULL) {
+		pc = new PcDef();
+		Pcs.push_back(pc);
 		isNew = true;
 	}
 
-	movie->Name = name;
-	movie->UUID = uuid;
-	movie->Binding = binding;
-	movie->isRunning = isRunning;
-	movie->isRemote = reachability == Native::REMOTE;
+	pc->Name = name;
+	pc->UUID = uuid;
+	pc->Binding = binding;
+	pc->isRunning = isRunning;
+	pc->isRemote = reachability == Native::REMOTE;
 
-	//movie->ResWidth = width;
-	//movie->ResHeight = height;
 	if (isNew) {
-		ReadMetaData(movie);
+		ReadMetaData(pc);
 	}
-	movie->Poster = PcPosterWTF;
+	pc->Poster = PcPosterWTF;
 	switch(pairState) {
-		case Native::NOT_PAIRED:	movie->Poster = PcPosterUnpaired; break;
-		case Native::PAIRED:		movie->Poster = PcPosterPaired; break;
-		case Native::PIN_WRONG:		movie->Poster = PcPosterWTF; break;
+		case Native::NOT_PAIRED:	pc->Poster = PcPosterUnpaired; break;
+		case Native::PAIRED:		pc->Poster = PcPosterPaired; break;
+		case Native::PIN_WRONG:		pc->Poster = PcPosterWTF; break;
 		case Native::FAILED:
-		default: 					movie->Poster = PcPosterUnknown; break;
+		default: 					pc->Poster = PcPosterUnknown; break;
 	}
 	updated = true;
 }
 
 void PcManager::RemovePc(const std::string &name) {
-	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
-		if (OVR::OVR_stricmp( Movies[i]->Name.c_str(), name.c_str() ) == 0)
+	for (OVR::UPInt i = 0; i < Pcs.size(); i++) {
+		if (OVR::OVR_stricmp( Pcs[i]->Name.c_str(), name.c_str() ) == 0)
 			continue;
-		Movies.erase( Movies.cbegin() + i );
+		Pcs.erase( Pcs.cbegin() + i );
 		return;
 	}
 }
 
-void PcManager::ReadMetaData( PcDef *movie )
+void PcManager::ReadMetaData( PcDef *pc )
 {
-	std::string filename = movie->Name;
+	std::string filename = pc->Name;
 	ReplaceExtension( filename, ".txt" );
 
 	const char* error = NULL;
@@ -185,10 +174,10 @@ void PcManager::ReadMetaData( PcDef *movie )
 std::vector<const PcDef *> PcManager::GetPcList(PcCategory category) const {
 	std::vector<const PcDef *> result;
 
-	for (OVR::UPInt i = 0; i < Movies.size(); i++) {
-		if (Movies[i]->Category == category) {
-			if (Movies[i]->Poster != 0) {
-				result.push_back(Movies[i]);
+	for (OVR::UPInt i = 0; i < Pcs.size(); i++) {
+		if (Pcs[i]->Category == category) {
+			if (Pcs[i]->Poster != 0) {
+				result.push_back(Pcs[i]);
 			} else {
 				OVR_LOG("Skipping PC with empty poster!");
 			}

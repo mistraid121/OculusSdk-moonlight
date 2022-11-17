@@ -25,7 +25,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "PcSelectionView.h"
 #include "AppSelectionView.h"
 #include "TheaterSelectionView.h"
-#include "ResumeMovieView.h"
 #include "GUI/GuiSys.h"
 #include "Sound/SoundEffectContext.h"
 #include <memory>
@@ -65,23 +64,21 @@ public:
 	const OVRFW::ovrApplFrameIn &	GetFrame() const { return VrFrame; }
 	OVRFW::ovrRendererOutput &		GetFrameResult() { return FrameResult; }
 
-	void                    SetPlaylist( const std::vector<const PcDef *> &playList, const int nextMovie );
-    	void                    SetMovie( const PcDef * nextMovie );
-    	void                    SetPc( const PcDef * pc);
+	void                    SetPlaylist( const std::vector<const AppDef *> &playList, const int nextApp );
+	void                    SetApp( const AppDef * nextApp );
+	void                    SetPc( const PcDef * pc);
 
 	void 					MovieLoaded( const int width, const int height, const int duration );
 
-	const PcDef *            GetCurrentMovie() const { return CurrentMovie; }
+	const AppDef *            GetCurrentApp() const { return CurrentApp; }
 	const PcDef *            GetCurrentPc() const { return CurrentPc; }
 	const SceneDef & 		GetCurrentTheater() const;
 
-	void                   			StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate);
-	void 					ResumeMovieFromSavedLocation();
-	void					PlayMovieFromBeginning();
-	void 					ResumeOrRestartMovie();
+	void                   	StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate);
+	void 					PlayOrResumeOrRestartApp();
 	void 					TheaterSelection();
-	void                   			PcSelection( bool inLobby );
-	void   			                AppSelection( bool inLobby );
+	void                   	PcSelection( bool inLobby );
+	void   			        AppSelection( bool inLobby );
 
 	void					MovieFinished();
 	void					UnableToPlayMovie();
@@ -142,17 +139,15 @@ private:
    	AppSelectionView        AppSelectionMenu;
 
 	TheaterSelectionView	TheaterSelectionMenu;
-	ResumeMovieView			ResumeMovieMenu;
 
     OVRFW::ovrMessageQueue			MessageQueue;
 
 	int						FrameCount;
 
-    	const PcDef *            CurrentMovie;
-    	const PcDef *            CurrentPc;
-    	std::vector<const PcDef *>    PlayList;
+	const AppDef *            CurrentApp;
+	const PcDef *            CurrentPc;
+	std::vector<const AppDef *>    PlayList;
 
-	bool					ShouldResumeMovie;
 	bool					MovieFinishedPlaying;
 
 	bool					MountState;

@@ -52,7 +52,7 @@ public:
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	void                SetAppList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie );
+	void                SetAppList( const std::vector<const AppDef *> &apps, const AppDef *nextApp );
     void                PairSuccess();
 
 
@@ -145,10 +145,10 @@ private:
 	std::vector<AppCategoryButton>			Categories;
 	PcCategory			 			CurrentCategory;
 	
-	std::vector<const PcDef *> 				AppList;
-	int									MoviesIndex;
+	std::vector<const AppDef *> 				AppList;
+	int									AppIndex;
 
-	const PcDef *					LastMovieDisplayed;
+	const AppDef *					LastAppDisplayed;
 
 	bool								RepositionScreen;
 	bool								HadSelection;
@@ -190,7 +190,7 @@ private:
 	AppSelectionView &				operator=( const AppSelectionView & );
 	void                            TextButtonHelper(OVRFW::UIButton* button, float scale = 1.0f, int w = 300, int h = 120);
 
-	const PcDef *					GetSelectedApp() const;
+	const AppDef *					GetSelectedApp() const;
 
 	void 								CreateMenu( OVRFW::OvrGuiSys & guiSys );
 	OVR::Vector3f 							ScalePosition( const OVR::Vector3f &startPos, const float scale, const float menuOffset ) const;

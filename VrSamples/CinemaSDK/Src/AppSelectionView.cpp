@@ -94,8 +94,8 @@ static const char* Guuid;
             Categories(),
             CurrentCategory(CATEGORY_LIMELIGHT),
             AppList(),
-            MoviesIndex(0),
-            LastMovieDisplayed(NULL),
+            AppIndex(0),
+            LastAppDisplayed(NULL),
             RepositionScreen(false),
             HadSelection( false ),
             settingsMenu( NULL ),
@@ -164,7 +164,7 @@ static const char* Guuid;
         OVR_LOG("OnOpen");
         CurViewState = VIEWSTATE_OPEN;
 
-        LastMovieDisplayed = NULL;
+        LastAppDisplayed = NULL;
         HadSelection = false;
 
         if (Cinema.InLobby) {
@@ -197,7 +197,7 @@ static const char* Guuid;
             MoveScreenLabel->SetVisible(false);
 
 
-            MovieBrowser->SetSelectionIndex(MoviesIndex);
+            MovieBrowser->SetSelectionIndex(AppIndex);
 
 
             RepositionScreen = false;
@@ -261,7 +261,7 @@ static const char* Guuid;
                     Cinema.PcSelection(true);
                 } else {
                     OVR_LOG("Resume movie.");
-                    Cinema.ResumeMovieFromSavedLocation();
+                    Cinema.PlayOrResumeOrRestartApp();
                 }
             }
 
@@ -341,7 +341,7 @@ static const char* Guuid;
             Cinema.SceneMgr.Frame(vrFrame);
         }
 
-    const PcDef *AppSelectionView::GetSelectedApp() const {
+    const AppDef *AppSelectionView::GetSelectedApp() const {
         int selectedItem = MovieBrowser->GetSelection();
         if ((selectedItem >= 0) && (selectedItem < static_cast<int>(AppList.size()))) {
             return AppList[selectedItem];
@@ -351,15 +351,15 @@ static const char* Guuid;
     }
 
     void AppSelectionView::UpdateAppTitle() {
-        const PcDef * currentMovie = GetSelectedApp();
-        if (LastMovieDisplayed != currentMovie) {
+        const AppDef * currentMovie = GetSelectedApp();
+        if (LastAppDisplayed != currentMovie) {
             if (currentMovie != NULL) {
                 MovieTitle->SetText(currentMovie->Name.c_str());
             } else {
                 MovieTitle->SetText("");
             }
 
-            LastMovieDisplayed = currentMovie;
+            LastAppDisplayed = currentMovie;
         }
     }
 
@@ -963,7 +963,7 @@ static const char* Guuid;
     void AppSelectionView::CloseAppButtonPressed()
     {
         const PcDef* pc = Cinema.GetCurrentPc();
-        const PcDef* app = NULL;
+        const AppDef* app = NULL;
 
         int selected = MovieBrowser->GetSelection();
         if(selected <   static_cast< int >(AppList.size()))
@@ -980,7 +980,7 @@ static const char* Guuid;
     {
         int appIndex = MovieBrowser->GetSelection();
 
-        const PcDef* app = AppList[appIndex];
+        const AppDef* app = AppList[appIndex];
 
         std::string    outPath;
         const ovrJava & java = *reinterpret_cast< const ovrJava* >( Cinema.GetContext()->ContextForVrApi() );
@@ -1206,17 +1206,17 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
             return;
         }
 
-        int lastIndex = MoviesIndex;
-        MoviesIndex = MovieBrowser->GetSelection();
-        Cinema.SetPlaylist(AppList, MoviesIndex);
+        int lastIndex = AppIndex;
+        AppIndex = MovieBrowser->GetSelection();
+        Cinema.SetPlaylist(AppList, AppIndex);
 
         Cinema.InLobby = true;
         if (!Cinema.InLobby) {
-            if (lastIndex == MoviesIndex) {
+            if (lastIndex == AppIndex) {
                 // selected the poster we were just watching
-                Cinema.ResumeMovieFromSavedLocation();
+                Cinema.PlayOrResumeOrRestartApp();
             } else {
-                Cinema.ResumeOrRestartMovie();
+                Cinema.PlayOrResumeOrRestartApp();
             }
         } else {
             Cinema.TheaterSelection();
@@ -1263,40 +1263,40 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
         OVR_LOG("%zu movies added", AppList.size());
     }
 
-    void AppSelectionView::SetAppList(const std::vector<const PcDef *> &movies,
-                                      const PcDef *nextMovie) {
+    void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
+                                      const AppDef *nextApp) {
         //OVR_LOG( "AppSelectionView::SetAppList: %d movies", movies.size());
 
-        AppList = movies;
+        AppList = apps;
         DeletePointerArray(MovieBrowserItems);
         for (OVR::UPInt i = 0; i < AppList.size(); i++) {
-            const PcDef *movie = AppList[i];
+            const AppDef *app = AppList[i];
 
-            OVR_LOG( "AddMovie: %s", movie->Name.c_str());
+            OVR_LOG( "AddMovie: %s", app->Name.c_str());
 
             CarouselItem *item = new CarouselItem();
-            item->Texture = movie->Poster;
-            item->TextureWidth = movie->PosterWidth;
-            item->TextureHeight = movie->PosterHeight;
+            item->Texture = app->Poster;
+            item->TextureWidth = app->PosterWidth;
+            item->TextureHeight = app->PosterHeight;
             MovieBrowserItems.push_back(item);
         }
         MovieBrowser->SetItems(MovieBrowserItems);
 
         MovieTitle->SetText("");
-        LastMovieDisplayed = NULL;
+        LastAppDisplayed = NULL;
 
-        //MoviesIndex = 0;
-        if (nextMovie != NULL) {
+        //AppIndex = 0;
+        if (nextApp != NULL) {
             for (OVR::UPInt i = 0; i < AppList.size(); i++) {
-                if (movies[i] == nextMovie) {
+                if (apps[i] == nextApp) {
                     StartTimer();
-                    MoviesIndex = i;
+                    AppIndex = i;
                     break;
                 }
             }
         }
 
-        MovieBrowser->SetSelectionIndex(MoviesIndex);
+        MovieBrowser->SetSelectionIndex(AppIndex);
 
         if (AppList.size() == 0) {
             if (CurrentCategory == CATEGORY_LIMELIGHT) {
@@ -1314,7 +1314,7 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
 
     void AppSelectionView::SelectionHighlighted(bool isHighlighted) {
         if (isHighlighted && !ShowTimer && !Cinema.InLobby &&
-            (MoviesIndex == MovieBrowser->GetSelection())) {
+            (AppIndex == MovieBrowser->GetSelection())) {
             // dim the poster when the resume icon is up and the poster is highlighted
             CenterPoster->SetColor(Vector4f(0.55f, 0.55f, 0.55f, 1.0f));
         } else if (MovieBrowser->HasSelection()) {
@@ -1353,7 +1353,7 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
             if (frac > 1.0f) {
                 frac = 1.0f;
                 Cinema.SetPlaylist(AppList, MovieBrowser->GetSelection());
-                Cinema.ResumeOrRestartMovie();
+                Cinema.PlayOrResumeOrRestartApp();
             }
             Vector2f offset(0.0f, 1.0f - static_cast<float>( frac ));
             TimerIcon->SetColorTableOffset(offset);

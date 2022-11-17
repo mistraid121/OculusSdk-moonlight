@@ -120,11 +120,6 @@ void TheaterSelectionView::OnClose()
 	CurViewState = VIEWSTATE_CLOSED;
 }
 
-bool TheaterSelectionView::BackPressed()
-{
-	return false;
-}
-
 bool TheaterSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
 {
 	OVR_UNUSED( keyCode );
@@ -368,11 +363,11 @@ void TheaterSelectionView::SelectPressed( const double currTimeInSeconds )
 	Cinema.SceneMgr.SetSceneModel( Cinema.ModelMgr.GetTheater( SelectedTheater ) );
 	if ( Cinema.InLobby )
 	{
-		Cinema.ResumeOrRestartMovie();
+		Cinema.PlayOrResumeOrRestartApp();
 	}
 	else
 	{
-		Cinema.ResumeMovieFromSavedLocation();
+		Cinema.PlayOrResumeOrRestartApp();
 	}
 }
 

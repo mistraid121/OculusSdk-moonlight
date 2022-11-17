@@ -423,7 +423,7 @@ void MoviePlayerView::InitializeSettings()
 			appSettings = NULL;
 		}
 
-		appSettingsPath = outPath + "settings." + Cinema.GetCurrentMovie()->Name + ".json";
+		appSettingsPath = outPath + "settings." + Cinema.GetCurrentApp()->Name + ".json";
 		appSettings = new Settings(appSettingsPath.c_str());
 		appSettings->CopyDefines(*defaultSettings);
 		appSettings->Load();
@@ -948,7 +948,7 @@ void MoviePlayerView::OnOpen( const double currTimeInSeconds )
 	}
 
 
-	MovieTitleLabel.SetText( Cinema.GetCurrentMovie()->Name.c_str() );
+	MovieTitleLabel.SetText( Cinema.GetCurrentApp()->Name.c_str() );
 	Bounds3f titleBounds = MovieTitleLabel.GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() ) * VRMenuObject::TEXELS_PER_METER;
 	MovieTitleLabel.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, titleBounds.GetSize().x + 88, titleBounds.GetSize().y + 32 );
 

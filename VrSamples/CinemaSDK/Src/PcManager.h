@@ -57,13 +57,11 @@ public:
 	GLuint			Poster;
 	int				PosterWidth;
 	int				PosterHeight;
-	int 			ResWidth;
-	int 			ResHeight;
 	PcCategory        Category;
 
 
-	    PcDef() : Name(), PosterFileName(), UUID(), Binding(), Poster( 0 ), PosterWidth( 0 ), PosterHeight( 0 ),
-            Category( CATEGORY_LIMELIGHT ) {}
+    PcDef() : Name(), PosterFileName(), UUID(), Binding(), Poster( 0 ), PosterWidth( 0 ), PosterHeight( 0 ),
+        Category( CATEGORY_LIMELIGHT ) {}
 
 
 };
@@ -84,11 +82,7 @@ public:
 	std::vector<const PcDef *>    GetPcList( PcCategory category ) const;
 
 public:
-	std::vector<PcDef *> 		Movies;
-
-    static const int 		PosterWidth;
-    static const int 		PosterHeight;
-
+	std::vector<PcDef *> 		Pcs;
     bool                    updated;
 
 private:
@@ -96,8 +90,6 @@ private:
 
 	PcManager &			operator=( const PcManager & );
 
-public:
-    GLuint                    PcPoster;
 private:
     GLuint                    PcPosterPaired;
     GLuint                    PcPosterUnpaired;

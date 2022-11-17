@@ -19,19 +19,29 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include <vector>
 #include <string>
 #include "PcManager.h"
+#include <GLES3/gl3.h>
 
 namespace OculusCinema {
 
 class CinemaApp;
 
-
-class AppDef : public PcDef
+class AppDef
 {
-	public:
-	AppDef() : PcDef() {}
+public:
+	std::string            Name;
+	std::string            PosterFileName;
+	std::string            UUID;
+	std::string            Binding;
+	int                Id;
+	bool            isRunning;
+	GLuint			Poster;
+	int				PosterWidth;
+	int				PosterHeight;
+
+	AppDef() : Name(), PosterFileName(), UUID(), Binding(), Poster( 0 ), PosterWidth( 0 ), PosterHeight( 0 ){}
 };
 
-class AppManager : public PcManager
+class AppManager
 {
 public:
 							AppManager( CinemaApp &cinema );
@@ -39,28 +49,20 @@ public:
 
 	virtual void			OneTimeInit( const char * launchIntent );
 	virtual void			OneTimeShutdown();
-	void					LoadApps();
 	void                    LoadPosters();
 	void                    AddApp(const std::string &name, const std::string &posterFileName, int id, bool isRunning);
 	void					RemoveApp( int id);
 
-	std::vector<const PcDef *>	GetAppList( PcCategory category ) const;
+	std::vector<const AppDef *>	GetAppList( PcCategory category ) const;
 
 public:
     std::vector<AppDef *> 		Apps;
 
-    static const int 		PosterWidth;
-    static const int 		PosterHeight;
-
-    bool					updated;
-
 private:
 	CinemaApp &				Cinema;
-
     GLuint					DefaultPoster;
-
-    virtual void 			ReadMetaData( PcDef *app );
-    virtual void 			LoadPoster( PcDef *app );
+    virtual void 			ReadMetaData( AppDef *app );
+    virtual void 			LoadPoster( AppDef *app );
 };
 
 } // namespace OculusCinema

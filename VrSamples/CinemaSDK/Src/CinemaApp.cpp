@@ -64,12 +64,10 @@ CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
 	PcSelectionMenu( *this ),
 	AppSelectionMenu( *this ),
 	TheaterSelectionMenu( *this ),
-	ResumeMovieMenu( *this ),
 	MessageQueue( 100 ),
 	FrameCount( 0 ),
-	CurrentMovie( NULL ),
+	CurrentApp( NULL ),
 	PlayList(),
-	ShouldResumeMovie( false ),
 	MovieFinishedPlaying( false ),
 	MountState( true ),			// We assume that the device is mounted at start since we can only detect changes in mount state
 	LastMountState( true ),
@@ -192,7 +190,7 @@ bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
 	TheaterSelectionMenu.OneTimeInit( intentURI.c_str() );
 
 	ViewMgr.AddView( &TheaterSelectionMenu );
-	ResumeMovieMenu.OneTimeInit( intentURI.c_str() );
+
 
 	PcSelection( true );
 
@@ -225,7 +223,6 @@ bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
 	PcSelectionMenu.OneTimeShutdown();
     	AppSelectionMenu.OneTimeShutdown();
 	TheaterSelectionMenu.OneTimeShutdown();
-	ResumeMovieMenu.OneTimeShutdown();
 	ovrCinemaStrings::Destroy( *this, CinemaStrings );
 
 	OvrGuiSys::Destroy( GuiSys );
@@ -309,18 +306,18 @@ bool CinemaApp::GetUseSrgb() const
 	return UseSrgb;// && app->GetFramebufferIsSrgb();
 }
 
-void CinemaApp::SetPlaylist( const std::vector<const PcDef *> &playList, const int nextMovie )
+void CinemaApp::SetPlaylist( const std::vector<const AppDef *> &playList, const int nextMovie )
 {
 	PlayList = playList;
 
 	//OVR_ASSERT( nextMovie < PlayList.GetSizeI() );
-	SetMovie( PlayList[ nextMovie ] );
+	SetApp( PlayList[ nextMovie ] );
 }
 
-void CinemaApp::SetMovie( const PcDef *movie )
+void CinemaApp::SetApp( const AppDef *app )
 {
-	OVR_LOG( "SetMovie( %s )", movie->Name.c_str() );
-	CurrentMovie = movie;
+	OVR_LOG( "SetMovie( %s )", app->Name.c_str() );
+	CurrentApp = app;
 	MovieFinishedPlaying = false;
 }
 
@@ -337,36 +334,19 @@ void CinemaApp::MovieLoaded( const int width, const int height, const int durati
 
 void CinemaApp::StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate)
 {
-	if ( CurrentMovie != NULL )
+	if ( CurrentApp != NULL )
 	{
 		MovieFinishedPlaying = false;
 		bool remote = CurrentPc->isRemote;
-		Native::StartMovie(CurrentPc->UUID.c_str(), CurrentMovie->Name.c_str(), CurrentMovie->Id, CurrentPc->Binding.c_str(), width, height, fps, hostAudio, customBitrate, remote );
-
-		ShouldResumeMovie = false;
+		Native::StartMovie(CurrentPc->UUID.c_str(), CurrentApp->Name.c_str(), CurrentApp->Id, CurrentPc->Binding.c_str(), width, height, fps, hostAudio, customBitrate, remote );
 	}
 }
 
-void CinemaApp::ResumeMovieFromSavedLocation()
+void CinemaApp::PlayOrResumeOrRestartApp()
 {
-	OVR_LOG( "ResumeMovie");
+	OVR_LOG( "PlayOrResumeOrRestartApp");
 	InLobby = false;
-	ShouldResumeMovie = true;
 	ViewMgr.OpenView( MoviePlayer );
-}
-
-void CinemaApp::PlayMovieFromBeginning()
-{
-	OVR_LOG( "PlayMovieFromBeginning");
-	InLobby = false;
-	ShouldResumeMovie = false;
-	ViewMgr.OpenView( MoviePlayer );
-}
-
-void CinemaApp::ResumeOrRestartMovie()
-{
-	
-	PlayMovieFromBeginning();
 	
 }
 

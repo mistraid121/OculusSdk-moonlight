@@ -30,8 +30,6 @@ LOCAL_SRC_FILES	:= 	../../../Src/CinemaApp.cpp \
 					../../../Src/PcCategoryComponent.cpp \
 					../../../Src/MoviePosterComponent.cpp \
 					../../../Src/MovieSelectionComponent.cpp \
-					../../../Src/ResumeMovieView.cpp \
-					../../../Src/ResumeMovieComponent.cpp \
 					../../../Src/CarouselSwipeHintComponent.cpp \
 					../../../Src/CinemaStrings.cpp \
 					../../../Src/Settings.cpp

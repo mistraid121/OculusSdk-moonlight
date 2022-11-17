@@ -995,7 +995,7 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
         {
             frac = 1.0f;
             //Cinema.SetPlaylist( MovieList, MovieBrowser->GetSelection() );
-            Cinema.ResumeOrRestartMovie();
+            Cinema.PlayOrResumeOrRestartApp();
         }
         Vector2f offset( 0.0f, 1.0f - static_cast<float>( frac ) );
         TimerIcon->SetColorTableOffset( offset );
@@ -1107,7 +1107,7 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
         else
         {
             OVR_LOG( "Resume movie." );
-            Cinema.ResumeMovieFromSavedLocation();
+            Cinema.PlayOrResumeOrRestartApp();
         }
     }
 
