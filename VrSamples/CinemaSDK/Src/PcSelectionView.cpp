@@ -61,12 +61,10 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	SwipeIconRightTexture(),
 	ResumeIconTexture(),
 	ErrorIconTexture(),
-	SDCardTexture(),
 	CloseIconTexture(),
 	Menu( NULL ),
 	CenterRoot( NULL ),
 	ErrorMessage( NULL ),
-	SDCardMessage( NULL ),
 	PlainErrorMessage( NULL ),
 	ErrorMessageClicked( false ),
 	MovieRoot( NULL ),
@@ -272,7 +270,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	SwipeIconRightTexture.LoadTextureFromApplicationPackage( "assets/SwipeSuggestionArrowRight.png" );
 	ResumeIconTexture.LoadTextureFromApplicationPackage( "assets/resume.png" );
 	ErrorIconTexture.LoadTextureFromApplicationPackage( "assets/error.png" );
-	SDCardTexture.LoadTextureFromApplicationPackage( "assets/sdcard.png" );
 	CloseIconTexture.LoadTextureFromApplicationPackage( "assets/close.png" );
 
 	newPCTex = LoadTextureFromApplicationPackage(
@@ -321,19 +318,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	ErrorMessage->SetTextOffset( Vector3f( 0.0f, -48 * VRMenuObject::DEFAULT_TEXEL_SCALE, 0.0f ) );
 	ErrorMessage->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, ErrorIconTexture );
 	ErrorMessage->SetVisible( false );
-
-	// ==============================================================================
-	//
-	// sdcard icon
-	//
-	SDCardMessage = new UILabel( Cinema.GetGuiSys() );
-	SDCardMessage->AddToMenu( Menu, CenterRoot );
-	SDCardMessage->SetLocalPose( forward, Vector3f( 0.00f, 1.76f + 330.0f * VRMenuObject::DEFAULT_TEXEL_SCALE, -7.39f + 0.5f ) );
-	SDCardMessage->SetLocalScale( Vector3f( 5.0f ) );
-	SDCardMessage->SetFontScale( 0.5f );
-	SDCardMessage->SetTextOffset( Vector3f( 0.0f, -96 * VRMenuObject::DEFAULT_TEXEL_SCALE, 0.0f ) );
-	SDCardMessage->SetVisible( false );
-	SDCardMessage->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SDCardTexture );
 
 	// ==============================================================================
 	//
@@ -667,11 +651,11 @@ void PcSelectionView::NewPCIPButtonPressed( UIButton *button)
 			error = Native::addPCbyIP(IPString.c_str());
 			if ( error == 2 )
 			{
-				SetError( "Error_UnknownHost", false, false );
+				SetError( "Error_UnknownHost", false );
 			}
 			else if( error == 1 )
 			{
-				SetError( "Error_AddPCFailed", false, false );
+				SetError( "Error_AddPCFailed", false );
 			}
 			IPoctets[0] = IPoctets[1] = IPoctets[2] = IPoctets[3] = 0;
 			currentOctet = 0;
@@ -851,39 +835,6 @@ void PcSelectionView::SetPcList( const std::vector<const PcDef *> &movies, const
 
 
 	if(MoviesIndex > static_cast< int >(MovieList.size())) MoviesIndex = 0;
-	/*
-    MoviesIndex = 0;
-    if ( nextMovie != NULL )
-    {
-        for ( int i = 0; i <static_cast< int >(MovieList.size()); i++ )
-        {
-            if ( movies[ i ] == nextMovie )
-            {
-                StartTimer();
-                MoviesIndex = i;
-                break;
-            }
-        }
-    }
-
-    MovieBrowser->SetSelectionIndex( MoviesIndex );
-*/
-/*    if ( MovieList.size() == 0 )
-    {
-        if ( CurrentCategory == CATEGORY_LIMELIGHT )
-        {
-            SetError( Cinema.GetCinemaStrings().Error_NoVideosInLimeLight.c_str(), false, false );
-        }
-        else
-        {
-            SetError( Cinema.GetCinemaStrings().Error_NoVideosOnPhone.c_str(), true, false );
-        }
-    }
-    else
-    {
-        ClearError();
-    }
-        */
 }
 
 void PcSelectionView::SetCategory( const PcCategory category )
@@ -1016,17 +967,12 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
     }
 }
 
-void PcSelectionView::SetError( const char *text, bool showSDCard, bool showErrorIcon )
+void PcSelectionView::SetError( const char *text, bool showErrorIcon )
 {
     ClearError();
 
     OVR_LOG( "SetError: %s", text );
-    if ( showSDCard )
-    {
-        SDCardMessage->SetVisible( true );
-        SDCardMessage->SetTextWordWrapped( text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f );
-    }
-    else if ( showErrorIcon )
+    if ( showErrorIcon )
     {
         ErrorMessage->SetVisible( true );
         ErrorMessage->SetTextWordWrapped( text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f );
@@ -1047,7 +993,6 @@ void PcSelectionView::ClearError()
     OVR_LOG( "ClearError" );
     ErrorMessageClicked = false;
     ErrorMessage->SetVisible( false );
-    SDCardMessage->SetVisible( false );
     PlainErrorMessage->SetVisible( false );
     TitleRoot->SetVisible( true );
     MovieRoot->SetVisible( true );
@@ -1058,7 +1003,7 @@ void PcSelectionView::ClearError()
 
 bool PcSelectionView::ErrorShown() const
 {
-    return ErrorMessage->GetVisible() || SDCardMessage->GetVisible() || PlainErrorMessage->GetVisible();
+    return ErrorMessage->GetVisible() || PlainErrorMessage->GetVisible();
 }
 
 void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )

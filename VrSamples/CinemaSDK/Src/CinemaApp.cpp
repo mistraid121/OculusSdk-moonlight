@@ -327,11 +327,6 @@ void CinemaApp::SetPc( const PcDef *pc )
     CurrentPc = pc;
 }
 
-void CinemaApp::MovieLoaded( const int width, const int height, const int duration )
-{
-	MoviePlayer.MovieLoaded( width, height, duration );
-}
-
 void CinemaApp::StartMoviePlayback(int width, int height, int fps, bool hostAudio, int customBitrate)
 {
 	if ( CurrentApp != NULL )
@@ -411,7 +406,7 @@ bool CinemaApp::OnKeyEvent( const int keyCode, const int repeatCount, const UIKe
 
 void CinemaApp::ShowPair( const std::string& msg )
 {
-    AppSelectionMenu.SetError(msg.c_str(),false,false);
+    AppSelectionMenu.SetError(msg.c_str(),false);
 }
 
 void CinemaApp::PairSuccess()
@@ -423,7 +418,7 @@ void CinemaApp::PairSuccess()
 void CinemaApp::ShowError( const std::string& msg )
 {
     View *view = ViewMgr.GetCurrentView();
-    if(view) view->SetError(msg.c_str(), false, true);
+    if(view) view->SetError(msg.c_str(), true);
 }
 
 void CinemaApp::ClearError()

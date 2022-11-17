@@ -989,13 +989,7 @@ void MoviePlayerView::LeavingVrMode()
 	Native::StopMovie( );
 }
 
-void MoviePlayerView::MovieLoaded( const int width, const int height, const int duration )
-{
-	OVR_UNUSED2( width, height );
-
-}
-
-void MoviePlayerView::SetError( const char *text, bool showSDCard, bool showErrorIcon )
+void MoviePlayerView::SetError( const char *text, bool showErrorIcon )
 {
     OVR_LOG( "Error: %s", text );
     Cinema.AppSelection( true );

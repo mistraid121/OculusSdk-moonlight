@@ -12,19 +12,10 @@ LICENSE file in the StreamTheater/ directory.
 
 *************************************************************************************/
 
-/*#include "Kernel/OVR_String_Utils.h"
-
-#include "CinemaApp.h"
-#include "Native.h"
-#include "SceneManager.h"
-#include "GuiSys.h"*/
 
 #include "Settings.h"
-
 #include <fstream>
 #include <string>
-//#include <Kernel/OVR_LogUtils.h>
-
 #include "vector"
 #include "OVR_JSON.h"
 

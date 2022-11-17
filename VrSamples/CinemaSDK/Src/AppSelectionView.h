@@ -59,7 +59,7 @@ public:
 	void 				Select( void );
 	void 				SelectionHighlighted( bool isHighlighted );
 	void 				SetCategory( const PcCategory category );
-	void				SetError( const char *text, bool showSDCard, bool showErrorIcon );
+	void				SetError( const char *text, bool showErrorIcon );
 	void				ClearError();
 
 private:
@@ -87,7 +87,6 @@ private:
 	OVRFW::UITexture							SwipeIconRightTexture;
 	OVRFW::UITexture							ResumeIconTexture;
 	OVRFW::UITexture							ErrorIconTexture;
-	OVRFW::UITexture							SDCardTexture;
 	OVRFW::UITexture                           CloseIconTexture;
 	OVRFW::UITexture                           SettingsIconTexture;
 
@@ -100,7 +99,6 @@ private:
 	OVRFW::UIContainer *						CenterRoot;
 
 	OVRFW::UILabel * 							ErrorMessage;
-	OVRFW::UILabel * 							SDCardMessage;
 	OVRFW::UILabel * 							PlainErrorMessage;
 	
 	bool								ErrorMessageClicked;

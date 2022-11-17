@@ -50,7 +50,7 @@ public:
 
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType ) = 0;
 	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame ) = 0;
-    virtual void        SetError( const char *text, bool showSDCard, bool showErrorIcon ) { }
+    virtual void        SetError( const char *text, bool showErrorIcon ) { }
     virtual void        ClearError() { }
 	bool				IsOpen() const { return CurViewState == VIEWSTATE_OPEN; }
 	bool				IsClosed() const { return CurViewState == VIEWSTATE_CLOSED; }

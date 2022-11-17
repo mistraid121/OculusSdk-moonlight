@@ -58,13 +58,11 @@ static const char* Guuid;
             SwipeIconRightTexture(),
             ResumeIconTexture(),
             ErrorIconTexture(),
-            SDCardTexture(),
             CloseIconTexture(),
             SettingsIconTexture(),
             Menu(NULL),
             CenterRoot(NULL),
             ErrorMessage(NULL),
-            SDCardMessage(NULL),
             PlainErrorMessage(NULL),
             ErrorMessageClicked(false),
             MovieRoot(NULL),
@@ -429,7 +427,6 @@ static const char* Guuid;
                 "assets/SwipeSuggestionArrowRight.png");
         ResumeIconTexture.LoadTextureFromApplicationPackage("assets/resume.png");
         ErrorIconTexture.LoadTextureFromApplicationPackage("assets/error.png");
-        SDCardTexture.LoadTextureFromApplicationPackage("assets/sdcard.png");
         CloseIconTexture.LoadTextureFromApplicationPackage( "assets/close.png" );
         SettingsIconTexture.LoadTextureFromApplicationPackage( "assets/settings.png" );
 
@@ -475,21 +472,6 @@ static const char* Guuid;
         ErrorMessage->SetImage(0, SURFACE_TEXTURE_DIFFUSE, ErrorIconTexture);
         ErrorMessage->SetVisible(false);
 
-        // ==============================================================================
-        //
-        // sdcard icon
-        //
-        SDCardMessage = new UILabel(Cinema.GetGuiSys());
-        SDCardMessage->AddToMenu(Menu, CenterRoot);
-        SDCardMessage->SetLocalPose(forward, Vector3f(0.00f, 1.76f + 330.0f *
-                                                                     VRMenuObject::DEFAULT_TEXEL_SCALE,
-                                                      -7.39f + 0.5f));
-        SDCardMessage->SetLocalScale(Vector3f(5.0f));
-        SDCardMessage->SetFontScale(0.5f);
-        SDCardMessage->SetTextOffset(
-                Vector3f(0.0f, -96 * VRMenuObject::DEFAULT_TEXEL_SCALE, 0.0f));
-        SDCardMessage->SetVisible(false);
-        SDCardMessage->SetImage(0, SURFACE_TEXTURE_DIFFUSE, SDCardTexture);
 
         // ==============================================================================
         //
@@ -1299,14 +1281,8 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
         MovieBrowser->SetSelectionIndex(AppIndex);
 
         if (AppList.size() == 0) {
-            if (CurrentCategory == CATEGORY_LIMELIGHT) {
-                SetError("error", false,
-                         false);
-                ErrorMessageClicked = true;
-            } else {
-                SetError("error", true,
-                         false);
-            }
+            SetError("error", false);
+            ErrorMessageClicked = true;
         } else {
             ClearError();
         }
@@ -1371,14 +1347,11 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
         }
     }
 
-    void AppSelectionView::SetError(const char *text, bool showSDCard, bool showErrorIcon) {
+    void AppSelectionView::SetError(const char *text, bool showErrorIcon) {
         ClearError();
 
         OVR_LOG("SetError: %s", text);
-        if (showSDCard) {
-            SDCardMessage->SetVisible(true);
-            SDCardMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f);
-        } else if (showErrorIcon) {
+        if (showErrorIcon) {
             ErrorMessage->SetVisible(true);
             ErrorMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f);
         } else {
@@ -1396,7 +1369,6 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
         OVR_LOG("ClearError");
         ErrorMessageClicked = false;
         ErrorMessage->SetVisible(false);
-        SDCardMessage->SetVisible(false);
         PlainErrorMessage->SetVisible(false);
         TitleRoot->SetVisible(true);
         MovieRoot->SetVisible(true);
@@ -1405,7 +1377,7 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
     }
 
     bool AppSelectionView::ErrorShown() const {
-        return ErrorMessage->GetVisible() || SDCardMessage->GetVisible() ||
+        return ErrorMessage->GetVisible()  ||
                PlainErrorMessage->GetVisible();
     }
 }

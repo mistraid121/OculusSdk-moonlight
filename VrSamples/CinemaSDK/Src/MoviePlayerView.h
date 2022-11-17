@@ -146,8 +146,7 @@ public:
 	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual void 			Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	void 					MovieLoaded( const int width, const int height, const int duration );
-	virtual void            SetError( const char *text, bool showSDCard, bool showErrorIcon );
+	virtual void            SetError( const char *text, bool showErrorIcon );
 
 	void                    MovieScreenUpdated();
 

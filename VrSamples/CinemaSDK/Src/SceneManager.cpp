@@ -872,8 +872,6 @@ bool SceneManager::Command( const char * msg )
 				CurrentMovieHeight = height;
 				break;
 		}
-
-		Cinema.MovieLoaded( CurrentMovieWidth, CurrentMovieHeight, MovieDuration );
 		FrameUpdateNeeded = true;
 		return true;
 	}
