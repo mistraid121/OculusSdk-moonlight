@@ -67,10 +67,10 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	ErrorMessage( NULL ),
 	PlainErrorMessage( NULL ),
 	ErrorMessageClicked( false ),
-	MovieRoot( NULL ),
+	PcRoot( NULL ),
 	CategoryRoot( NULL ),
 	TitleRoot( NULL ),
-	MovieTitle( NULL ),
+	PcTitle( NULL ),
 	SelectionFrame( NULL ),
 	CenterPoster( NULL ),
 	CenterIndex( 0 ),
@@ -87,14 +87,14 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	MoveScreenLabel( NULL ),
 	MoveScreenAlpha(),
 	SelectionFader(),
-	MovieBrowser( NULL ),
-	MoviePanelPositions(),
-	MoviePosterComponents(),
+	PcBrowser( NULL ),
+	PcPanelPositions(),
+	PcPosterComponents(),
 	Categories(),
 	CurrentCategory( CATEGORY_LIMELIGHT ),
-	MovieList(),
-	MoviesIndex( 0 ),
-	LastMovieDisplayed( NULL ),
+	PcList(),
+	PcsIndex( 0 ),
+	LastPcDisplayed( NULL ),
 	RepositionScreen( false ),
 	HadSelection( false ),
 	newPCWidth( 0 ),
@@ -117,7 +117,7 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 
 PcSelectionView::~PcSelectionView()
 {
-	DeletePointerArray( MovieBrowserItems );
+	DeletePointerArray( PcBrowserItems );
 }
 
 void PcSelectionView::OneTimeInit( const char * launchIntent )
@@ -147,7 +147,7 @@ void PcSelectionView::OnOpen(const double currTimeInSeconds )
 	OVR_LOG( "OnOpen" );
 	CurViewState = VIEWSTATE_OPEN;
 
-	LastMovieDisplayed = NULL;
+	LastPcDisplayed = NULL;
 	HadSelection = false;
 
 	if ( Cinema.InLobby )
@@ -175,7 +175,7 @@ void PcSelectionView::OnOpen(const double currTimeInSeconds )
 	
 	MoveScreenLabel->SetVisible( false );
 
-	MovieBrowser->SetSelectionIndex( MoviesIndex );
+	PcBrowser->SetSelectionIndex( PcsIndex );
 
 	RepositionScreen = false;
 	MoveScreenAlpha.Set( 0, 0, 0, 0.0f );
@@ -294,9 +294,9 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	CenterRoot->AddToMenu( Menu );
 	CenterRoot->SetLocalPose( forward, Vector3f( 0.0f, 0.0f, 0.0f ) );
 
-	MovieRoot = new UIContainer( Cinema.GetGuiSys() );
-	MovieRoot->AddToMenu( Menu, CenterRoot );
-	MovieRoot->SetLocalPose( forward, Vector3f( 0.0f, 0.0f, 0.0f ) );
+	PcRoot = new UIContainer( Cinema.GetGuiSys() );
+	PcRoot->AddToMenu( Menu, CenterRoot );
+	PcRoot->SetLocalPose( forward, Vector3f( 0.0f, 0.0f, 0.0f ) );
 
 	CategoryRoot = new UIContainer( Cinema.GetGuiSys() );
 	CategoryRoot->AddToMenu( Menu, CenterRoot );
@@ -332,28 +332,28 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 	// ==============================================================================
 	//
-	// movie browser
+	// Pc browser
 	//
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f( -5.59f, 1.76f, -12.55f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f( -3.82f, 1.76f, -10.97f ), Vector4f( 0.1f, 0.1f, 0.1f, 1.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f( -2.05f, 1.76f,  -9.39f ), Vector4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f(  0.00f, 1.76f,  -7.39f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f(  2.05f, 1.76f,  -9.39f ), Vector4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f(  3.82f, 1.76f, -10.97f ), Vector4f( 0.1f, 0.1f, 0.1f, 1.0f ) ) );
-	MoviePanelPositions.push_back( PanelPose( forward, Vector3f(  5.59f, 1.76f, -12.55f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f( -5.59f, 1.76f, -12.55f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f( -3.82f, 1.76f, -10.97f ), Vector4f( 0.1f, 0.1f, 0.1f, 1.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f( -2.05f, 1.76f,  -9.39f ), Vector4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f(  0.00f, 1.76f,  -7.39f ), Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f(  2.05f, 1.76f,  -9.39f ), Vector4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f(  3.82f, 1.76f, -10.97f ), Vector4f( 0.1f, 0.1f, 0.1f, 1.0f ) ) );
+	PcPanelPositions.push_back( PanelPose( forward, Vector3f(  5.59f, 1.76f, -12.55f ), Vector4f( 0.0f, 0.0f, 0.0f, 0.0f ) ) );
 
-	CenterIndex = MoviePanelPositions.size() / 2;
-	CenterPosition = MoviePanelPositions[ CenterIndex ].Position;
+	CenterIndex = PcPanelPositions.size() / 2;
+	CenterPosition = PcPanelPositions[ CenterIndex ].Position;
 
-	MovieBrowser = new CarouselBrowserComponent( MovieBrowserItems, MoviePanelPositions );
-	MovieRoot->AddComponent( MovieBrowser );
+	PcBrowser = new CarouselBrowserComponent( PcBrowserItems, PcPanelPositions );
+	PcRoot->AddComponent( PcBrowser );
 
 	// ==============================================================================
 	//
 	// selection rectangle
 	//
 	SelectionFrame = new UIImage( Cinema.GetGuiSys() );
-	SelectionFrame->AddToMenu( Menu, MovieRoot );
+	SelectionFrame->AddToMenu( Menu, PcRoot );
 	SelectionFrame->SetLocalPose( forward, CenterPosition + Vector3f( 0.0f, 0.0f, 0.1f ) );
 	SelectionFrame->SetLocalScale( PosterScale );
 	SelectionFrame->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SelectionTexture );
@@ -365,14 +365,14 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 	// ==============================================================================
 	//
-	// add shadow and 3D icon to movie poster panels
+	// add shadow and 3D icon to Pc poster panels
 	//
 	std::vector<VRMenuObject *> menuObjs;
-	for ( OVR::UPInt i = 0; i < MoviePanelPositions.size(); ++i )
+	for ( OVR::UPInt i = 0; i < PcPanelPositions.size(); ++i )
 	{
 		UIContainer *posterContainer = new UIContainer( Cinema.GetGuiSys() );
-		posterContainer->AddToMenu( Menu, MovieRoot );
-		posterContainer->SetLocalPose( MoviePanelPositions[ i ].Orientation, MoviePanelPositions[ i ].Position );
+		posterContainer->AddToMenu( Menu, PcRoot );
+		posterContainer->SetLocalPose( PcPanelPositions[ i ].Orientation, PcPanelPositions[ i ].Position );
 		posterContainer->GetMenuObject()->AddFlags( VRMENUOBJECT_FLAG_NO_FOCUS_GAINED );
 
 		//
@@ -419,10 +419,10 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 		posterContainer->AddComponent( posterComp );
 
 		menuObjs.push_back( posterContainer->GetMenuObject() );
-		MoviePosterComponents.push_back( posterComp );
+		PcPosterComponents.push_back( posterComp );
 	}
 
-	MovieBrowser->SetMenuObjects( menuObjs, MoviePosterComponents );
+	PcBrowser->SetMenuObjects( menuObjs, PcPosterComponents );
 
 	// ==============================================================================
 	//
@@ -468,13 +468,13 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 
 	// ==============================================================================
 	//
-	// movie title
+	// Pc title
 	//
-	MovieTitle = new UILabel( Cinema.GetGuiSys() );
-	MovieTitle->AddToMenu( Menu, TitleRoot );
-	MovieTitle->SetLocalPose( forward, Vector3f( 0.0f, 0.045f, -7.37f ) );
-	MovieTitle->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-	MovieTitle->SetFontScale( 2.5f );
+	PcTitle = new UILabel( Cinema.GetGuiSys() );
+	PcTitle->AddToMenu( Menu, TitleRoot );
+	PcTitle->SetLocalPose( forward, Vector3f( 0.0f, 0.045f, -7.37f ) );
+	PcTitle->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+	PcTitle->SetFontScale( 2.5f );
 
 	// ==============================================================================
 	//
@@ -491,7 +491,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 		LeftSwipes[ i ]->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SwipeIconLeftTexture );
 		LeftSwipes[ i ]->SetLocalScale( PosterScale );
 		LeftSwipes[ i ]->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_DEPTH ) | VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-		LeftSwipes[ i ]->AddComponent( new CarouselSwipeHintComponent( MovieBrowser, false, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
+		LeftSwipes[ i ]->AddComponent( new CarouselSwipeHintComponent( PcBrowser, false, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
 
 		swipeIconPos.x = ( ( PosterWidth + SwipeIconLeftTexture.Width * ( i + 2 ) ) * -0.5f ) * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.x;
 		LeftSwipes[ i ]->SetLocalPosition( swipeIconPos );
@@ -501,7 +501,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 		RightSwipes[ i ]->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SwipeIconRightTexture );
 		RightSwipes[ i ]->SetLocalScale( PosterScale );
 		RightSwipes[ i ]->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_FLAG_NO_DEPTH ) | VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-		RightSwipes[ i ]->AddComponent( new CarouselSwipeHintComponent( MovieBrowser, true, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
+		RightSwipes[ i ]->AddComponent( new CarouselSwipeHintComponent( PcBrowser, true, 1.3333f, 0.4f + ( float )i * 0.13333f, 5.0f ) );
 
 		swipeIconPos.x = ( ( PosterWidth + SwipeIconRightTexture.Width * ( i + 2 ) ) * 0.5f ) * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.x;
 		RightSwipes[ i ]->SetLocalPosition( swipeIconPos );
@@ -512,7 +512,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	// resume icon
 	//
 	ResumeIcon = new UILabel( Cinema.GetGuiSys() );
-	ResumeIcon->AddToMenu( Menu, MovieRoot );
+	ResumeIcon->AddToMenu( Menu, PcRoot );
 	ResumeIcon->SetLocalPose( forward, CenterPosition + Vector3f( 0.0f, 0.0f, 0.5f ) );
 	ResumeIcon->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, ResumeIconTexture );
 	ResumeIcon->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
@@ -527,7 +527,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	// close app button
 	//
 	CloseAppButton = new UIButton( Cinema.GetGuiSys()  );
-	CloseAppButton->AddToMenu(  Menu, MovieRoot );
+	CloseAppButton->AddToMenu(  Menu, PcRoot );
 	CloseAppButton->SetLocalPose( forward, CenterPosition + Vector3f( 0.8f, -1.28f, 0.5f ) );
 	CloseAppButton->SetButtonImages( CloseIconTexture, CloseIconTexture, CloseIconTexture );
 	CloseAppButton->SetLocalScale( 3.0f );
@@ -541,7 +541,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	// timer
 	//
 	TimerIcon = new UILabel( Cinema.GetGuiSys() );
-	TimerIcon->AddToMenu( Menu, MovieRoot );
+	TimerIcon->AddToMenu( Menu, PcRoot );
 	TimerIcon->SetLocalPose( forward, CenterPosition + Vector3f( 0.0f, 0.0f, 0.5f ) );
 	TimerIcon->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
 	TimerIcon->SetFontScale( 1.0f );
@@ -747,7 +747,7 @@ void PcSelectionView::UpdateMenuPosition()
 
 void PcSelectionView::Select()
 {
-	OVR_LOG( "SelectMovie");
+	OVR_LOG( "SelectPc");
 
 	// ignore selection while repositioning screen
 	if ( RepositionScreen )
@@ -756,9 +756,9 @@ void PcSelectionView::Select()
 	}
 
 
-	MoviesIndex = MovieBrowser->GetSelection();
+	PcsIndex = PcBrowser->GetSelection();
 
-	if (MoviesIndex >= (int)MovieList.size())
+	if (PcsIndex >= (int)PcList.size())
 	{
 		// open up manual IP entry menu
 		newPCMenu->SetVisible(true);
@@ -766,7 +766,7 @@ void PcSelectionView::Select()
 	}
 
 
-	Cinema.SetPc(MovieList[MoviesIndex]);
+	Cinema.SetPc(PcList[PcsIndex]);
 
 
 	if ( !Cinema.InLobby )
@@ -790,34 +790,34 @@ void PcSelectionView::StartTimer()
 
 const PcDef *PcSelectionView::GetSelectedPc() const
 {
-	int selectedItem = MovieBrowser->GetSelection();
-	if ( ( selectedItem >= 0 ) && ( selectedItem < static_cast< int >(MovieList.size()) ) )
+	int selectedItem = PcBrowser->GetSelection();
+	if ( ( selectedItem >= 0 ) && ( selectedItem < static_cast< int >(PcList.size()) ) )
 	{
-		return MovieList[ selectedItem ];
+		return PcList[ selectedItem ];
 	}
 
 	return NULL;
 }
 
-void PcSelectionView::SetPcList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie )
+void PcSelectionView::SetPcList( const std::vector<const PcDef *> &pcs)
 {
-	OVR_LOG( "SetPcList: %zu movies", movies.size() );
+	OVR_LOG( "SetPcList: %zu Pcs", pcs.size() );
 
-	MovieList = movies;
-	DeletePointerArray( MovieBrowserItems );
-	for ( OVR::UPInt i = 0; i < MovieList.size(); i++ )
+	PcList = pcs;
+	DeletePointerArray( PcBrowserItems );
+	for ( OVR::UPInt i = 0; i < PcList.size(); i++ )
 	{
-		const PcDef *movie = MovieList[ i ];
+		const PcDef *Pc = PcList[ i ];
 
-		OVR_LOG( "AddMovie: %s", movie->Name.c_str() );
+		OVR_LOG( "AddPc: %s", Pc->Name.c_str() );
 
 
 		CarouselItem *item = new CarouselItem();
-		item->Texture 		= movie->Poster;
-		item->TextureWidth 	= movie->PosterWidth;
-		item->TextureHeight	= movie->PosterHeight;
-		item->UserData 		= ( void * )movie;
-		MovieBrowserItems.push_back( item );
+		item->Texture 		= Pc->Poster;
+		item->TextureWidth 	= Pc->PosterWidth;
+		item->TextureHeight	= Pc->PosterHeight;
+		item->UserData 		= ( void * )Pc;
+		PcBrowserItems.push_back( item );
 	}
 
 	CarouselItem *addPCitem        = new CarouselItem();
@@ -825,16 +825,16 @@ void PcSelectionView::SetPcList( const std::vector<const PcDef *> &movies, const
 	addPCitem->TextureWidth     = newPCWidth;
 	addPCitem->TextureHeight    = newPCHeight;
 	addPCitem->UserData = 0;
-	MovieBrowserItems.push_back( addPCitem );
+	PcBrowserItems.push_back( addPCitem );
 
 
-	MovieBrowser->SetItems( MovieBrowserItems );
+	PcBrowser->SetItems( PcBrowserItems );
 
-	MovieTitle->SetText( "" );
-	LastMovieDisplayed = NULL;
+	PcTitle->SetText( "" );
+	LastPcDisplayed = NULL;
 
 
-	if(MoviesIndex > static_cast< int >(MovieList.size())) MoviesIndex = 0;
+	if(PcsIndex > static_cast< int >(PcList.size())) PcsIndex = 0;
 }
 
 void PcSelectionView::SetCategory( const PcCategory category )
@@ -866,38 +866,38 @@ void PcSelectionView::SetCategory( const PcCategory category )
         compRight->Reset( RightSwipes[ i ]->GetMenuObject() );
     }
 
-    SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ), NULL );
+    SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ) );
 
-    OVR_LOG( "%zu movies added", MovieList.size() );
+    OVR_LOG( "%zu Pcs added", PcList.size() );
 }
 
 void PcSelectionView::UpdatePcTitle()
 {
-    const PcDef * currentMovie = GetSelectedPc();
-    if ( LastMovieDisplayed != currentMovie )
+    const PcDef * currentPc = GetSelectedPc();
+    if ( LastPcDisplayed != currentPc )
     {
-        if ( currentMovie != NULL )
+        if ( currentPc != NULL )
         {
-            MovieTitle->SetText( currentMovie->Name.c_str() );
+            PcTitle->SetText( currentPc->Name.c_str() );
         }
         else
         {
 
-			MovieTitle->SetText( Cinema.GetCinemaStrings().title_add_pc );
+			PcTitle->SetText( Cinema.GetCinemaStrings().title_add_pc );
 		}
 
-        LastMovieDisplayed = currentMovie;
+        LastPcDisplayed = currentPc;
     }
 }
 
 void PcSelectionView::SelectionHighlighted( bool isHighlighted )
 {
-    if ( isHighlighted && !ShowTimer && !Cinema.InLobby && ( MoviesIndex == MovieBrowser->GetSelection() ) )
+    if ( isHighlighted && !ShowTimer && !Cinema.InLobby && ( PcsIndex == PcBrowser->GetSelection() ) )
     {
         // dim the poster when the resume icon is up and the poster is highlighted
         CenterPoster->SetColor( Vector4f( 0.55f, 0.55f, 0.55f, 1.0f ) );
     }
-    else if ( MovieBrowser->HasSelection() )
+    else if ( PcBrowser->HasSelection() )
     {
         CenterPoster->SetColor( Vector4f( 1.0f ) );
     }
@@ -906,7 +906,7 @@ void PcSelectionView::SelectionHighlighted( bool isHighlighted )
 void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
 {
     const double now = vrapi_GetTimeInSeconds();
-    if ( !MovieBrowser->HasSelection() )
+    if ( !PcBrowser->HasSelection() )
     {
         SelectionFader.Set( now, 0, now + 0.1, 1.0f );
         TimerStartTime = 0;
@@ -918,13 +918,13 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
     }
     else
     {
-        MovieBrowser->CheckGamepad( Cinema.GetGuiSys(), vrFrame, MovieRoot->GetMenuObject() );
+        PcBrowser->CheckGamepad( Cinema.GetGuiSys(), vrFrame, PcRoot->GetMenuObject() );
     }
 
     SelectionFrame->SetColor( Vector4f( static_cast<float>( SelectionFader.Value( now ) ) ) );
 
-	int selected = MovieBrowser->GetSelection();
-	if ( static_cast< int >(MovieList.size()) > selected && MovieList[selected]->isRunning )
+	int selected = PcBrowser->GetSelection();
+	if ( static_cast< int >(PcList.size()) > selected && PcList[selected]->isRunning )
 	{
         ResumeIcon->SetColor( Vector4f( static_cast<float>( SelectionFader.Value( now ) ) ) );
         ResumeIcon->SetTextColor( Vector4f( static_cast<float>( SelectionFader.Value( now ) ) ) );
@@ -945,7 +945,7 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
         if ( frac > 1.0f )
         {
             frac = 1.0f;
-            //Cinema.SetPlaylist( MovieList, MovieBrowser->GetSelection() );
+            //Cinema.SetPlaylist( PcList, PcBrowser->GetSelection() );
             Cinema.PlayOrResumeOrRestartApp();
         }
         Vector2f offset( 0.0f, 1.0f - static_cast<float>( frac ) );
@@ -983,7 +983,7 @@ void PcSelectionView::SetError( const char *text, bool showErrorIcon )
         PlainErrorMessage->SetTextWordWrapped( text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f );
     }
     TitleRoot->SetVisible( false );
-    MovieRoot->SetVisible( false );
+    PcRoot->SetVisible( false );
 
     CarouselSwipeHintComponent::ShowSwipeHints = false;
 }
@@ -995,7 +995,7 @@ void PcSelectionView::ClearError()
     ErrorMessage->SetVisible( false );
     PlainErrorMessage->SetVisible( false );
     TitleRoot->SetVisible( true );
-    MovieRoot->SetVisible( true );
+    PcRoot->SetVisible( true );
 	CategoryRoot->SetVisible( true );
 
     CarouselSwipeHintComponent::ShowSwipeHints = true;
@@ -1146,7 +1146,7 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
     if (Cinema.PcMgr.updated)
     {
         Cinema.PcMgr.updated = false;
-        SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ), NULL );
+        SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ) );
     }
 
     Cinema.SceneMgr.Frame( vrFrame );

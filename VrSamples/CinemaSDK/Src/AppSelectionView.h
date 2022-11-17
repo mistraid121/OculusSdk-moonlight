@@ -34,7 +34,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 namespace OculusCinema {
 
 class CinemaApp;
-class CarouselBrowserComponent;
 class MovieSelectionComponent;
 
 class AppSelectionView : public SelectionView

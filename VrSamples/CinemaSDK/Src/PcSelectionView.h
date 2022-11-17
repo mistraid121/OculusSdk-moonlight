@@ -32,8 +32,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 namespace OculusCinema {
 
 class CinemaApp;
-class CarouselBrowserComponent;
-class MovieSelectionComponent;
+
 
 class PcSelectionView : public SelectionView
 {
@@ -50,7 +49,7 @@ public:
 	virtual bool 		OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	void 				SetPcList( const std::vector<const PcDef *> &movies, const PcDef *nextMovie );
+	void 				SetPcList( const std::vector<const PcDef *> &pcs);
 
 	virtual void 				Select( void );
 	virtual void 				SelectionHighlighted( bool isHighlighted );
@@ -68,7 +67,7 @@ private:
 		float			Width;
 		float			Height;
 
-					PcCategoryButton( const PcCategory category, const std::string &text ) :
+		PcCategoryButton( const PcCategory category, const std::string &text ) :
 						Category( category ), Text( text ), Button( NULL ), Width( 0.0f ), Height( 0.0f ) {}
 	};
 
@@ -94,11 +93,11 @@ private:
 	
 	bool								ErrorMessageClicked;
 
-	OVRFW::UIContainer *						MovieRoot;
+	OVRFW::UIContainer *						PcRoot;
 	OVRFW::UIContainer *						CategoryRoot;
 	OVRFW::UIContainer *						TitleRoot;
 
-	OVRFW::UILabel	*							MovieTitle;
+	OVRFW::UILabel	*							PcTitle;
 
 	OVRFW::UIImage *							SelectionFrame;
 
@@ -124,19 +123,19 @@ private:
 
 	OVRFW::Lerp								SelectionFader;
 
-	CarouselBrowserComponent *			MovieBrowser;
-	std::vector<CarouselItem *> 				MovieBrowserItems;
-	std::vector<PanelPose>					MoviePanelPositions;
+	CarouselBrowserComponent *			PcBrowser;
+	std::vector<CarouselItem *> 				PcBrowserItems;
+	std::vector<PanelPose>					PcPanelPositions;
 
-	std::vector<CarouselItemComponent *>	 	MoviePosterComponents;
+	std::vector<CarouselItemComponent *>	 	PcPosterComponents;
 
 	std::vector<PcCategoryButton>			Categories;
 	PcCategory			 			CurrentCategory;
 	
-	std::vector<const PcDef *> 			MovieList;
-	int									MoviesIndex;
+	std::vector<const PcDef *> 			PcList;
+	int									PcsIndex;
 
-	const PcDef *					LastMovieDisplayed;
+	const PcDef *					LastPcDisplayed;
 
 	bool								RepositionScreen;
 	bool								HadSelection;
