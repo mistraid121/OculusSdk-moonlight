@@ -62,48 +62,28 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	ResumeIconTexture(),
 	ErrorIconTexture(),
 	CloseIconTexture(),
-	Menu( NULL ),
-	CenterRoot( NULL ),
-	ErrorMessage( NULL ),
-	PlainErrorMessage( NULL ),
 	ErrorMessageClicked( false ),
-	PcRoot( NULL ),
-	CategoryRoot( NULL ),
-	TitleRoot( NULL ),
-	PcTitle( NULL ),
-	SelectionFrame( NULL ),
-	CenterPoster( NULL ),
 	CenterIndex( 0 ),
 	CenterPosition(),
 	LeftSwipes(),
 	RightSwipes(),
-	ResumeIcon( NULL ),
-	CloseAppButton( NULL ),
-	TimerIcon( NULL ),
-	TimerText( NULL ),
 	TimerStartTime( 0 ),
 	TimerValue( 0 ),
 	ShowTimer( false ),
-	MoveScreenLabel( NULL ),
 	MoveScreenAlpha(),
 	SelectionFader(),
-	PcBrowser( NULL ),
 	PcPanelPositions(),
 	PcPosterComponents(),
 	Categories(),
 	CurrentCategory( CATEGORY_LIMELIGHT ),
 	PcList(),
 	PcsIndex( 0 ),
-	LastPcDisplayed( NULL ),
 	RepositionScreen( false ),
 	HadSelection( false ),
 	newPCWidth( 0 ),
 	newPCHeight( 0 ),
 	newPCTex(),
-	newPCMenu( NULL ),
 	bgTintTexture(),
-	newPCbg( Cinema.GetGuiSys() ),
-	newPCIPLabel( Cinema.GetGuiSys() ),
 	newPCIPButtons(),
 	IPoctets(),
 	currentOctet(0),
@@ -587,17 +567,18 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	newPCMenu->SetLocalPose( forward, Vector3f( 0.0f, 1.5f, -3.0f ) );
 	newPCMenu->SetVisible(false);
 
-	newPCbg.AddToMenu(  Menu, newPCMenu);
-    newPCbg.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 550, 1000 );
+	newPCbg=new UIImage( Cinema.GetGuiSys() );
+	newPCbg->AddToMenu(  Menu, newPCMenu);
+    newPCbg->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 550, 1000 );
 
 
-
-	newPCIPLabel.AddToMenu(  Menu, &newPCbg );
-	newPCIPLabel.SetLocalPosition( Vector3f( 0.0f, 0.8f, 0.1f ) );
-	newPCIPLabel.SetFontScale( 1.4f );
-	newPCIPLabel.SetText( IPString );
-	newPCIPLabel.SetTextOffset( Vector3f( 0.0f, 0.0f, 0.01f ) );
-	newPCIPLabel.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 550, 120 );
+	newPCIPLabel=new UILabel( Cinema.GetGuiSys() );
+	newPCIPLabel->AddToMenu(  Menu, newPCbg );
+	newPCIPLabel->SetLocalPosition( Vector3f( 0.0f, 0.8f, 0.1f ) );
+	newPCIPLabel->SetFontScale( 1.4f );
+	newPCIPLabel->SetText( IPString );
+	newPCIPLabel->SetTextOffset( Vector3f( 0.0f, 0.0f, 0.01f ) );
+	newPCIPLabel->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 550, 120 );
 
 	const int numButtons = 13;
 	const char* buttons[numButtons] = {"7","8","9","4","5","6","1","2","3","0",".","<","Enter"};
@@ -606,7 +587,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	for(int i = 0; i < numButtons; i++ )
 	{
 		UIButton *button = new UIButton( Cinema.GetGuiSys() );
-		button->AddToMenu( Menu, &newPCbg );
+		button->AddToMenu( Menu, newPCbg );
 		button->SetLocalPosition( Vector3f( -0.3f + (i % cols) * 0.3f, 0.45f + (i / cols) * -0.3f, 0.15f ) );
 		button->SetText( buttons[i] );
 		button->SetLocalScale( Vector3f( 1.0f ) );
@@ -691,7 +672,7 @@ void PcSelectionView::NewPCIPButtonPressed( UIButton *button)
 		if( i != currentOctet || IPoctets[i] != 0) IPString += std::to_string(IPoctets[i] );
 		if( i == currentOctet ) IPString += "_";
 	}
-	newPCIPLabel.SetText( IPString );
+	newPCIPLabel->SetText( IPString );
 
 }
 

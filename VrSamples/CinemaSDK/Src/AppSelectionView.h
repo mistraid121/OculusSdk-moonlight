@@ -151,7 +151,7 @@ private:
 	bool								HadSelection;
 	OVRFW::UIContainer *                        settingsMenu;
 	OVRFW::UITexture                            bgTintTexture;
-	OVRFW::UIImage                                newPCbg;
+	OVRFW::UIImage *                               newPCbg;
 
 	OVRFW::UIButton *                        ButtonGaze;
 	OVRFW::UIButton *                        ButtonTrackpad;

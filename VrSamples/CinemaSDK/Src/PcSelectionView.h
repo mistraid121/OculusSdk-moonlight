@@ -149,8 +149,8 @@ private:
 
 	OVRFW::UIContainer *                        newPCMenu;
 	OVRFW::UITexture                            bgTintTexture;
-	OVRFW::UIImage                                newPCbg;
-	OVRFW::UILabel                                newPCIPLabel;
+	OVRFW::UIImage *                               newPCbg;
+	OVRFW::UILabel *                               newPCIPLabel;
 	std::vector<OVRFW::UIButton*>                newPCIPButtons;
 	int                                 IPoctets[4];
 	int                                    currentOctet;

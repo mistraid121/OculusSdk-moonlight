@@ -30,22 +30,10 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 namespace OculusCinema {
 
-enum ePlaybackControlsEvent
-{
-	UI_NO_EVENT = 0,
-	UI_RW_PRESSED = 1,
-	UI_PLAY_PRESSED = 2,
-	UI_FF_PRESSED = 3,
-	UI_CAROUSEL_PRESSED = 4,
-	UI_CLOSE_UI_PRESSED = 5,
-	UI_USER_TIMEOUT = 6,
-	UI_SEEK_PRESSED = 7
-};
-
 enum AspectRatio
 {
-	DIECISEIS_NOVENOS = 0,
-	CUATRO_TERCIOS,
+	Ratio_16_9 = 0,
+	Ratio_4_3,
 };
 
 enum MouseMode
@@ -170,16 +158,16 @@ private:
 	OVRFW::UITexture				SliderPosition;
 
 	OVRFW::UIMenu *				MoveScreenMenu;
-	OVRFW::UILabel 				MoveScreenLabel;
+	OVRFW::UILabel *				MoveScreenLabel;
 	OVRFW::Lerp					MoveScreenAlpha;
 
 	OVRFW::UIMenu *				PlaybackControlsMenu;
-	OVRFW::UIContainer 			PlaybackControlsPosition;
-	OVRFW::UIContainer 			PlaybackControlsScale;
-	OVRFW::UILabel 				MovieTitleLabel;
+	OVRFW::UIContainer *			PlaybackControlsPosition;
+	OVRFW::UIContainer *			PlaybackControlsScale;
+	OVRFW::UILabel *				MovieTitleLabel;
 
 
-	OVRFW::UIImage					ControlsBackground;
+	OVRFW::UIImage	*				ControlsBackground;
 	ControlsGazeTimer *		GazeTimer;
 
 	OVRFW::UITexture                MouseTexture;
@@ -203,108 +191,108 @@ private:
 	OVRFW::UITexture                ExitPressedTexture;
 
 	OVRFW::UIContainer *			SaveMenu;
-	OVRFW::UIButton			ButtonSaveApp;
-	OVRFW::UIButton			ButtonSaveDefault;
-	OVRFW::UIButton			ButtonResetSettings;
-	OVRFW::UIButton			ButtonSaveSettings1;
-	OVRFW::UIButton			ButtonSaveSettings2;
-	OVRFW::UIButton			ButtonSaveSettings3;
-	OVRFW::UIButton			ButtonLoadSettings1;
-	OVRFW::UIButton			ButtonLoadSettings2;
-	OVRFW::UIButton			ButtonLoadSettings3;
+	OVRFW::UIButton	*		ButtonSaveApp;
+	OVRFW::UIButton	*		ButtonSaveDefault;
+	OVRFW::UIButton	*		ButtonResetSettings;
+	OVRFW::UIButton	*		ButtonSaveSettings1;
+	OVRFW::UIButton	*		ButtonSaveSettings2;
+	OVRFW::UIButton	*		ButtonSaveSettings3;
+	OVRFW::UIButton	*		ButtonLoadSettings1;
+	OVRFW::UIButton	*		ButtonLoadSettings2;
+	OVRFW::UIButton	*		ButtonLoadSettings3;
 
 	OVRFW::UITexture                ButtonTexture;
 	OVRFW::UITexture                ButtonHoverTexture;
 	OVRFW::UITexture                ButtonPressedTexture;
 
 
-	OVRFW::UIButton                MouseMenuButton;
+	OVRFW::UIButton *               MouseMenuButton;
 	OVRFW::UIContainer *           MouseMenu;
-	OVRFW::UIButton            	ButtonGaze;
-	OVRFW::UIButton            	ButtonTrackpad;
-    OVRFW::UIButton            	ButtonOff;
-	OVRFW::UILabel                 GazeScale;
-	OVRFW::UIImage                 GazeSliderBackground;
-	OVRFW::UIImage                 GazeSliderIndicator;
-	OVRFW::UILabel                 GazeCurrentSetting;
-	OVRFW::UILabel                 GazeNewSetting;
+	OVRFW::UIButton *           	ButtonGaze;
+	OVRFW::UIButton *           	ButtonTrackpad;
+    OVRFW::UIButton *           	ButtonOff;
+	OVRFW::UILabel *                GazeScale;
+	OVRFW::UIImage *                GazeSliderBackground;
+	OVRFW::UIImage *                GazeSliderIndicator;
+	OVRFW::UILabel *                GazeCurrentSetting;
+	OVRFW::UILabel *                GazeNewSetting;
 	SliderComponent         GazeSlider;
 
-	OVRFW::UILabel                 TrackpadScale;
-	OVRFW::UIImage                 TrackpadSliderBackground;
-	OVRFW::UIImage                 TrackpadSliderIndicator;
-	OVRFW::UILabel                 TrackpadCurrentSetting;
-	OVRFW::UILabel                 TrackpadNewSetting;
+	OVRFW::UILabel *                TrackpadScale;
+	OVRFW::UIImage *                TrackpadSliderBackground;
+	OVRFW::UIImage *                TrackpadSliderIndicator;
+	OVRFW::UILabel *                TrackpadCurrentSetting;
+	OVRFW::UILabel *                TrackpadNewSetting;
 	SliderComponent         TrackpadSlider;
 
 
-	OVRFW::UIButton                StreamMenuButton;
+	OVRFW::UIButton *               StreamMenuButton;
 	OVRFW::UIContainer *            StreamMenu;
-	OVRFW::UIButton            ButtonAspectRatio169;
-	OVRFW::UIButton            ButtonAspectRatio43;
-	OVRFW::UIButton            Button4k60;
-	OVRFW::UIButton            Button4k30;
-    OVRFW::UIButton            Button1080p60;
-    OVRFW::UIButton            Button1080p30;
-    OVRFW::UIButton            Button720p60;
-    OVRFW::UIButton            Button720p30;
-	OVRFW::UIButton            ButtonHostAudio;
+	OVRFW::UIButton *           ButtonAspectRatio169;
+	OVRFW::UIButton *           ButtonAspectRatio43;
+	OVRFW::UIButton *           Button4k60;
+	OVRFW::UIButton *           Button4k30;
+    OVRFW::UIButton *           Button1080p60;
+    OVRFW::UIButton *           Button1080p30;
+    OVRFW::UIButton *           Button720p60;
+    OVRFW::UIButton *           Button720p30;
+	OVRFW::UIButton *           ButtonHostAudio;
 
-	OVRFW::UIButton            ButtonApply;
+	OVRFW::UIButton *           ButtonApply;
 
-	OVRFW::UILabel             BitrateAdjust;
-	OVRFW::UIImage             BitrateSliderBackground;
-	OVRFW::UIImage             BitrateSliderIndicator;
-	OVRFW::UILabel             BitrateCurrentSetting;
-	OVRFW::UILabel             BitrateNewSetting;
+	OVRFW::UILabel *            BitrateAdjust;
+	OVRFW::UIImage *            BitrateSliderBackground;
+	OVRFW::UIImage *            BitrateSliderIndicator;
+	OVRFW::UILabel *            BitrateCurrentSetting;
+	OVRFW::UILabel *            BitrateNewSetting;
 	SliderComponent     BitrateSlider;
 
 
-	OVRFW::UIButton                ScreenMenuButton;
+	OVRFW::UIButton *               ScreenMenuButton;
 	OVRFW::UIContainer *            ScreenMenu;
-    OVRFW::UIButton            ButtonSBS;
-    OVRFW::UIButton            ButtonChangeSeat;
-	OVRFW::UILabel                    ScreenDistance;
-	OVRFW::UIImage                    DistanceSliderBackground;
-	OVRFW::UIImage                    DistanceSliderIndicator;
-	OVRFW::UILabel                 DistanceCurrentSetting;
-	OVRFW::UILabel                 DistanceNewSetting;
+    OVRFW::UIButton *           ButtonSBS;
+    OVRFW::UIButton *           ButtonChangeSeat;
+	OVRFW::UILabel *                  ScreenDistance;
+	OVRFW::UIImage *                   DistanceSliderBackground;
+	OVRFW::UIImage *                   DistanceSliderIndicator;
+	OVRFW::UILabel *                DistanceCurrentSetting;
+	OVRFW::UILabel *                DistanceNewSetting;
 	SliderComponent         DistanceSlider;
 
-	OVRFW::UILabel                    ScreenSize;
-	OVRFW::UIImage                    SizeSliderBackground;
-	OVRFW::UIImage                    SizeSliderIndicator;
-	OVRFW::UILabel                 SizeCurrentSetting;
-	OVRFW::UILabel                 SizeNewSetting;
+	OVRFW::UILabel *                   ScreenSize;
+	OVRFW::UIImage *                   SizeSliderBackground;
+	OVRFW::UIImage *                   SizeSliderIndicator;
+	OVRFW::UILabel *                SizeCurrentSetting;
+	OVRFW::UILabel *                SizeNewSetting;
 	SliderComponent         SizeSlider;
 
-	OVRFW::UIButton                HelpMenuButton;
+	OVRFW::UIButton *               HelpMenuButton;
 	OVRFW::UIContainer *            HelpMenu;
-	OVRFW::UILabel                    HelpText;
+	OVRFW::UILabel *                   HelpText;
 
-	OVRFW::UIButton                VRModeMenuButton;
+	OVRFW::UIButton *               VRModeMenuButton;
 	OVRFW::UIContainer *            VRModeMenu;
-	OVRFW::UIButton                ExitButton;
+	OVRFW::UIButton *               ExitButton;
 
-	OVRFW::UILabel                    LatencyScale;
-	OVRFW::UIImage                    LatencySliderBackground;
-	OVRFW::UIImage                    LatencySliderIndicator;
-	OVRFW::UILabel                 LatencyCurrentSetting;
-	OVRFW::UILabel                 LatencyNewSetting;
+	OVRFW::UILabel *                   LatencyScale;
+	OVRFW::UIImage *                   LatencySliderBackground;
+	OVRFW::UIImage *                   LatencySliderIndicator;
+	OVRFW::UILabel *                LatencyCurrentSetting;
+	OVRFW::UILabel *                LatencyNewSetting;
 	SliderComponent         LatencySlider;
 
-	OVRFW::UILabel                    VRXScale;
-	OVRFW::UIImage                    VRXSliderBackground;
-	OVRFW::UIImage                    VRXSliderIndicator;
-	OVRFW::UILabel                 VRXCurrentSetting;
-	OVRFW::UILabel                 VRXNewSetting;
+	OVRFW::UILabel *                   VRXScale;
+	OVRFW::UIImage *                   VRXSliderBackground;
+	OVRFW::UIImage *                   VRXSliderIndicator;
+	OVRFW::UILabel *                VRXCurrentSetting;
+	OVRFW::UILabel *                VRXNewSetting;
 	SliderComponent         VRXSlider;
 
-	OVRFW::UILabel                    VRYScale;
-	OVRFW::UIImage                    VRYSliderBackground;
-	OVRFW::UIImage                    VRYSliderIndicator;
-	OVRFW::UILabel                 VRYCurrentSetting;
-	OVRFW::UILabel                 VRYNewSetting;
+	OVRFW::UILabel *                   VRYScale;
+	OVRFW::UIImage *                   VRYSliderBackground;
+	OVRFW::UIImage *                   VRYSliderIndicator;
+	OVRFW::UILabel *                VRYCurrentSetting;
+	OVRFW::UILabel *                VRYNewSetting;
 	SliderComponent         VRYSlider;
 
 
@@ -381,9 +369,9 @@ class OldScreenPose : public std::list<OldScreenPose> {
 
 
 private:
-	void					TextButtonHelper(OVRFW::UIButton& button, float scale = 1.0f, int w = 320, int h = 120);
-	void                    SetUpSlider(OVRFW::OvrGuiSys & guiSys, OVRFW::UIObject *parent, SliderComponent& scrub, OVRFW::UIImage& bg,
-										OVRFW::UIImage& ind, OVRFW::UILabel& cur, OVRFW::UILabel& set, int slideWidth, int xoff, int yoff);
+	void					TextButtonHelper(OVRFW::UIButton* button, float scale = 1.0f, int w = 320, int h = 120);
+	void                    SetUpSlider(OVRFW::OvrGuiSys & guiSys, OVRFW::UIObject *parent, SliderComponent& scrub, OVRFW::UIImage* bg,
+										OVRFW::UIImage* ind, OVRFW::UILabel* cur, OVRFW::UILabel* set, int slideWidth, int xoff, int yoff);
 
 	void 					CreateMenu( OVRFW::OvrGuiSys & guiSys );
 

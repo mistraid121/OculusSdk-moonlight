@@ -50,99 +50,14 @@ MoviePlayerView::MoviePlayerView( CinemaApp &cinema ) :
 	SliderBackgroundTexture(),
 	SliderProgressTexture(),
 	SliderPosition(),
-	MoveScreenMenu( NULL ),
-	MoveScreenLabel( Cinema.GetGuiSys() ),
 	MoveScreenAlpha(),
-	PlaybackControlsMenu( NULL ),
-	PlaybackControlsPosition( Cinema.GetGuiSys() ),
-	PlaybackControlsScale( Cinema.GetGuiSys() ),
-	MovieTitleLabel( Cinema.GetGuiSys() ),
-	ControlsBackground( Cinema.GetGuiSys() ),
-	GazeTimer( nullptr ),
-	SaveMenu( NULL ),
-	ButtonSaveApp( Cinema.GetGuiSys()),
-	ButtonSaveDefault( Cinema.GetGuiSys() ),
-	ButtonResetSettings( Cinema.GetGuiSys() ),
-	ButtonSaveSettings1( Cinema.GetGuiSys() ),
-	ButtonSaveSettings2( Cinema.GetGuiSys() ),
-	ButtonSaveSettings3( Cinema.GetGuiSys() ),
-	ButtonLoadSettings1( Cinema.GetGuiSys() ),
-	ButtonLoadSettings2( Cinema.GetGuiSys() ),
-	ButtonLoadSettings3( Cinema.GetGuiSys() ),
-	MouseMenuButton( Cinema.GetGuiSys() ),
-	MouseMenu( NULL ),
-	ButtonGaze( Cinema.GetGuiSys()  ),
-	ButtonTrackpad( Cinema.GetGuiSys() ),
-	ButtonOff( Cinema.GetGuiSys() ),
-    GazeScale( Cinema.GetGuiSys() ),
-    GazeSliderBackground( Cinema.GetGuiSys()  ),
-    GazeSliderIndicator( Cinema.GetGuiSys() ),
-    GazeCurrentSetting( Cinema.GetGuiSys() ),
-    GazeNewSetting( Cinema.GetGuiSys() ),
     GazeSlider(),
-    TrackpadScale( Cinema.GetGuiSys() ),
-    TrackpadSliderBackground( Cinema.GetGuiSys() ),
-    TrackpadSliderIndicator( Cinema.GetGuiSys() ),
-    TrackpadCurrentSetting( Cinema.GetGuiSys() ),
-    TrackpadNewSetting( Cinema.GetGuiSys() ),
     TrackpadSlider(),
-    StreamMenuButton( Cinema.GetGuiSys()  ),
-	StreamMenu( NULL ),
-	ButtonAspectRatio169( Cinema.GetGuiSys()  ),
-	ButtonAspectRatio43( Cinema.GetGuiSys()  ),
-    Button4k60( Cinema.GetGuiSys()  ),
-    Button4k30( Cinema.GetGuiSys()  ),
-	Button1080p60( Cinema.GetGuiSys()  ),
-	Button1080p30( Cinema.GetGuiSys()  ),
-	Button720p60( Cinema.GetGuiSys()  ),
-	Button720p30( Cinema.GetGuiSys() ),
-	ButtonHostAudio( Cinema.GetGuiSys()  ),
-	ButtonApply( Cinema.GetGuiSys()  ),
-	BitrateAdjust( Cinema.GetGuiSys()  ),
-	BitrateSliderBackground( Cinema.GetGuiSys()   ),
-	BitrateSliderIndicator( Cinema.GetGuiSys()  ),
-	BitrateCurrentSetting( Cinema.GetGuiSys()  ),
-	BitrateNewSetting( Cinema.GetGuiSys()  ),
 	BitrateSlider( ),
-	ScreenMenuButton( Cinema.GetGuiSys()  ),
-	ScreenMenu( NULL ),
-	ButtonSBS( Cinema.GetGuiSys()  ),
-	ButtonChangeSeat( Cinema.GetGuiSys()  ),
-    ScreenDistance( Cinema.GetGuiSys() ),
-    DistanceSliderBackground( Cinema.GetGuiSys() ),
-    DistanceSliderIndicator( Cinema.GetGuiSys() ),
-    DistanceCurrentSetting( Cinema.GetGuiSys() ),
-    DistanceNewSetting( Cinema.GetGuiSys() ),
     DistanceSlider(),
-    ScreenSize( Cinema.GetGuiSys() ),
-    SizeSliderBackground( Cinema.GetGuiSys() ),
-    SizeSliderIndicator( Cinema.GetGuiSys() ),
-    SizeCurrentSetting( Cinema.GetGuiSys() ),
-    SizeNewSetting( Cinema.GetGuiSys() ),
     SizeSlider(),
-	HelpMenuButton( Cinema.GetGuiSys()),
-	HelpMenu( NULL ),
-	HelpText( Cinema.GetGuiSys() ),
-	VRModeMenuButton( Cinema.GetGuiSys()),
-	VRModeMenu( NULL ),
-	ExitButton( Cinema.GetGuiSys() ),
-	LatencyScale( Cinema.GetGuiSys()),
-	LatencySliderBackground( Cinema.GetGuiSys() ),
-	LatencySliderIndicator( Cinema.GetGuiSys()),
-	LatencyCurrentSetting( Cinema.GetGuiSys()),
-	LatencyNewSetting( Cinema.GetGuiSys()),
 	LatencySlider(),
-	VRXScale( Cinema.GetGuiSys() ),
-	VRXSliderBackground( Cinema.GetGuiSys() ),
-	VRXSliderIndicator( Cinema.GetGuiSys() ),
-	VRXCurrentSetting( Cinema.GetGuiSys() ),
-	VRXNewSetting( Cinema.GetGuiSys()),
 	VRXSlider(),
-	VRYScale( Cinema.GetGuiSys()),
-	VRYSliderBackground( Cinema.GetGuiSys() ),
-	VRYSliderIndicator( Cinema.GetGuiSys() ),
-	VRYCurrentSetting( Cinema.GetGuiSys() ),
-	VRYNewSetting( Cinema.GetGuiSys() ),
 	VRYSlider(),
 	settingsVersion(1.0f),
 	defaultSettingsPath(""),
@@ -150,11 +65,6 @@ MoviePlayerView::MoviePlayerView( CinemaApp &cinema ) :
 	settings2Path(""),
 	settings3Path(""),
 	appSettingsPath(""),
-	defaultSettings( NULL ),
-	settings1( NULL ),
-	settings2( NULL ),
-	settings3( NULL ),
-	appSettings( NULL ),
 	BackgroundClicked( false ),
 	UIOpened( false ),
 	allowDrag(false),
@@ -168,7 +78,7 @@ MoviePlayerView::MoviePlayerView( CinemaApp &cinema ) :
     mouseMode(MOUSE_GAZE),
     gazeScaleValue(1.05),
     trackpadScaleValue(2.0),
-	streamAspectRatio(DIECISEIS_NOVENOS),
+	streamAspectRatio(Ratio_16_9),
     streamWidth(1280),
     streamHeight(720),
     streamFPS(60),
@@ -290,55 +200,55 @@ void VRXCallback                    ( SliderComponent *button, void *object, con
 void VRYCallback                    ( SliderComponent *button, void *object, const float value ) { ( ( MoviePlayerView * )object )->VRYPressed( value ); }
 
 
-void MoviePlayerView::TextButtonHelper(UIButton& button, float scale, int w, int h)
+void MoviePlayerView::TextButtonHelper(UIButton* button, float scale, int w, int h)
 {
-	button.SetLocalScale( Vector3f( scale ) );
-	//button.SET SetFontScale( 1.0f );
-	button.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	//button.SetSetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	//button.GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-	button.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, w, h );
-	button.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	button->SetLocalScale( Vector3f( scale ) );
+	//button->SET SetFontScale( 1.0f );
+	button->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	//button->SetSetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	//button->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+	button->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, w, h );
+	button->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 
 }
 
 
-void MoviePlayerView::SetUpSlider(OvrGuiSys & guiSys, UIObject *parent, SliderComponent& scrub, UIImage& bg, UIImage& ind, UILabel& cur, UILabel& set, int slideWidth, int xoff, int yoff)
+void MoviePlayerView::SetUpSlider(OvrGuiSys & guiSys, UIObject *parent, SliderComponent& scrub, UIImage* bg, UIImage* ind, UILabel* cur, UILabel* set, int slideWidth, int xoff, int yoff)
 {
-	bg.AddToMenu( PlaybackControlsMenu, parent );
-	bg.SetLocalPosition( PixelPos( xoff, yoff, 2 ) );
-	bg.SetColor( Vector4f( 0.5333f, 0.5333f, 0.5333f, 1.0f ) );
-	bg.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderBackgroundTexture, slideWidth + 6, 46 );
-	bg.AddComponent( &scrub );
+	bg->AddToMenu( PlaybackControlsMenu, parent );
+	bg->SetLocalPosition( PixelPos( xoff, yoff, 2 ) );
+	bg->SetColor( Vector4f( 0.5333f, 0.5333f, 0.5333f, 1.0f ) );
+	bg->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderBackgroundTexture, slideWidth + 6, 46 );
+	bg->AddComponent( &scrub );
 
-	ind.AddToMenu(  PlaybackControlsMenu, &bg );
-	ind.SetLocalPosition( PixelPos( 0, 0, 1 ) );
-	ind.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderProgressTexture, slideWidth, 40 );
-	ind.GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+	ind->AddToMenu(  PlaybackControlsMenu, bg );
+	ind->SetLocalPosition( PixelPos( 0, 0, 1 ) );
+	ind->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderProgressTexture, slideWidth, 40 );
+	ind->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
 
-	cur.AddToMenu( PlaybackControlsMenu, &bg );
-	cur.SetLocalPosition( PixelPos( 0, 52, 2 ) );
-	cur.SetLocalScale( Vector3f( 1.0f ) );
-	cur.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderPosition );
-	cur.SetText( "1.0" );
-	cur.SetTextOffset( PixelPos( 0, 6, 1 ) );
-	cur.SetFontScale( 0.71f );
-	cur.SetColor( Vector4f( 0 / 255.0f, 93 / 255.0f, 219 / 255.0f, 1.0f ) );
-	cur.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	cur.GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+	cur->AddToMenu( PlaybackControlsMenu, bg );
+	cur->SetLocalPosition( PixelPos( 0, 52, 2 ) );
+	cur->SetLocalScale( Vector3f( 1.0f ) );
+	cur->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderPosition );
+	cur->SetText( "1.0" );
+	cur->SetTextOffset( PixelPos( 0, 6, 1 ) );
+	cur->SetFontScale( 0.71f );
+	cur->SetColor( Vector4f( 0 / 255.0f, 93 / 255.0f, 219 / 255.0f, 1.0f ) );
+	cur->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	cur->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
 
-	set.AddToMenu(  PlaybackControlsMenu, &bg );
-	set.SetLocalPosition( PixelPos( 0, 52, 4 ) );
-	set.SetLocalScale( Vector3f( 1.0f ) );
-	set.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderPosition );
-	set.SetText( "1.0" );
-	set.SetTextOffset( PixelPos( 0, 6, 1 ) );
-	set.SetFontScale( 0.71f );
-	set.SetColor( Vector4f( 47.0f / 255.0f, 70 / 255.0f, 89 / 255.0f, 1.0f ) );
-	set.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	set.GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+	set->AddToMenu(  PlaybackControlsMenu, bg );
+	set->SetLocalPosition( PixelPos( 0, 52, 4 ) );
+	set->SetLocalScale( Vector3f( 1.0f ) );
+	set->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, SliderPosition );
+	set->SetText( "1.0" );
+	set->SetTextOffset( PixelPos( 0, 6, 1 ) );
+	set->SetFontScale( 0.71f );
+	set->SetColor( Vector4f( 47.0f / 255.0f, 70 / 255.0f, 89 / 255.0f, 1.0f ) );
+	set->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	set->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
 
-	scrub.SetWidgets( &bg, &ind, &cur, &set, slideWidth );
+	scrub.SetWidgets( bg, ind, cur, set, slideWidth );
 
 }
 
@@ -481,13 +391,14 @@ void MoviePlayerView::CreateMenu( OvrGuiSys & guiSys )
 	MoveScreenMenu->Create( "MoviePlayerMenu" );
 	MoveScreenMenu->SetFlags( VRMenuFlags_t( VRMENU_FLAG_TRACK_GAZE ) | VRMenuFlags_t( VRMENU_FLAG_BACK_KEY_DOESNT_EXIT ) );
 
-	MoveScreenLabel.AddToMenu( MoveScreenMenu, NULL );
-    MoveScreenLabel.SetLocalPose( Quatf( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f ), Vector3f( 0.0f, 0.0f, -1.8f ) );
-    MoveScreenLabel.GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-    MoveScreenLabel.SetFontScale( 0.5f );
-    MoveScreenLabel.SetText( Cinema.GetCinemaStrings().MoviePlayer_Reorient );
-    MoveScreenLabel.SetTextOffset( Vector3f( 0.0f, -24 * VRMenuObject::DEFAULT_TEXEL_SCALE, 0.0f ) );  // offset to be below gaze cursor
-    MoveScreenLabel.SetVisible( false );
+	MoveScreenLabel=new UILabel( Cinema.GetGuiSys() );
+	MoveScreenLabel->AddToMenu( MoveScreenMenu, NULL );
+    MoveScreenLabel->SetLocalPose( Quatf( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f ), Vector3f( 0.0f, 0.0f, -1.8f ) );
+    MoveScreenLabel->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
+    MoveScreenLabel->SetFontScale( 0.5f );
+    MoveScreenLabel->SetText( Cinema.GetCinemaStrings().MoviePlayer_Reorient );
+    MoveScreenLabel->SetTextOffset( Vector3f( 0.0f, -24 * VRMenuObject::DEFAULT_TEXEL_SCALE, 0.0f ) );  // offset to be below gaze cursor
+    MoveScreenLabel->SetVisible( false );
 
     // ==============================================================================
     //
@@ -497,90 +408,95 @@ void MoviePlayerView::CreateMenu( OvrGuiSys & guiSys )
     PlaybackControlsMenu->Create( "PlaybackControlsMenu" );
     PlaybackControlsMenu->SetFlags( VRMenuFlags_t( VRMENU_FLAG_BACK_KEY_DOESNT_EXIT ) );
 
-    PlaybackControlsPosition.AddToMenu( PlaybackControlsMenu );
-    PlaybackControlsScale.AddToMenu( PlaybackControlsMenu, &PlaybackControlsPosition );
-    PlaybackControlsScale.SetLocalPosition( Vector3f( 0.0f, 0.0f, 0.01f ) );
-    PlaybackControlsScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1080, 1080 );
+	PlaybackControlsPosition=new UIContainer( Cinema.GetGuiSys() );
+    PlaybackControlsPosition->AddToMenu( PlaybackControlsMenu );
+	PlaybackControlsScale=new UIContainer( Cinema.GetGuiSys() );
+    PlaybackControlsScale->AddToMenu( PlaybackControlsMenu, PlaybackControlsPosition );
+    PlaybackControlsScale->SetLocalPosition( Vector3f( 0.0f, 0.0f, 0.01f ) );
+    PlaybackControlsScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1080, 1080 );
 
 	// ==============================================================================
     //
     // movie title
     //
-    MovieTitleLabel.AddToMenu( PlaybackControlsMenu, &PlaybackControlsScale );
-    MovieTitleLabel.SetLocalPosition( PixelPos( 0, 266, 0 ) );
-    MovieTitleLabel.SetFontScale( 1.4f );
-    MovieTitleLabel.SetText( "" );
-    MovieTitleLabel.SetTextOffset( Vector3f( 0.0f, 0.0f, 0.01f ) );
-    MovieTitleLabel.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 320, 120 );
+	MovieTitleLabel=new UILabel( Cinema.GetGuiSys() );
+    MovieTitleLabel->AddToMenu( PlaybackControlsMenu, PlaybackControlsScale );
+    MovieTitleLabel->SetLocalPosition( PixelPos( 0, 266, 0 ) );
+    MovieTitleLabel->SetFontScale( 1.4f );
+    MovieTitleLabel->SetText( "" );
+    MovieTitleLabel->SetTextOffset( Vector3f( 0.0f, 0.0f, 0.01f ) );
+    MovieTitleLabel->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 320, 120 );
 
     // ==============================================================================
     //
     // controls
     //
-    ControlsBackground.AddToMenu( PlaybackControlsMenu, &PlaybackControlsScale );
-	ControlsBackground.AddFlags( VRMENUOBJECT_RENDER_HIERARCHY_ORDER );
+	ControlsBackground=new UIImage( Cinema.GetGuiSys() );
+    ControlsBackground->AddToMenu( PlaybackControlsMenu, PlaybackControlsScale );
+	ControlsBackground->AddFlags( VRMENUOBJECT_RENDER_HIERARCHY_ORDER );
 
-	ControlsBackground.SetLocalPosition( PixelPos( 220, 500, 0 ) );
+	ControlsBackground->SetLocalPosition( PixelPos( 220, 500, 0 ) );
 
-	ControlsBackground.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 168 );
-    ControlsBackground.AddComponent( GazeTimer = new ControlsGazeTimer() );
+	ControlsBackground->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 168 );
+    ControlsBackground->AddComponent( GazeTimer = new ControlsGazeTimer() );
 
-	MouseMenuButton.AddToMenu(  PlaybackControlsMenu, &ControlsBackground );
+	MouseMenuButton=new UIButton( Cinema.GetGuiSys() );
+	MouseMenuButton->AddToMenu(  PlaybackControlsMenu, ControlsBackground );
+	MouseMenuButton->SetLocalScale( Vector3f( 2.0f ) );
+	MouseMenuButton->SetButtonImages( MouseTexture, MouseHoverTexture, MousePressedTexture );
+	MouseMenuButton->SetOnClick( MouseMenuButtonCallback, this );
+	MouseMenuButton->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 
-	MouseMenuButton.SetLocalScale( Vector3f( 2.0f ) );
-	MouseMenuButton.SetButtonImages( MouseTexture, MouseHoverTexture, MousePressedTexture );
-	MouseMenuButton.SetOnClick( MouseMenuButtonCallback, this );
-	MouseMenuButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	StreamMenuButton=new UIButton( Cinema.GetGuiSys()  );
+	StreamMenuButton->AddToMenu(  PlaybackControlsMenu, ControlsBackground );
+	StreamMenuButton->SetLocalScale( Vector3f( 2.0f ) );
+	StreamMenuButton->SetButtonImages( StreamTexture, StreamHoverTexture, StreamPressedTexture );
+	StreamMenuButton->SetOnClick( StreamMenuButtonCallback, this );
+	StreamMenuButton->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 
-	StreamMenuButton.AddToMenu(  PlaybackControlsMenu, &ControlsBackground );
+	ScreenMenuButton=new UIButton( Cinema.GetGuiSys()  );
+	ScreenMenuButton->AddToMenu(  PlaybackControlsMenu, ControlsBackground );
+	ScreenMenuButton->SetLocalScale( Vector3f( 2.0f ) );
+	ScreenMenuButton->SetButtonImages( ScreenTexture, ScreenHoverTexture, ScreenPressedTexture );
+	ScreenMenuButton->SetOnClick( ScreenMenuButtonCallback, this );
+	ScreenMenuButton->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 
-	StreamMenuButton.SetLocalScale( Vector3f( 2.0f ) );
-	StreamMenuButton.SetButtonImages( StreamTexture, StreamHoverTexture, StreamPressedTexture );
-	StreamMenuButton.SetOnClick( StreamMenuButtonCallback, this );
-	StreamMenuButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
-
-	ScreenMenuButton.AddToMenu(  PlaybackControlsMenu, &ControlsBackground );
-
-	ScreenMenuButton.SetLocalScale( Vector3f( 2.0f ) );
-	ScreenMenuButton.SetButtonImages( ScreenTexture, ScreenHoverTexture, ScreenPressedTexture );
-	ScreenMenuButton.SetOnClick( ScreenMenuButtonCallback, this );
-	ScreenMenuButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
-
-	/*VRModeMenuButton.AddToMenu( PlaybackControlsMenu, &ControlsBackground );
+	/*VRModeMenuButton.AddToMenu( PlaybackControlsMenu, ControlsBackground );
 	VRModeMenuButton.SetLocalScale( Vector3f( 2.0f ) );
 	VRModeMenuButton.SetButtonImages( VRModeTexture, VRModeHoverTexture, VRModePressedTexture );
 	VRModeMenuButton.SetOnClick( VRModeMenuButtonCallback, this );
 	VRModeMenuButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
-	HelpMenuButton.AddToMenu( PlaybackControlsMenu, &ControlsBackground );
+	HelpMenuButton.AddToMenu( PlaybackControlsMenu, ControlsBackground );
 	HelpMenuButton.SetLocalScale( Vector3f( 2.0f ) );
 	HelpMenuButton.SetButtonImages( HelpTexture, HelpTexture, HelpTexture );
 	HelpMenuButton.SetOnClick( HelpMenuButtonCallback, this );
 	HelpMenuButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 */
 
-	ExitButton.AddToMenu( PlaybackControlsMenu, &ControlsBackground );
-	ExitButton.SetLocalScale( Vector3f( 2.0f ) );
-	ExitButton.SetButtonImages( ExitTexture, ExitHoverTexture, ExitPressedTexture );
-	ExitButton.SetOnClick( ExitButtonCallback, this );
-	ExitButton.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	ExitButton=new UIButton( Cinema.GetGuiSys() );
+	ExitButton->AddToMenu( PlaybackControlsMenu, ControlsBackground );
+	ExitButton->SetLocalScale( Vector3f( 2.0f ) );
+	ExitButton->SetButtonImages( ExitTexture, ExitHoverTexture, ExitPressedTexture );
+	ExitButton->SetOnClick( ExitButtonCallback, this );
+	ExitButton->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
 
 	static const int MenuButtonsWidth = 1100;
 	static const int MenuButtonsCount = 6;
 	static const int MenuButtonsStep = MenuButtonsWidth / ( MenuButtonsCount - 1 );
 	int menuButtonPos = 0 - MenuButtonsWidth / 2;
 
-	MouseMenuButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
+	MouseMenuButton->SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 	menuButtonPos += MenuButtonsStep;
-	StreamMenuButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
+	StreamMenuButton->SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 	menuButtonPos += MenuButtonsStep;
-	ScreenMenuButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
+	ScreenMenuButton->SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 	menuButtonPos += MenuButtonsStep;
 	/*VRModeMenuButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 	menuButtonPos += MenuButtonsStep;
 	HelpMenuButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 	menuButtonPos += MenuButtonsStep;
 	 */
-	ExitButton.SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
+	ExitButton->SetLocalPosition( PixelPos( menuButtonPos, 0, 1 ) );
 
 
 	const static int MENU_X = 200;
@@ -593,322 +509,386 @@ void MoviePlayerView::CreateMenu( OvrGuiSys & guiSys )
 
 
 	SaveMenu = new UIContainer( Cinema.GetGuiSys() );
-	SaveMenu->AddToMenu(  PlaybackControlsMenu, &PlaybackControlsScale );
+	SaveMenu->AddToMenu(  PlaybackControlsMenu, PlaybackControlsScale );
 	SaveMenu->SetLocalPosition( PixelPos( 0, -450, 1 ) );
 	SaveMenu->SetVisible(false);
 
-	ButtonSaveApp.AddToMenu( PlaybackControlsMenu, SaveMenu );
-	ButtonSaveApp.SetLocalPosition( PixelPos( 660, MENU_DIST_3_ROW, 1 ) );
-	ButtonSaveApp.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp.c_str()  );
-	ButtonSaveApp.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSaveApp=new UIButton( Cinema.GetGuiSys());
+	ButtonSaveApp->AddToMenu( PlaybackControlsMenu, SaveMenu );
+	ButtonSaveApp->SetLocalPosition( PixelPos( 660, MENU_DIST_3_ROW, 1 ) );
+	ButtonSaveApp->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveApp.c_str()  );
+	ButtonSaveApp->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveApp, 0.5f);
-	ButtonSaveApp.SetOnClick( SaveAppCallback, this);
+	ButtonSaveApp->SetOnClick( SaveAppCallback, this);
 
-	ButtonSaveDefault.AddToMenu(  PlaybackControlsMenu, SaveMenu );
-	ButtonSaveDefault.SetLocalPosition( PixelPos( 660, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveDefault.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault.c_str()  );
-	ButtonSaveDefault.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSaveDefault=new UIButton( Cinema.GetGuiSys() );
+	ButtonSaveDefault->AddToMenu(  PlaybackControlsMenu, SaveMenu );
+	ButtonSaveDefault->SetLocalPosition( PixelPos( 660, MENU_DIST_2_ROW, 1 ) );
+	ButtonSaveDefault->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveDefault.c_str()  );
+	ButtonSaveDefault->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveDefault, 0.5f);
-	ButtonSaveDefault.SetOnClick( SaveDefaultCallback, this);
+	ButtonSaveDefault->SetOnClick( SaveDefaultCallback, this);
 
-	ButtonResetSettings.AddToMenu(  PlaybackControlsMenu, SaveMenu );
-	ButtonResetSettings.SetLocalPosition( PixelPos( 660, MENU_DIST_1_ROW, 1 ) );
-	ButtonResetSettings.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonResetSettings.c_str()  );
-	ButtonResetSettings.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonResetSettings=new UIButton( Cinema.GetGuiSys() );
+	ButtonResetSettings->AddToMenu(  PlaybackControlsMenu, SaveMenu );
+	ButtonResetSettings->SetLocalPosition( PixelPos( 660, MENU_DIST_1_ROW, 1 ) );
+	ButtonResetSettings->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonResetSettings.c_str()  );
+	ButtonResetSettings->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonResetSettings, 0.5f);
-	ButtonResetSettings.SetOnClick( ResetDefaultCallback, this);
+	ButtonResetSettings->SetOnClick( ResetDefaultCallback, this);
 
-	ButtonSaveSettings1.AddToMenu( PlaybackControlsMenu, SaveMenu );
-	ButtonSaveSettings1.SetLocalPosition( PixelPos( 0, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings1.c_str()  );
-	ButtonSaveSettings1.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSaveSettings1=new UIButton( Cinema.GetGuiSys() );
+	ButtonSaveSettings1->AddToMenu( PlaybackControlsMenu, SaveMenu );
+	ButtonSaveSettings1->SetLocalPosition( PixelPos( 0, MENU_DIST_2_ROW, 1 ) );
+	ButtonSaveSettings1->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings1.c_str()  );
+	ButtonSaveSettings1->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings1, 0.5f);
-	ButtonSaveSettings1.SetOnClick( Save1Callback, this);
+	ButtonSaveSettings1->SetOnClick( Save1Callback, this);
 
-	ButtonSaveSettings2.AddToMenu( PlaybackControlsMenu, SaveMenu );
-	ButtonSaveSettings2.SetLocalPosition( PixelPos( 220, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings2.c_str()  );
-	ButtonSaveSettings2.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSaveSettings2=new UIButton( Cinema.GetGuiSys() );
+	ButtonSaveSettings2->AddToMenu( PlaybackControlsMenu, SaveMenu );
+	ButtonSaveSettings2->SetLocalPosition( PixelPos( 220, MENU_DIST_2_ROW, 1 ) );
+	ButtonSaveSettings2->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings2.c_str()  );
+	ButtonSaveSettings2->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings2, 0.5f);
-	ButtonSaveSettings2.SetOnClick( Save2Callback, this);
+	ButtonSaveSettings2->SetOnClick( Save2Callback, this);
 
-	ButtonSaveSettings3.AddToMenu( PlaybackControlsMenu, SaveMenu );
-	ButtonSaveSettings3.SetLocalPosition( PixelPos( 440, MENU_DIST_2_ROW, 1 ) );
-	ButtonSaveSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings3.c_str()  );
-	ButtonSaveSettings3.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSaveSettings3=new UIButton( Cinema.GetGuiSys() );
+	ButtonSaveSettings3->AddToMenu( PlaybackControlsMenu, SaveMenu );
+	ButtonSaveSettings3->SetLocalPosition( PixelPos( 440, MENU_DIST_2_ROW, 1 ) );
+	ButtonSaveSettings3->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSaveSettings3.c_str()  );
+	ButtonSaveSettings3->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonSaveSettings3, 0.5f);
-	ButtonSaveSettings3.SetOnClick( Save3Callback, this);
+	ButtonSaveSettings3->SetOnClick( Save3Callback, this);
 
-	ButtonLoadSettings1.AddToMenu(  PlaybackControlsMenu, SaveMenu );
-	ButtonLoadSettings1.SetLocalPosition( PixelPos( 0, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings1.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings1.c_str()  );
-	ButtonLoadSettings1.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonLoadSettings1=new UIButton( Cinema.GetGuiSys() );
+	ButtonLoadSettings1->AddToMenu(  PlaybackControlsMenu, SaveMenu );
+	ButtonLoadSettings1->SetLocalPosition( PixelPos( 0, MENU_DIST_1_ROW, 1 ) );
+	ButtonLoadSettings1->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings1.c_str()  );
+	ButtonLoadSettings1->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings1, 0.5f);
-	ButtonLoadSettings1.SetOnClick( Load1Callback, this);
+	ButtonLoadSettings1->SetOnClick( Load1Callback, this);
 
-	ButtonLoadSettings2.AddToMenu(  PlaybackControlsMenu, SaveMenu );
-	ButtonLoadSettings2.SetLocalPosition( PixelPos( 220, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings2.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings2.c_str() );
-	ButtonLoadSettings2.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonLoadSettings2=new UIButton( Cinema.GetGuiSys() );
+	ButtonLoadSettings2->AddToMenu(  PlaybackControlsMenu, SaveMenu );
+	ButtonLoadSettings2->SetLocalPosition( PixelPos( 220, MENU_DIST_1_ROW, 1 ) );
+	ButtonLoadSettings2->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings2.c_str() );
+	ButtonLoadSettings2->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings2, 0.5f);
-	ButtonLoadSettings2.SetOnClick( Load2Callback, this);
+	ButtonLoadSettings2->SetOnClick( Load2Callback, this);
 
-	ButtonLoadSettings3.AddToMenu(  PlaybackControlsMenu, SaveMenu );
-	ButtonLoadSettings3.SetLocalPosition( PixelPos( 440, MENU_DIST_1_ROW, 1 ) );
-	ButtonLoadSettings3.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings3.c_str() );
-	ButtonLoadSettings3.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonLoadSettings3=new UIButton( Cinema.GetGuiSys() );
+	ButtonLoadSettings3->AddToMenu(  PlaybackControlsMenu, SaveMenu );
+	ButtonLoadSettings3->SetLocalPosition( PixelPos( 440, MENU_DIST_1_ROW, 1 ) );
+	ButtonLoadSettings3->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonLoadSettings3.c_str() );
+	ButtonLoadSettings3->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 	TextButtonHelper(ButtonLoadSettings3, 0.5f);
-	ButtonLoadSettings3.SetOnClick( Load3Callback, this);
+	ButtonLoadSettings3->SetOnClick( Load3Callback, this);
 
 
 	MouseMenu = new UIContainer( Cinema.GetGuiSys() );
-	MouseMenu->AddToMenu(  PlaybackControlsMenu, &PlaybackControlsScale );
+	MouseMenu->AddToMenu(  PlaybackControlsMenu, PlaybackControlsScale );
 	MouseMenu->SetLocalPosition( PixelPos( 0, MENU_TOP, 1 ) );
 	MouseMenu->SetVisible(false);
 
-	ButtonGaze.AddToMenu(  PlaybackControlsMenu, MouseMenu );
-	ButtonGaze.SetLocalPosition( PixelPos( MENU_X * -1.8, MENU_Y * 1, 1 ) );
-	ButtonGaze.SetText(  Cinema.GetCinemaStrings().ButtonText_ButtonGaze.c_str());
+
+	ButtonGaze=new UIButton( Cinema.GetGuiSys()  );
+	ButtonGaze->AddToMenu(  PlaybackControlsMenu, MouseMenu );
+	ButtonGaze->SetLocalPosition( PixelPos( MENU_X * -1.8, MENU_Y * 1, 1 ) );
+	ButtonGaze->SetText(  Cinema.GetCinemaStrings().ButtonText_ButtonGaze.c_str());
 	TextButtonHelper(ButtonGaze);
-	ButtonGaze.SetOnClick( GazeCallback, this);
-    ButtonGaze.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-    ButtonGaze.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonGaze->SetOnClick( GazeCallback, this);
+    ButtonGaze->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+    ButtonGaze->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-
-	ButtonTrackpad.AddToMenu(  PlaybackControlsMenu, MouseMenu );
-	ButtonTrackpad.SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
-	ButtonTrackpad.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad.c_str() );
+	ButtonTrackpad=new UIButton (Cinema.GetGuiSys() );
+	ButtonTrackpad->AddToMenu(  PlaybackControlsMenu, MouseMenu );
+	ButtonTrackpad->SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
+	ButtonTrackpad->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonTrackpad.c_str() );
 	TextButtonHelper(ButtonTrackpad);
-	ButtonTrackpad.SetOnClick( TrackpadCallback, this);
-    ButtonTrackpad.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	ButtonTrackpad.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonTrackpad->SetOnClick( TrackpadCallback, this);
+    ButtonTrackpad->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonTrackpad->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-    ButtonOff.AddToMenu(  PlaybackControlsMenu, MouseMenu );
-	ButtonOff.SetLocalPosition( PixelPos( MENU_X * 1.8, MENU_Y * 1, 1 ) );
-	ButtonOff.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff.c_str()  );
+	ButtonOff=new UIButton( Cinema.GetGuiSys() );
+    ButtonOff->AddToMenu(  PlaybackControlsMenu, MouseMenu );
+	ButtonOff->SetLocalPosition( PixelPos( MENU_X * 1.8, MENU_Y * 1, 1 ) );
+	ButtonOff->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonOff.c_str()  );
 	TextButtonHelper(ButtonOff);
-	ButtonOff.SetOnClick( OffCallback, this);
-    ButtonOff.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	ButtonOff.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonOff->SetOnClick( OffCallback, this);
+    ButtonOff->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonOff->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	GazeScale.AddToMenu( PlaybackControlsMenu, MouseMenu );
-	GazeScale.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
-    GazeScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelGazeScale.c_str()  );
+	GazeScale=new UILabel( Cinema.GetGuiSys() );
+	GazeScale->AddToMenu( PlaybackControlsMenu, MouseMenu );
+	GazeScale->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
+    GazeScale->SetText( Cinema.GetCinemaStrings().ButtonText_LabelGazeScale.c_str()  );
 
 
-	GazeScale.SetLocalScale( Vector3f( 1.0f ) );
-	GazeScale.SetFontScale( 1.0f );
-	GazeScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	GazeScale.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	GazeScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	GazeScale->SetLocalScale( Vector3f( 1.0f ) );
+	GazeScale->SetFontScale( 1.0f );
+	GazeScale->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	GazeScale->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	GazeScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	GazeSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	GazeSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	GazeCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	GazeNewSetting=new UILabel( Cinema.GetGuiSys() );
 	SetUpSlider(guiSys, MouseMenu, GazeSlider, GazeSliderBackground, GazeSliderIndicator, GazeCurrentSetting, GazeNewSetting, 300, MENU_X * -1, MENU_Y * 3);
 	GazeSlider.SetOnClick( GazeScaleCallback, this );
 
-
-	TrackpadScale.AddToMenu(  PlaybackControlsMenu, MouseMenu );
-	TrackpadScale.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
-    TrackpadScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelTrackpadScale.c_str()  );
-	TrackpadScale.SetLocalScale( Vector3f( 1.0f ) );
-	TrackpadScale.SetFontScale( 1.0f );
-	TrackpadScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	TrackpadScale.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	TrackpadScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	TrackpadScale=new UILabel( Cinema.GetGuiSys() );
+	TrackpadScale->AddToMenu(  PlaybackControlsMenu, MouseMenu );
+	TrackpadScale->SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
+    TrackpadScale->SetText( Cinema.GetCinemaStrings().ButtonText_LabelTrackpadScale.c_str()  );
+	TrackpadScale->SetLocalScale( Vector3f( 1.0f ) );
+	TrackpadScale->SetFontScale( 1.0f );
+	TrackpadScale->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	TrackpadScale->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	TrackpadScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	TrackpadSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	TrackpadSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	TrackpadCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	TrackpadNewSetting=new UILabel( Cinema.GetGuiSys() );
 	SetUpSlider(guiSys, MouseMenu, TrackpadSlider, TrackpadSliderBackground, TrackpadSliderIndicator, TrackpadCurrentSetting, TrackpadNewSetting, 300,  MENU_X * 1, MENU_Y * 3);
 	TrackpadSlider.SetOnClick( TrackpadScaleCallback, this );
 
 
 	StreamMenu = new UIContainer( Cinema.GetGuiSys() );
-	StreamMenu->AddToMenu(  PlaybackControlsMenu, &PlaybackControlsScale );
+	StreamMenu->AddToMenu(  PlaybackControlsMenu, PlaybackControlsScale );
 	StreamMenu->SetLocalPosition( PixelPos( 0, MENU_TOP, 1 ) );
 	StreamMenu->SetVisible(false);
 
-    Button4k60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
-    Button4k60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 1, 1 ) );
-    Button4k60.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60.c_str() );
+	Button4k60=new UIButton( Cinema.GetGuiSys()  );
+    Button4k60->AddToMenu(  PlaybackControlsMenu, StreamMenu );
+    Button4k60->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 1, 1 ) );
+    Button4k60->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k60.c_str() );
     TextButtonHelper(Button4k60);
-    Button4k60.SetOnClick( Button4k60Callback, this);
-    Button4k60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button4k60.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+    Button4k60->SetOnClick( Button4k60Callback, this);
+    Button4k60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button4k60->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-    Button4k30.AddToMenu( PlaybackControlsMenu, StreamMenu );
-    Button4k30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 1, 1 ) );
-    Button4k30.SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30.c_str() );
+	Button4k30=new UIButton( Cinema.GetGuiSys()  );
+    Button4k30->AddToMenu( PlaybackControlsMenu, StreamMenu );
+    Button4k30->SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 1, 1 ) );
+    Button4k30->SetText( Cinema.GetCinemaStrings().ButtonText_Button4k30.c_str() );
     TextButtonHelper(Button4k30);
-    Button4k30.SetOnClick( Button4k30Callback, this);
-    Button4k30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button4k30.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+    Button4k30->SetOnClick( Button4k30Callback, this);
+    Button4k30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button4k30->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	ButtonAspectRatio169.AddToMenu( PlaybackControlsMenu, StreamMenu );
-	ButtonAspectRatio169.SetLocalPosition( PixelPos( MENU_X * 3 , MENU_Y * 1, 1 ) );
-	ButtonAspectRatio169.SetText( "16:9" );
+	ButtonAspectRatio169=new UIButton( Cinema.GetGuiSys()  );
+	ButtonAspectRatio169->AddToMenu( PlaybackControlsMenu, StreamMenu );
+	ButtonAspectRatio169->SetLocalPosition( PixelPos( MENU_X * 3 , MENU_Y * 1, 1 ) );
+	ButtonAspectRatio169->SetText( "16:9" );
 	TextButtonHelper(ButtonAspectRatio169);
-	ButtonAspectRatio169.SetOnClick( ButtonAspectRatio169Callback, this);
-	ButtonAspectRatio169.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	ButtonAspectRatio169.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonAspectRatio169->SetOnClick( ButtonAspectRatio169Callback, this);
+	ButtonAspectRatio169->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonAspectRatio169->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	Button1080p60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
-	Button1080p60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
-	Button1080p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60.c_str() );
+	Button1080p60=new UIButton( Cinema.GetGuiSys()  );
+	Button1080p60->AddToMenu(  PlaybackControlsMenu, StreamMenu );
+	Button1080p60->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2, 1 ) );
+	Button1080p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p60.c_str() );
 	TextButtonHelper(Button1080p60);
-	Button1080p60.SetOnClick( Button1080p60Callback, this);
-    Button1080p60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button1080p60.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	Button1080p60->SetOnClick( Button1080p60Callback, this);
+    Button1080p60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button1080p60->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-    Button1080p30.AddToMenu( PlaybackControlsMenu, StreamMenu );
-	Button1080p30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
-	Button1080p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30.c_str() );
+	Button1080p30=new UIButton( Cinema.GetGuiSys()  );
+    Button1080p30->AddToMenu( PlaybackControlsMenu, StreamMenu );
+	Button1080p30->SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2, 1 ) );
+	Button1080p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button1080p30.c_str() );
 	TextButtonHelper(Button1080p30);
-	Button1080p30.SetOnClick( Button1080p30Callback, this);
-    Button1080p30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button1080p30.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	Button1080p30->SetOnClick( Button1080p30Callback, this);
+    Button1080p30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button1080p30->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	ButtonAspectRatio43.AddToMenu( PlaybackControlsMenu, StreamMenu );
-	ButtonAspectRatio43.SetLocalPosition( PixelPos( MENU_X * 3 , MENU_Y * 2, 1 ) );
-	ButtonAspectRatio43.SetText( "4:3" );
+	ButtonAspectRatio43=new UIButton( Cinema.GetGuiSys()  );
+	ButtonAspectRatio43->AddToMenu( PlaybackControlsMenu, StreamMenu );
+	ButtonAspectRatio43->SetLocalPosition( PixelPos( MENU_X * 3 , MENU_Y * 2, 1 ) );
+	ButtonAspectRatio43->SetText( "4:3" );
 	TextButtonHelper(ButtonAspectRatio43);
-	ButtonAspectRatio43.SetOnClick( ButtonAspectRatio43Callback, this);
-	ButtonAspectRatio43.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	ButtonAspectRatio43.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonAspectRatio43->SetOnClick( ButtonAspectRatio43Callback, this);
+	ButtonAspectRatio43->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonAspectRatio43->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-    Button720p60.AddToMenu(  PlaybackControlsMenu, StreamMenu );
-	Button720p60.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 3, 1 ) );
-	Button720p60.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60.c_str()  );
+	Button720p60=new UIButton( Cinema.GetGuiSys()  );
+    Button720p60->AddToMenu(  PlaybackControlsMenu, StreamMenu );
+	Button720p60->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 3, 1 ) );
+	Button720p60->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p60.c_str()  );
 	TextButtonHelper(Button720p60);
-	Button720p60.SetOnClick( Button720p60Callback, this);
-    Button720p60.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button720p60.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	Button720p60->SetOnClick( Button720p60Callback, this);
+    Button720p60->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button720p60->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-    Button720p30.AddToMenu( PlaybackControlsMenu, StreamMenu );
-	Button720p30.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 3, 1 ) );
-	Button720p30.SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30.c_str()  );
+	Button720p30=new UIButton( Cinema.GetGuiSys() );
+    Button720p30->AddToMenu( PlaybackControlsMenu, StreamMenu );
+	Button720p30->SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 3, 1 ) );
+	Button720p30->SetText( Cinema.GetCinemaStrings().ButtonText_Button720p30.c_str()  );
 	TextButtonHelper(Button720p30);
-	Button720p30.SetOnClick( Button720p30Callback, this);
-    Button720p30.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	Button720p30.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	Button720p30->SetOnClick( Button720p30Callback, this);
+    Button720p30->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	Button720p30->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	ButtonHostAudio.AddToMenu(  PlaybackControlsMenu, StreamMenu );
-	ButtonHostAudio.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 4, 1 ) );
-	ButtonHostAudio.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio.c_str());
+	ButtonHostAudio=new UIButton( Cinema.GetGuiSys()  );
+	ButtonHostAudio->AddToMenu(  PlaybackControlsMenu, StreamMenu );
+	ButtonHostAudio->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 4, 1 ) );
+	ButtonHostAudio->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonHostAudio.c_str());
 	TextButtonHelper(ButtonHostAudio);
-	ButtonHostAudio.SetOnClick( HostAudioCallback, this);
-    ButtonHostAudio.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	ButtonHostAudio.SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
+	ButtonHostAudio->SetOnClick( HostAudioCallback, this);
+    ButtonHostAudio->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonHostAudio->SetAsToggleButton(ButtonPressedTexture,Vector4f( 1.0f ));
 
-	ButtonApply.AddToMenu(  PlaybackControlsMenu, StreamMenu );
-	ButtonApply.SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2, 1 ) );
-	ButtonApply.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonApply.c_str() );
+	ButtonApply=new UIButton( Cinema.GetGuiSys()  );
+	ButtonApply->AddToMenu(  PlaybackControlsMenu, StreamMenu );
+	ButtonApply->SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2, 1 ) );
+	ButtonApply->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonApply.c_str() );
 	TextButtonHelper(ButtonApply);
-	ButtonApply.SetOnClick( ApplyVideoCallback, this);
-    ButtonApply.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	//ButtonApply.SetIsEnabled( ApplyVideoIsEnabledCallback, this);
+	ButtonApply->SetOnClick( ApplyVideoCallback, this);
+    ButtonApply->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	//ButtonApply->SetIsEnabled( ApplyVideoIsEnabledCallback, this);
 
-	BitrateAdjust.AddToMenu( PlaybackControlsMenu, StreamMenu );
-	BitrateAdjust.SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2.75, 1 ) );
-	BitrateAdjust.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonBitrate.c_str() );
-	BitrateAdjust.SetLocalScale( Vector3f( 1.0f ) );
-	BitrateAdjust.SetFontScale( 1.0f );
-	BitrateAdjust.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	BitrateAdjust.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	BitrateAdjust.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
+	BitrateAdjust=new UILabel( Cinema.GetGuiSys()  );
+	BitrateAdjust->AddToMenu( PlaybackControlsMenu, StreamMenu );
+	BitrateAdjust->SetLocalPosition( PixelPos( MENU_X * -2.7, MENU_Y * 2.75, 1 ) );
+	BitrateAdjust->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonBitrate.c_str() );
+	BitrateAdjust->SetLocalScale( Vector3f( 1.0f ) );
+	BitrateAdjust->SetFontScale( 1.0f );
+	BitrateAdjust->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	BitrateAdjust->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	BitrateAdjust->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
+	BitrateSliderBackground=new UIImage( Cinema.GetGuiSys()   );
+	BitrateSliderIndicator=new UIImage( Cinema.GetGuiSys()  );
+	BitrateCurrentSetting=new UILabel( Cinema.GetGuiSys()  );
+	BitrateNewSetting=new UILabel( Cinema.GetGuiSys()  );
 	SetUpSlider(guiSys, StreamMenu, BitrateSlider, BitrateSliderBackground, BitrateSliderIndicator, BitrateCurrentSetting, BitrateNewSetting, 300, MENU_X * -2.7, MENU_Y * 3.5);
 	BitrateSlider.SetOnClick( BitrateCallback, this );
 
     ScreenMenu = new UIContainer( Cinema.GetGuiSys() );
-    ScreenMenu->AddToMenu(  PlaybackControlsMenu, &PlaybackControlsScale );
+    ScreenMenu->AddToMenu(  PlaybackControlsMenu, PlaybackControlsScale );
     ScreenMenu->SetLocalPosition( PixelPos( 0, MENU_TOP, 1 ) );
     ScreenMenu->SetVisible(false);
 
-	ButtonSBS.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
-	ButtonSBS.SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 2.25, 1 ) );
-	ButtonSBS.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSBS.c_str() );
+	ButtonSBS=new UIButton( Cinema.GetGuiSys()  );
+	ButtonSBS->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
+	ButtonSBS->SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 2.25, 1 ) );
+	ButtonSBS->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSBS.c_str() );
 	TextButtonHelper(ButtonSBS);
-	ButtonSBS.SetOnClick( SBSCallback, this);
-    ButtonSBS.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonSBS->SetOnClick( SBSCallback, this);
+    ButtonSBS->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 
-	ButtonChangeSeat.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
-	ButtonChangeSeat.SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 1.25, 1 ) );
-	ButtonChangeSeat.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonChangeSeat.c_str() );
+	ButtonChangeSeat=new UIButton( Cinema.GetGuiSys()  );
+	ButtonChangeSeat->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
+	ButtonChangeSeat->SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 1.25, 1 ) );
+	ButtonChangeSeat->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonChangeSeat.c_str() );
 	TextButtonHelper(ButtonChangeSeat);
-	ButtonChangeSeat.SetOnClick( ChangeSeatCallback, this);
-    ButtonChangeSeat.SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
+	ButtonChangeSeat->SetOnClick( ChangeSeatCallback, this);
+    ButtonChangeSeat->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
 
-	//ButtonChangeSeat.SetIsEnabled( IsChangeSeatsEnabledCallback, this );
+	//ButtonChangeSeat->SetIsEnabled( IsChangeSeatsEnabledCallback, this );
 
-	ScreenDistance.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
-	ScreenDistance.SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 1.25, 1 ) );
-    ScreenDistance.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonDistance.c_str() );
-	ScreenDistance.SetLocalScale( Vector3f( 1.0f ) );
-	ScreenDistance.SetFontScale( 1.0f );
-	ScreenDistance.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	ScreenDistance.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	ScreenDistance.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
-	//ScreenDistance.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	ScreenDistance=new UILabel( Cinema.GetGuiSys() );
+	ScreenDistance->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
+	ScreenDistance->SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 1.25, 1 ) );
+    ScreenDistance->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonDistance.c_str() );
+	ScreenDistance->SetLocalScale( Vector3f( 1.0f ) );
+	ScreenDistance->SetFontScale( 1.0f );
+	ScreenDistance->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	ScreenDistance->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	ScreenDistance->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
+	//ScreenDistance->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	DistanceSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	DistanceSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	DistanceCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	DistanceNewSetting=new UILabel( Cinema.GetGuiSys() );
 	SetUpSlider(guiSys, ScreenMenu, DistanceSlider, DistanceSliderBackground, DistanceSliderIndicator, DistanceCurrentSetting, DistanceNewSetting, 800, MENU_X * 2, MENU_Y * 1.25);
 	DistanceSlider.SetOnClick( DistanceCallback, this );
 
 
-	ScreenSize.AddToMenu(  PlaybackControlsMenu, ScreenMenu );
-	ScreenSize.SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 2.25 , 1 ) );
-    ScreenSize.SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSize.c_str() );
-	ScreenSize.SetLocalScale( Vector3f( 1.0f ) );
-	ScreenSize.SetFontScale( 1.0f );
-	ScreenSize.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	ScreenSize.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	ScreenSize.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
-	//ScreenSize.GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	ScreenSize=new UILabel( Cinema.GetGuiSys() );
+	ScreenSize->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
+	ScreenSize->SetLocalPosition( PixelPos( MENU_X * -0.5, MENU_Y * 2.25 , 1 ) );
+    ScreenSize->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonSize.c_str() );
+	ScreenSize->SetLocalScale( Vector3f( 1.0f ) );
+	ScreenSize->SetFontScale( 1.0f );
+	ScreenSize->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	ScreenSize->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	ScreenSize->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 240, 80 );
+	//ScreenSize->GetMenuObject()->SetLocalBoundsExpand( PixelPos( 20, 0, 0 ), Vector3f::ZERO );
+	SizeSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	SizeSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	SizeCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	SizeNewSetting=new UILabel( Cinema.GetGuiSys() );
 	SetUpSlider(guiSys, ScreenMenu, SizeSlider, SizeSliderBackground, SizeSliderIndicator, SizeCurrentSetting, SizeNewSetting, 800, MENU_X * 2, MENU_Y * 2.25);
 	SizeSlider.SetOnClick( SizeCallback, this );
 	VRModeMenu = new UIContainer(  Cinema.GetGuiSys() );
-	VRModeMenu->AddToMenu( PlaybackControlsMenu, &PlaybackControlsScale );
+	VRModeMenu->AddToMenu( PlaybackControlsMenu, PlaybackControlsScale );
 	VRModeMenu->SetLocalPosition( PixelPos( 0, MENU_TOP, 1 ) );
 	VRModeMenu->SetVisible(false);
 
-	LatencyScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
-	LatencyScale.SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
-	LatencyScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelLatency.c_str() );
-	LatencyScale.SetLocalScale( Vector3f( 1.0f ) );
-	LatencyScale.SetFontScale( 1.0f );
-	LatencyScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	LatencyScale.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	LatencyScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	LatencyScale=new UILabel( Cinema.GetGuiSys());
+	LatencyScale->AddToMenu( PlaybackControlsMenu, VRModeMenu );
+	LatencyScale->SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
+	LatencyScale->SetText( Cinema.GetCinemaStrings().ButtonText_LabelLatency.c_str() );
+	LatencyScale->SetLocalScale( Vector3f( 1.0f ) );
+	LatencyScale->SetFontScale( 1.0f );
+	LatencyScale->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	LatencyScale->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	LatencyScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	LatencySliderBackground=new UIImage( Cinema.GetGuiSys() );
+	LatencySliderIndicator=new UIImage( Cinema.GetGuiSys());
+	LatencyCurrentSetting=new UILabel( Cinema.GetGuiSys());
+	LatencyNewSetting=new UILabel( Cinema.GetGuiSys());
 	SetUpSlider(guiSys, VRModeMenu, LatencySlider, LatencySliderBackground, LatencySliderIndicator, LatencyCurrentSetting, LatencyNewSetting, 300,  MENU_X * 0, MENU_Y * 1.75);
 	LatencySlider.SetOnClick( LatencyCallback, this );
 
-	VRXScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
-	VRXScale.SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2.5, 1 ) );
-	VRXScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRXScale.c_str());
-	VRXScale.SetLocalScale( Vector3f( 1.0f ) );
-	VRXScale.SetFontScale( 1.0f );
-	VRXScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	VRXScale.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	VRXScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	VRXScale=new UILabel( Cinema.GetGuiSys() );
+	VRXScale->AddToMenu( PlaybackControlsMenu, VRModeMenu );
+	VRXScale->SetLocalPosition( PixelPos( MENU_X * -1, MENU_Y * 2.5, 1 ) );
+	VRXScale->SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRXScale.c_str());
+	VRXScale->SetLocalScale( Vector3f( 1.0f ) );
+	VRXScale->SetFontScale( 1.0f );
+	VRXScale->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	VRXScale->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	VRXScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	VRXSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	VRXSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	VRXCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	VRXNewSetting=new UILabel( Cinema.GetGuiSys());
 	SetUpSlider(guiSys, VRModeMenu, VRXSlider, VRXSliderBackground, VRXSliderIndicator, VRXCurrentSetting, VRXNewSetting, 300,  MENU_X * -1, MENU_Y * 3.25);
 	VRXSlider.SetOnClick( VRXCallback, this );
 
-	VRYScale.AddToMenu( PlaybackControlsMenu, VRModeMenu );
-	VRYScale.SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2.5, 1 ) );
-	VRYScale.SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRYScale.c_str());
-	VRYScale.SetLocalScale( Vector3f( 1.0f ) );
-	VRYScale.SetFontScale( 1.0f );
-	VRYScale.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	VRYScale.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	VRYScale.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	VRYScale=new UILabel( Cinema.GetGuiSys());
+	VRYScale->AddToMenu( PlaybackControlsMenu, VRModeMenu );
+	VRYScale->SetLocalPosition( PixelPos( MENU_X * 1, MENU_Y * 2.5, 1 ) );
+	VRYScale->SetText( Cinema.GetCinemaStrings().ButtonText_LabelVRYScale.c_str());
+	VRYScale->SetLocalScale( Vector3f( 1.0f ) );
+	VRYScale->SetFontScale( 1.0f );
+	VRYScale->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	VRYScale->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	VRYScale->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 300, 80 );
+	VRYSliderBackground=new UIImage( Cinema.GetGuiSys() );
+	VRYSliderIndicator=new UIImage( Cinema.GetGuiSys() );
+	VRYCurrentSetting=new UILabel( Cinema.GetGuiSys() );
+	VRYNewSetting=new UILabel( Cinema.GetGuiSys() );
 	SetUpSlider(guiSys, VRModeMenu, VRYSlider, VRYSliderBackground, VRYSliderIndicator, VRYCurrentSetting, VRYNewSetting, 300,  MENU_X * 1, MENU_Y * 3.25);
 	VRYSlider.SetOnClick( VRYCallback, this );
 
 	HelpMenu = new UIContainer( Cinema.GetGuiSys() );
-	HelpMenu->AddToMenu( PlaybackControlsMenu, &PlaybackControlsScale );
+	HelpMenu->AddToMenu( PlaybackControlsMenu, PlaybackControlsScale );
 	HelpMenu->SetLocalPosition( PixelPos( 0, MENU_TOP, 1 ) );
 	HelpMenu->SetVisible(false);
 
-	HelpText.AddToMenu( PlaybackControlsMenu, HelpMenu );
-	HelpText.SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
-	HelpText.SetLocalScale( Vector3f( 1.0f ) );
-	HelpText.SetFontScale( 1.0f );
-	HelpText.SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	HelpText.SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	HelpText.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 600 );
-	HelpText.SetTextWordWrapped( Cinema.GetCinemaStrings().HelpText.c_str(), Cinema.GetGuiSys().GetDefaultFont(), HelpText.GetWorldScale().x * 2);
+	HelpText=new UILabel( Cinema.GetGuiSys() );
+	HelpText->AddToMenu( PlaybackControlsMenu, HelpMenu );
+	HelpText->SetLocalPosition( PixelPos( MENU_X * 0, MENU_Y * 1, 1 ) );
+	HelpText->SetLocalScale( Vector3f( 1.0f ) );
+	HelpText->SetFontScale( 1.0f );
+	HelpText->SetColor( Vector4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	HelpText->SetTextColor( Vector4f( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	HelpText->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, 1200, 600 );
+	HelpText->SetTextWordWrapped( Cinema.GetCinemaStrings().HelpText.c_str(), Cinema.GetGuiSys().GetDefaultFont(), HelpText->GetWorldScale().x * 2);
 }
 
 void MoviePlayerView::OnOpen( const double currTimeInSeconds )
@@ -939,7 +919,7 @@ void MoviePlayerView::OnOpen( const double currTimeInSeconds )
     Cinema.StartMoviePlayback(WidthByAspect(), streamHeight, streamFPS, streamHostAudio, bitrate);
 	if ( Cinema.SceneMgr.SceneInfo.UseVRScreen )
 	{
-		VRModeMenuButton.SetVisible(true);
+		VRModeMenuButton->SetVisible(true);
 		screenMotionPaused = true;
 	}
 	else
@@ -948,9 +928,9 @@ void MoviePlayerView::OnOpen( const double currTimeInSeconds )
 	}
 
 
-	MovieTitleLabel.SetText( Cinema.GetCurrentApp()->Name.c_str() );
-	Bounds3f titleBounds = MovieTitleLabel.GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() ) * VRMenuObject::TEXELS_PER_METER;
-	MovieTitleLabel.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, titleBounds.GetSize().x + 88, titleBounds.GetSize().y + 32 );
+	MovieTitleLabel->SetText( Cinema.GetCurrentApp()->Name.c_str() );
+	Bounds3f titleBounds = MovieTitleLabel->GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() ) * VRMenuObject::TEXELS_PER_METER;
+	MovieTitleLabel->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, titleBounds.GetSize().x + 88, titleBounds.GetSize().y + 32 );
 
 
 }
@@ -964,7 +944,7 @@ void MoviePlayerView::OnClose()
 
 	if ( MoveScreenMenu->IsOpen() )
 	{
-		MoveScreenLabel.SetVisible( false );
+		MoveScreenLabel->SetVisible( false );
 		MoveScreenMenu->Close();
 	}
 
@@ -1098,10 +1078,10 @@ void MoviePlayerView::ShowUI( const double currTimeInSeconds )
 
 	PlaybackControlsMenu->Open();
 	GazeTimer->SetGazeTime(currTimeInSeconds);
-	MovieTitleLabel.SetVisible(true);
+	MovieTitleLabel->SetVisible(true);
 
-	PlaybackControlsScale.SetLocalScale( Vector3f( Cinema.SceneMgr.GetScreenSize().y * ( 500.0f / 1080.0f ) ) );
-	PlaybackControlsPosition.SetLocalPose( Cinema.SceneMgr.GetScreenPose() );
+	PlaybackControlsScale->SetLocalScale( Vector3f( Cinema.SceneMgr.GetScreenSize().y * ( 500.0f / 1080.0f ) ) );
+	PlaybackControlsPosition->SetLocalPose( Cinema.SceneMgr.GetScreenPose() );
 
 	uiActive = true;
 }
@@ -1693,8 +1673,8 @@ void MoviePlayerView::CheckInput( const ovrApplFrameIn & vrFrame )
 			float alpha = static_cast<float>( MoveScreenAlpha.Value( now ) );
 			if ( alpha > 0.0f )
 			{
-				MoveScreenLabel.SetVisible( true );
-				MoveScreenLabel.SetTextColor( Vector4f( alpha ) );
+				MoveScreenLabel->SetVisible( true );
+				MoveScreenLabel->SetTextColor( Vector4f( alpha ) );
 			}
 /*
 			if (  vrFrame.AllButtons &  BUTTON_TOUCH  )
@@ -1707,7 +1687,7 @@ void MoviePlayerView::CheckInput( const ovrApplFrameIn & vrFrame )
 			// onscreen, so hide message
 			const double now = vrapi_GetTimeInSeconds();
 			MoveScreenAlpha.Set( now, -1.0f, now + 1.0f, 1.0f );
-			MoveScreenLabel.SetVisible( false );
+			MoveScreenLabel->SetVisible( false );
 		}
 	}
 
@@ -1797,7 +1777,7 @@ void MoviePlayerView::HelpMenuButtonPressed()
 	VRModeMenu->SetVisible(false);
 	HelpMenu->SetVisible(!HelpMenu->GetVisible());
 
-	MovieTitleLabel.SetVisible(false);
+	MovieTitleLabel->SetVisible(false);
 
 	SaveMenu->SetVisible(HelpMenu->GetVisible());
 }
@@ -1863,7 +1843,7 @@ void MoviePlayerView::ResetDefaultPressed()
 	trackpadScaleValue = 2.0;
 	streamWidth = 1280;
 	streamHeight = 720;
-	streamAspectRatio = DIECISEIS_NOVENOS;
+	streamAspectRatio = Ratio_16_9;
 	streamFPS = 60;
 	streamHostAudio = true;
 	GazeMin = 0.7;
@@ -1956,7 +1936,7 @@ void MoviePlayerView::LoadSettings(Settings* set)
 
 int MoviePlayerView::WidthByAspect(){
 
-	if (streamAspectRatio == DIECISEIS_NOVENOS){
+	if (streamAspectRatio == Ratio_16_9){
 		return streamWidth;
 	}else{
 		return ((streamHeight/3)*4);
@@ -1966,7 +1946,7 @@ int MoviePlayerView::WidthByAspect(){
 }
 
 void MoviePlayerView::GazeFocusLost(){
-	ButtonGaze.SetHilighted(true);
+	ButtonGaze->SetHilighted(true);
 }
 
 
@@ -1974,7 +1954,7 @@ void MoviePlayerView::GazeFocusLost(){
 void MoviePlayerView::GazePressed()
 {
 	mouseMode = MOUSE_GAZE;
-	ButtonGaze.SetHilighted(true);
+	ButtonGaze->SetHilighted(true);
 	UpdateMenus();
 }
 void MoviePlayerView::TrackpadPressed()
@@ -2017,7 +1997,7 @@ void MoviePlayerView::TrackpadScalePressed(const float value)
 void MoviePlayerView::ButtonAspectRatio169Pressed()
 {
 	Cinema.SceneMgr.ClearMovie();
-	streamAspectRatio = DIECISEIS_NOVENOS;
+	streamAspectRatio = Ratio_16_9;
 	UpdateMenus();
 	//TODO: This all needs to be saved in prefs
 	Cinema.StartMoviePlayback(WidthByAspect(), streamHeight, streamFPS, streamHostAudio, bitrate);
@@ -2026,7 +2006,7 @@ void MoviePlayerView::ButtonAspectRatio169Pressed()
 void MoviePlayerView::ButtonAspectRatio43Pressed()
 {
 	Cinema.SceneMgr.ClearMovie();
-	streamAspectRatio = CUATRO_TERCIOS;
+	streamAspectRatio = Ratio_4_3;
 	UpdateMenus();
 	//TODO: This all needs to be saved in prefs
 	Cinema.StartMoviePlayback(WidthByAspect(), streamHeight, streamFPS, streamHostAudio, bitrate );
@@ -2203,24 +2183,24 @@ bool MoviePlayerView::IsChangeSeatsEnabled()
 
 void MoviePlayerView::UpdateMenus()
 {
-	ButtonGaze.UpdateButtonState();
-	ButtonTrackpad.UpdateButtonState();
-	ButtonOff.UpdateButtonState();
+	ButtonGaze->UpdateButtonState();
+	ButtonTrackpad->UpdateButtonState();
+	ButtonOff->UpdateButtonState();
 
-	ButtonAspectRatio169.UpdateButtonState();
-	ButtonAspectRatio43.UpdateButtonState();
+	ButtonAspectRatio169->UpdateButtonState();
+	ButtonAspectRatio43->UpdateButtonState();
 
-	Button4k60.UpdateButtonState();
-	Button4k30.UpdateButtonState();
-	Button1080p60.UpdateButtonState();
-	Button1080p30.UpdateButtonState();
-	Button720p60.UpdateButtonState();
-	Button720p30.UpdateButtonState();
-	//ButtonHostAudio.UpdateButtonState();
-	ButtonApply.UpdateButtonState();
+	Button4k60->UpdateButtonState();
+	Button4k30->UpdateButtonState();
+	Button1080p60->UpdateButtonState();
+	Button1080p30->UpdateButtonState();
+	Button720p60->UpdateButtonState();
+	Button720p30->UpdateButtonState();
+	//ButtonHostAudio->UpdateButtonState();
+	ButtonApply->UpdateButtonState();
 
-	ButtonSBS.UpdateButtonState();
-	ButtonChangeSeat.UpdateButtonState();
+	ButtonSBS->UpdateButtonState();
+	ButtonChangeSeat->UpdateButtonState();
 }
 
 
@@ -2258,8 +2238,8 @@ void MoviePlayerView::UpdateUI( const ovrApplFrameIn & vrFrame )
 		if ( Cinema.SceneMgr.FreeScreenActive )
 		{
 			// update the screen position & size;
-			PlaybackControlsScale.SetLocalScale( Vector3f( Cinema.SceneMgr.GetScreenSize().y * ( 500.0f / 1080.0f ) ) );
-			PlaybackControlsPosition.SetLocalPose( Cinema.SceneMgr.GetScreenPose() );
+			PlaybackControlsScale->SetLocalScale( Vector3f( Cinema.SceneMgr.GetScreenSize().y * ( 500.0f / 1080.0f ) ) );
+			PlaybackControlsPosition->SetLocalPose( Cinema.SceneMgr.GetScreenPose() );
 		}
 	}
 

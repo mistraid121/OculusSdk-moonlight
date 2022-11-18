@@ -60,72 +60,34 @@ static const char* Guuid;
             ErrorIconTexture(),
             CloseIconTexture(),
             SettingsIconTexture(),
-            Menu(NULL),
-            CenterRoot(NULL),
-            ErrorMessage(NULL),
-            PlainErrorMessage(NULL),
             ErrorMessageClicked(false),
-            MovieRoot(NULL),
-            CategoryRoot(NULL),
-            TitleRoot(NULL),
-            MovieTitle(NULL),
-            SelectionFrame(NULL),
-            CenterPoster(NULL),
             CenterIndex(0),
             CenterPosition(),
             LeftSwipes(),
             RightSwipes(),
-            ResumeIcon(NULL),
-            CloseAppButton( NULL ),
-            SettingsButton( NULL ),
-            TimerIcon(NULL),
-            TimerText(NULL),
             TimerStartTime(0),
             TimerValue(0),
             ShowTimer(false),
-            MoveScreenLabel(NULL),
             MoveScreenAlpha(),
             SelectionFader(),
-            MovieBrowser(NULL),
             MoviePanelPositions(),
             MoviePosterComponents(),
             Categories(),
             CurrentCategory(CATEGORY_LIMELIGHT),
             AppList(),
             AppIndex(0),
-            LastAppDisplayed(NULL),
             RepositionScreen(false),
             HadSelection( false ),
-            settingsMenu( NULL ),
             bgTintTexture(),
-            newPCbg( Cinema.GetGuiSys() ),
-            ButtonGaze( NULL ),
-            ButtonTrackpad( NULL ),
-            ButtonOff( NULL ),
-            Button169( NULL ),
-            Button43( NULL ),
-            Button4k60( NULL ),
-            Button4k30( NULL ),
-            Button1080p60( NULL ),
-            Button1080p30( NULL ),
-            Button720p60( NULL ),
-            Button720p30( NULL ),
-            ButtonHostAudio( NULL ),
-            ButtonSaveApp( NULL ),
-            ButtonSaveDefault( NULL ),
             mouseMode( MOUSE_GAZE ),
-            streamAspectRatio(DIECISEIS_NOVENOS),
+            streamAspectRatio(Ratio_16_9),
             streamWidth( 1280 ),
             streamHeight( 720 ),
             streamFPS( 60 ),
             streamHostAudio( 0 ),
             settingsVersion(1.0f),
             defaultSettingsPath(""),
-            appSettingsPath(""),
-            defaultSettings( NULL ),
-            appSettings( NULL )
-
-
+            appSettingsPath("")
     {
         // This is called at library load time, so the system is not initialized
         // properly yet.
@@ -794,8 +756,9 @@ static const char* Guuid;
         settingsMenu->SetLocalPose( forward, Vector3f( 0.0f, 1.5f, -3.0f ) );
         settingsMenu->SetVisible(false);
 
-        newPCbg.AddToMenu(  Menu, settingsMenu);
-        newPCbg.SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 800, 1400 );
+        newPCbg= new UIImage( Cinema.GetGuiSys() );
+        newPCbg->AddToMenu(  Menu, settingsMenu);
+        newPCbg->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, bgTintTexture, 800, 1400 );
 
         static const float column1 = -0.40f;
         static const float column2 = 0.40f;
@@ -1041,11 +1004,11 @@ static const char* Guuid;
         }
         else if( button == Button169 )
         {
-            streamAspectRatio = DIECISEIS_NOVENOS;
+            streamAspectRatio = Ratio_16_9;
         }
         else if( button == Button43 )
         {
-            streamAspectRatio = CUATRO_TERCIOS;
+            streamAspectRatio = Ratio_4_3;
         }
         else if( button == Button1080p60 )
         {
