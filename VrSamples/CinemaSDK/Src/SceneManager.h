@@ -35,7 +35,8 @@ public:
 	void				OneTimeShutdown();
 
 	bool 				Command( const char * msg );
-	void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
+	void				AppRenderFrame( const OVRFW::ovrApplFrameIn & in, OVRFW::ovrRendererOutput & out );
+	//void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 				SetSeat( int newSeat );
 	bool 				ChangeSeats( const OVRFW::ovrApplFrameIn & vrFrame );
@@ -145,8 +146,10 @@ public:
 
 private:
 	SceneManager &		operator=( const SceneManager & );
+    OVRFW::ovrSurfaceRender			SurfaceRender;
+    void                AppRenderEye( const OVRFW::ovrApplFrameIn & in, OVRFW::ovrRendererOutput & out, int eye );
 
-	void				CheckForbufferResize();
+    void				CheckForbufferResize();
 	GLuint 				BuildScreenVignetteTexture( const int horizontalTile ) const;
 	int 				BottomMipLevel( const int width, const int height ) const;
 };

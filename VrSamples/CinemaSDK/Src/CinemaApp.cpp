@@ -176,14 +176,12 @@ bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
 	PcMgr.OneTimeInit( intentURI.c_str() );
 	AppMgr.OneTimeInit( intentURI.c_str());
 	MoviePlayer.OneTimeInit( intentURI.c_str() );
-
 	ViewMgr.AddView( &MoviePlayer );
 	PcSelectionMenu.OneTimeInit( intentURI.c_str() );
 	ViewMgr.AddView( &PcSelectionMenu );
 	AppSelectionMenu.OneTimeInit( intentURI.c_str() );
 	ViewMgr.AddView( &AppSelectionMenu );
 	TheaterSelectionMenu.OneTimeInit( intentURI.c_str() );
-
 	ViewMgr.AddView( &TheaterSelectionMenu );
 
 
@@ -430,7 +428,7 @@ void CinemaApp::Command( const char * msg )
 	}
 }
 
-ovrRendererOutput CinemaApp::Frame( const ovrApplFrameIn & vrFrame )
+ovrApplFrameOut CinemaApp::AppFrame( const ovrApplFrameIn & vrFrame )
 {
 	//FrameResult = ovrFrameResult();
 
@@ -493,7 +491,12 @@ ovrRendererOutput CinemaApp::Frame( const ovrApplFrameIn & vrFrame )
 
 	GuiSys->AppendSurfaceList( FrameResult.FrameMatrices.CenterView, &FrameResult.Surfaces );
 
-	return FrameResult;
+	return ovrApplFrameOut();
+}
+
+void CinemaApp::AppRenderFrame( const OVRFW::ovrApplFrameIn & in, OVRFW::ovrRendererOutput & out )
+{
+	SceneMgr.AppRenderFrame(in,out);
 }
 
 ovrCinemaStrings & CinemaApp::GetCinemaStrings() const

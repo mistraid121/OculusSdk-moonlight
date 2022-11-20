@@ -298,7 +298,7 @@ static const char* Guuid;
             UpdateAppTitle();
             UpdateSelectionFrame(vrFrame);
 
-            Cinema.SceneMgr.Frame(vrFrame);
+            //Cinema.SceneMgr.Frame(vrFrame);
         }
 
     const AppDef *AppSelectionView::GetSelectedApp() const {

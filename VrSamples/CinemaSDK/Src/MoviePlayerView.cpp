@@ -2284,7 +2284,7 @@ void MoviePlayerView::Frame( const ovrApplFrameIn & vrFrame )
 		MoveScreenMenu->Close();
 	}
 
-	Cinema.SceneMgr.Frame( vrFrame );
+	//Cinema.SceneMgr.Frame( vrFrame );
 }
 
 /*************************************************************************************/

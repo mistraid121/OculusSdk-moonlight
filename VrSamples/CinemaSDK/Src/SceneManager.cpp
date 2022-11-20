@@ -39,193 +39,199 @@ using OVR::Bounds3f;
 namespace OculusCinema
 {
 
-    SceneManager::SceneManager( CinemaApp &cinema ) :
-            Cinema( cinema ),
-            StaticLighting(),
-            MovieTexture( NULL ),
-            MovieTextureTimestamp( 0 ),
-            FreeScreenActive( false ),
-            FreeScreenScale( 1.0f ),
-            FreeScreenDistance( 1.5f ),
-            FreeScreenPose(),
-            ForceMono( false ),
-            CurrentMovieWidth( 0 ),
-            CurrentMovieHeight( 480 ),
-            MovieTextureWidth( 0 ),
-            MovieTextureHeight( 0 ),
-            //CurrentMovieFormat( VT_2D ),
-            MovieRotation( 0 ),
-            MovieDuration( 0 ),
-            FrameUpdateNeeded( false ),
-            ClearGhostsFrames( 0 ),
-            UnitSquare(),
-            ScreenColor(),
-            CurrentMipMappedMovieTexture( 0 ),
-            MipMappedMovieTextureSwapChain( NULL ),
-            MipMappedMovieTextureSwapChainLength( 0 ),
-            MipMappedMovieFBOs( NULL ),
-            BufferSize(),
-            ScreenVignetteTexture( 0 ),
-            ScreenVignetteSbsTexture( 0 ),
-            SceneProgramIndex( SCENE_PROGRAM_DYNAMIC_ONLY ),
-            Scene(),
-            SceneScreenSurface( NULL ),
-            SceneSeatPositions(),
-            SceneSeatCount( 0 ),
-            SeatPosition( 0 ),
-            SceneScreenBounds(),
-            AllowMove( false ),
-            VoidedScene( false ),
-            FixVoidedScene( false )
+SceneManager::SceneManager( CinemaApp &cinema ) :
+        Cinema( cinema ),
+        StaticLighting(),
+        MovieTexture( NULL ),
+        MovieTextureTimestamp( 0 ),
+        FreeScreenActive( false ),
+        FreeScreenScale( 1.0f ),
+        FreeScreenDistance( 1.5f ),
+        FreeScreenPose(),
+        ForceMono( false ),
+        CurrentMovieWidth( 0 ),
+        CurrentMovieHeight( 480 ),
+        MovieTextureWidth( 0 ),
+        MovieTextureHeight( 0 ),
+        //CurrentMovieFormat( VT_2D ),
+        MovieRotation( 0 ),
+        MovieDuration( 0 ),
+        FrameUpdateNeeded( false ),
+        ClearGhostsFrames( 0 ),
+        UnitSquare(),
+        ScreenColor(),
+        CurrentMipMappedMovieTexture( 0 ),
+        MipMappedMovieTextureSwapChain( NULL ),
+        MipMappedMovieTextureSwapChainLength( 0 ),
+        MipMappedMovieFBOs( NULL ),
+        BufferSize(),
+        ScreenVignetteTexture( 0 ),
+        ScreenVignetteSbsTexture( 0 ),
+        SceneProgramIndex( SCENE_PROGRAM_DYNAMIC_ONLY ),
+        Scene(),
+        SceneScreenSurface( NULL ),
+        SceneSeatPositions(),
+        SceneSeatCount( 0 ),
+        SeatPosition( 0 ),
+        SceneScreenBounds(),
+        AllowMove( false ),
+        VoidedScene( false ),
+        FixVoidedScene( false )
 
+{
+}
+
+static GlGeometry BuildFadedScreenMask( const float xFraction, const float yFraction )
+{
+    const float posx[] = { -1.001f, -1.0f + xFraction * 0.25f, -1.0f + xFraction, 1.0f - xFraction, 1.0f - xFraction * 0.25f, 1.001f };
+    const float posy[] = { -1.001f, -1.0f + yFraction * 0.25f, -1.0f + yFraction, 1.0f - yFraction, 1.0f - yFraction * 0.25f, 1.001f };
+
+    const int vertexCount = 6 * 6;
+
+    VertexAttribs attribs;
+    attribs.position.resize( vertexCount );
+    attribs.uv0.resize( vertexCount );
+    attribs.color.resize( vertexCount );
+
+    for ( int y = 0; y < 6; y++ )
     {
+        for ( int x = 0; x < 6; x++ )
+        {
+            const int index = y * 6 + x;
+            attribs.position[index].x = posx[x];
+            attribs.position[index].y = posy[y];
+            attribs.position[index].z = 0.0f;
+            attribs.uv0[index].x = 0.0f;
+            attribs.uv0[index].y = 0.0f;
+            // the outer edges will have 0 color
+            const float c = ( y <= 1 || y >= 4 || x <= 1 || x >= 4 ) ? 0.0f : 1.0f;
+            for ( int i = 0; i < 3; i++ )
+            {
+                attribs.color[index][i] = c;
+            }
+            attribs.color[index][3] = 1.0f;	// solid alpha
+        }
     }
 
-    static GlGeometry BuildFadedScreenMask( const float xFraction, const float yFraction )
+    std::vector< TriangleIndex > indices;
+    indices.resize( 25 * 6 );
+
+    // Should we flip the triangulation on the corners?
+    int index = 0;
+    for ( TriangleIndex x = 0; x < 5; x++ )
     {
-        const float posx[] = { -1.001f, -1.0f + xFraction * 0.25f, -1.0f + xFraction, 1.0f - xFraction, 1.0f - xFraction * 0.25f, 1.001f };
-        const float posy[] = { -1.001f, -1.0f + yFraction * 0.25f, -1.0f + yFraction, 1.0f - yFraction, 1.0f - yFraction * 0.25f, 1.001f };
-
-        const int vertexCount = 6 * 6;
-
-        VertexAttribs attribs;
-        attribs.position.resize( vertexCount );
-        attribs.uv0.resize( vertexCount );
-        attribs.color.resize( vertexCount );
-
-        for ( int y = 0; y < 6; y++ )
+        for ( TriangleIndex y = 0; y < 5; y++ )
         {
-            for ( int x = 0; x < 6; x++ )
-            {
-                const int index = y * 6 + x;
-                attribs.position[index].x = posx[x];
-                attribs.position[index].y = posy[y];
-                attribs.position[index].z = 0.0f;
-                attribs.uv0[index].x = 0.0f;
-                attribs.uv0[index].y = 0.0f;
-                // the outer edges will have 0 color
-                const float c = ( y <= 1 || y >= 4 || x <= 1 || x >= 4 ) ? 0.0f : 1.0f;
-                for ( int i = 0; i < 3; i++ )
-                {
-                    attribs.color[index][i] = c;
-                }
-                attribs.color[index][3] = 1.0f;	// solid alpha
-            }
+            indices[index + 0] = y * 6 + x;
+            indices[index + 1] = y * 6 + x + 1;
+            indices[index + 2] = (y + 1) * 6 + x;
+            indices[index + 3] = (y + 1) * 6 + x;
+            indices[index + 4] = y * 6 + x + 1;
+            indices[index + 5] = (y + 1) * 6 + x + 1;
+            index += 6;
         }
-
-        std::vector< TriangleIndex > indices;
-        indices.resize( 25 * 6 );
-
-        // Should we flip the triangulation on the corners?
-        int index = 0;
-        for ( TriangleIndex x = 0; x < 5; x++ )
-        {
-            for ( TriangleIndex y = 0; y < 5; y++ )
-            {
-                indices[index + 0] = y * 6 + x;
-                indices[index + 1] = y * 6 + x + 1;
-                indices[index + 2] = (y + 1) * 6 + x;
-                indices[index + 3] = (y + 1) * 6 + x;
-                indices[index + 4] = y * 6 + x + 1;
-                indices[index + 5] = (y + 1) * 6 + x + 1;
-                index += 6;
-            }
-        }
-
-        return GlGeometry( attribs, indices );
     }
 
-    static const char * overlayScreenFadeMaskVertexShaderSrc =
-            "attribute vec4 VertexColor;\n"
-                    "attribute vec4 Position;\n"
-                    "varying  lowp vec4 oColor;\n"
-                    "void main()\n"
-                    "{\n"
-                    "   gl_Position = TransformVertex( Position );\n"
-                    "   oColor = vec4( 1.0, 1.0, 1.0, 1.0 - VertexColor.x );\n"
-                    "}\n";
+    return GlGeometry( attribs, indices );
+}
 
-    static const char * overlayScreenFadeMaskFragmentShaderSrc =
-            "varying lowp vec4	oColor;\n"
-                    "void main()\n"
-                    "{\n"
-                    "	gl_FragColor = oColor;\n"
-                    "}\n";
+static const char * overlayScreenFadeMaskVertexShaderSrc =
+        "attribute vec4 VertexColor;\n"
+                "attribute vec4 Position;\n"
+                "varying  lowp vec4 oColor;\n"
+                "void main()\n"
+                "{\n"
+                "   gl_Position = TransformVertex( Position );\n"
+                "   oColor = vec4( 1.0, 1.0, 1.0, 1.0 - VertexColor.x );\n"
+                "}\n";
+
+static const char * overlayScreenFadeMaskFragmentShaderSrc =
+        "varying lowp vec4	oColor;\n"
+                "void main()\n"
+                "{\n"
+                "	gl_FragColor = oColor;\n"
+                "}\n";
 
 void SceneManager::OneTimeInit( const char * launchIntent )
 {
 	OVR_LOG( "SceneManager::OneTimeInit" );
 
-        OVR_UNUSED( launchIntent );
+    OVR_UNUSED( launchIntent );
 
-        const double start = GetTimeInSeconds();
+    const double start = GetTimeInSeconds();
 
-        UnitSquare = BuildTesselatedQuad( 1, 1 );
 
-        ScreenVignetteTexture = BuildScreenVignetteTexture( 1 );
-        ScreenVignetteSbsTexture = BuildScreenVignetteTexture( 2 );
+	/// Init Rendering
+	SurfaceRender.Init();
 
-        FadedScreenMaskSquareDef.graphicsCommand.Program = GlProgram::Build(
-                overlayScreenFadeMaskVertexShaderSrc,
-                overlayScreenFadeMaskFragmentShaderSrc,
-                NULL, 0 );
+    UnitSquare = BuildTesselatedQuad( 1, 1 );
 
-        FadedScreenMaskSquareDef.surfaceName = "FadedScreenMaskSquare";
-        FadedScreenMaskSquareDef.geo = BuildFadedScreenMask( 0.0f, 0.0f );
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.depthEnable = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.depthMaskEnable = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.cullEnable = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[0] = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[1] = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[2] = false;
-        FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[3] = true;
+    ScreenVignetteTexture = BuildScreenVignetteTexture( 1 );
+    ScreenVignetteSbsTexture = BuildScreenVignetteTexture( 2 );
 
-       BlackSceneScreenSurfaceDef.surfaceName = "SceneScreenSurf";
-	//BlackSceneScreenSurfaceDef.geo = ; // Determined by the scene model loaded
-	BlackSceneScreenSurfaceDef.graphicsCommand.Program = Cinema.ShaderMgr.ScenePrograms[0];
+    FadedScreenMaskSquareDef.graphicsCommand.Program = GlProgram::Build(
+            overlayScreenFadeMaskVertexShaderSrc,
+            overlayScreenFadeMaskFragmentShaderSrc,
+            NULL, 0 );
 
-        OVR_LOG( "SceneManager::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
-    }
+    FadedScreenMaskSquareDef.surfaceName = "FadedScreenMaskSquare";
+    FadedScreenMaskSquareDef.geo = BuildFadedScreenMask( 0.0f, 0.0f );
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.depthEnable = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.depthMaskEnable = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.cullEnable = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[0] = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[1] = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[2] = false;
+    FadedScreenMaskSquareDef.graphicsCommand.GpuState.colorMaskEnable[3] = true;
 
-    void SceneManager::OneTimeShutdown()
+    BlackSceneScreenSurfaceDef.surfaceName = "SceneScreenSurf";
+    //BlackSceneScreenSurfaceDef.geo = ; // Determined by the scene model loaded
+    BlackSceneScreenSurfaceDef.graphicsCommand.Program = Cinema.ShaderMgr.ScenePrograms[0];
+
+    OVR_LOG( "SceneManager::OneTimeInit: %3.1f seconds", GetTimeInSeconds() - start );
+}
+
+void SceneManager::OneTimeShutdown()
+{
+    OVR_LOG( "SceneManager::OneTimeShutdown" );
+
+    // Free GL resources
+
+    GlProgram::Free( FadedScreenMaskSquareDef.graphicsCommand.Program );
+    FadedScreenMaskSquareDef.geo.Free();
+
+    ScreenSurfaceDef.geo.Free();
+
+    UnitSquare.Free();
+
+    if ( ScreenVignetteTexture != 0 )
     {
-        OVR_LOG( "SceneManager::OneTimeShutdown" );
-
-        // Free GL resources
-
-        GlProgram::Free( FadedScreenMaskSquareDef.graphicsCommand.Program );
-        FadedScreenMaskSquareDef.geo.Free();
-
-        ScreenSurfaceDef.geo.Free();
-
-        UnitSquare.Free();
-
-        if ( ScreenVignetteTexture != 0 )
-        {
-            glDeleteTextures( 1, & ScreenVignetteTexture );
-            ScreenVignetteTexture = 0;
-        }
-
-        if ( ScreenVignetteSbsTexture != 0 )
-        {
-            glDeleteTextures( 1, & ScreenVignetteSbsTexture );
-            ScreenVignetteSbsTexture = 0;
-        }
-
-        if ( MipMappedMovieFBOs != NULL )
-        {
-            glDeleteFramebuffers( MipMappedMovieTextureSwapChainLength, MipMappedMovieFBOs );
-            delete [] MipMappedMovieFBOs;
-            MipMappedMovieFBOs = NULL;
-        }
-
-        if ( MipMappedMovieTextureSwapChain != NULL )
-        {
-            vrapi_DestroyTextureSwapChain( MipMappedMovieTextureSwapChain );
-            MipMappedMovieTextureSwapChain = NULL;
-            MipMappedMovieTextureSwapChainLength = 0;
-        }
+        glDeleteTextures( 1, & ScreenVignetteTexture );
+        ScreenVignetteTexture = 0;
     }
+
+    if ( ScreenVignetteSbsTexture != 0 )
+    {
+        glDeleteTextures( 1, & ScreenVignetteSbsTexture );
+        ScreenVignetteSbsTexture = 0;
+    }
+
+    if ( MipMappedMovieFBOs != NULL )
+    {
+        glDeleteFramebuffers( MipMappedMovieTextureSwapChainLength, MipMappedMovieFBOs );
+        delete [] MipMappedMovieFBOs;
+        MipMappedMovieFBOs = NULL;
+    }
+
+    if ( MipMappedMovieTextureSwapChain != NULL )
+    {
+        vrapi_DestroyTextureSwapChain( MipMappedMovieTextureSwapChain );
+        MipMappedMovieTextureSwapChain = NULL;
+        MipMappedMovieTextureSwapChainLength = 0;
+    }
+
+	SurfaceRender.Shutdown();
+}
 
 //=========================================================================================
 
@@ -954,15 +960,12 @@ static void GetTextureMatrix( const MovieFormat format, const int movieRotation,
 	}
 }
 
-/*
- * Frame()
- *
- * App override
- */
-void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
+
+void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput & out )
+//void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 {
 	// disallow player movement
-	ovrApplFrameIn vrFrameWithoutMove = vrFrame;
+	ovrApplFrameIn vrFrameWithoutMove = in;
 	if ( !AllowMove )
 	{
 		vrFrameWithoutMove.LeftRemote.Joystick.x = 0.0f;
@@ -996,8 +999,8 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 	    glBindTexture( GL_TEXTURE_EXTERNAL_OES, 0 );
 	    if ( MovieTexture->GetNanoTimeStamp() != MovieTextureTimestamp )
 	    {
-		MovieTextureTimestamp = MovieTexture->GetNanoTimeStamp();
-		FrameUpdateNeeded = true;
+			MovieTextureTimestamp = MovieTexture->GetNanoTimeStamp();
+			FrameUpdateNeeded = true;
 	    }
 	    FrameUpdateNeeded = true;
 	    Cinema.MovieScreenUpdated();
@@ -1064,7 +1067,7 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 	{
 		// lights fading in and out, always on if no movie loaded
 		const float cinemaLights = ( ( MovieTextureWidth > 0 ) && !SceneInfo.UseFreeScreen ) ?
-				(float)StaticLighting.Value( vrFrame.RealTimeInSeconds ) : 1.0f;
+				(float)StaticLighting.Value( in.RealTimeInSeconds ) : 1.0f;
 
 		if ( cinemaLights <= 0.0f )
 		{
@@ -1127,14 +1130,13 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 		}
 	}
 
-	ovrRendererOutput & res = Cinema.GetFrameResult();
-	Scene.GetFrameMatrices( Cinema.GetSuggestedEyeFovDegreesX(), Cinema.GetSuggestedEyeFovDegreesY(), res.FrameMatrices );
-	Scene.GenerateFrameSurfaceList( res.FrameMatrices, res.Surfaces );
+	Scene.GetFrameMatrices( Cinema.GetSuggestedEyeFovDegreesX(), Cinema.GetSuggestedEyeFovDegreesY(), out.FrameMatrices );
+	Scene.GenerateFrameSurfaceList( out.FrameMatrices, out.Surfaces );
 
 	//-------------------------------
 	// Rendering
 	//-------------------------------
-	res.FrameFlags = 0;
+	out.FrameFlags = 0;
 
 	const bool drawScreen = ( ( SceneScreenSurface != NULL ) || SceneInfo.UseFreeScreen ) && MovieTexture && ( CurrentMovieWidth > 0 );
 
@@ -1145,7 +1147,7 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 		if ( FreeScreenActive && !SceneInfo.UseFreeScreen && ( SceneScreenSurface != NULL ) )
 		{
 			BlackSceneScreenSurfaceDef.graphicsCommand.GpuState.depthEnable = false;
-			res.Surfaces.push_back( ovrDrawSurface( &BlackSceneScreenSurfaceDef ) );
+			out.Surfaces.push_back( ovrDrawSurface( &BlackSceneScreenSurfaceDef ) );
 		}
 
 		Matrix4f texMatrix[2];
@@ -1157,7 +1159,7 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 
 		// Draw the movie texture layer
 		{
-			ovrLayerProjection2 & overlayLayer = res.Layers[ res.NumLayers++ ].Projection;
+			ovrLayerProjection2 & overlayLayer = out.Layers[ out.NumLayers++ ].Projection;
 			overlayLayer = vrapi_DefaultLayerProjection2();
 
 			overlayLayer.Header.SrcBlend = VRAPI_FRAME_LAYER_BLEND_ONE;
@@ -1177,24 +1179,50 @@ void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 
 		// explicitly clear a hole in the eye buffer alpha
 		{
-			res.Surfaces.push_back( ovrDrawSurface( ScreenMatrix(), &FadedScreenMaskSquareDef ) );
+			out.Surfaces.push_back( ovrDrawSurface( ScreenMatrix(), &FadedScreenMaskSquareDef ) );
 		}
 	}
 
-	ovrLayerProjection2 & worldLayer = res.Layers[ res.NumLayers++ ].Projection;
+	ovrLayerProjection2 & worldLayer = out.Layers[ out.NumLayers++ ].Projection;
 	worldLayer = vrapi_DefaultLayerProjection2();
 
 	worldLayer.Header.SrcBlend = ( drawScreen ) ? VRAPI_FRAME_LAYER_BLEND_SRC_ALPHA : VRAPI_FRAME_LAYER_BLEND_ONE;
 	worldLayer.Header.DstBlend = ( drawScreen ) ? VRAPI_FRAME_LAYER_BLEND_ONE_MINUS_SRC_ALPHA : VRAPI_FRAME_LAYER_BLEND_ZERO;
 	worldLayer.Header.Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
 
-	worldLayer.HeadPose = Cinema.GetFrame().Tracking.HeadPose;/*
+	worldLayer.HeadPose = Cinema.GetFrame().Tracking.HeadPose;
 	for ( int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++ )
 	{
-		worldLayer.Textures[eye].ColorSwapChain = Cinema.GetFrame().ColorTextureSwapChain[eye];
-		worldLayer.Textures[eye].SwapChainIndex = Cinema.GetFrame().TextureSwapChainIndex;
-		worldLayer.Textures[eye].TexCoordsFromTanAngles = Cinema.GetFrame().TexCoordsFromTanAngles;
-	}*/
+		ovrFramebuffer * framebuffer = Cinema.GetFrameBuffer( eye );
+		worldLayer.Textures[eye].ColorSwapChain = framebuffer->ColorTextureSwapChain;
+		worldLayer.Textures[eye].SwapChainIndex = framebuffer->TextureSwapChainIndex;
+		worldLayer.Textures[eye].TexCoordsFromTanAngles = ovrMatrix4f_TanAngleMatrixFromProjection( (ovrMatrix4f *)&out.FrameMatrices.EyeProjection[eye] );
+	}
+
+	// render images for each eye
+	for ( int eye = 0; eye < Cinema.GetNumFramebuffers(); ++eye )
+	{
+		ovrFramebuffer * framebuffer = Cinema.GetFrameBuffer( eye );
+		ovrFramebuffer_SetCurrent( framebuffer );
+
+		Cinema.AppEyeGLStateSetup( in, framebuffer, eye );
+		AppRenderEye( in, out, eye );
+
+		ovrFramebuffer_Resolve( framebuffer );
+		ovrFramebuffer_Advance( framebuffer );
+	}
+
+	ovrFramebuffer_SetNone();
+}
+
+void SceneManager::AppRenderEye( const ovrApplFrameIn & in, ovrRendererOutput & out, int eye )
+{
+	// Render the surfaces returned by Frame.
+	SurfaceRender.RenderSurfaceList(
+			out.Surfaces,
+			out.FrameMatrices.EyeView[0], 		// always use 0 as it assumes an array
+			out.FrameMatrices.EyeProjection[0], // always use 0 as it assumes an array
+			eye );
 }
 
 } // namespace OculusCinema

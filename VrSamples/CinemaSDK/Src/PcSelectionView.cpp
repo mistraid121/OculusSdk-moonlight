@@ -1130,7 +1130,7 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
         SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ) );
     }
 
-    Cinema.SceneMgr.Frame( vrFrame );
+    //Cinema.SceneMgr.Frame( vrFrame );
 }
 
 } // namespace OculusCinema

@@ -55,14 +55,16 @@ public:
 
 	//virtual void			Configure( ovrSettings & settings );
 	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
-	virtual OVRFW::ovrRendererOutput	Frame( const OVRFW::ovrApplFrameIn & vrFrame );
-
+	//virtual OVRFW::ovrRendererOutput	Frame( const OVRFW::ovrApplFrameIn & vrFrame );
+	// Called once per frame when the VR session is active.
+	virtual OVRFW::ovrApplFrameOut	AppFrame( const OVRFW::ovrApplFrameIn & vrFrame ) override;
+	// Called once per frame to allow the application to render eye buffers.
+	virtual void                  	AppRenderFrame( const OVRFW::ovrApplFrameIn & in, OVRFW::ovrRendererOutput & out ) override;
 	OVRFW::OvrGuiSys &				GetGuiSys() { return *GuiSys; }
 	OVRFW::ovrLocale &				GetLocale() { return *Locale; }
     OVRFW::ovrMessageQueue &		GetMessageQueue() { return MessageQueue; }
 
 	const OVRFW::ovrApplFrameIn &	GetFrame() const { return VrFrame; }
-	OVRFW::ovrRendererOutput &		GetFrameResult() { return FrameResult; }
 
 	void                    SetPlaylist( const std::vector<const AppDef *> &playList, const int nextApp );
 	void                    SetApp( const AppDef * nextApp );
@@ -107,6 +109,21 @@ public:
 
 	float 					GetSuggestedEyeFovDegreesX() const {return SuggestedEyeFovDegreesX;}
 	float 					GetSuggestedEyeFovDegreesY() const {return SuggestedEyeFovDegreesY;}
+
+    int				  GetNumFramebuffers() const
+    {
+        return ovrAppl::GetNumFramebuffers();
+    }
+
+    ovrFramebuffer * GetFrameBuffer( int eye )
+    {
+        return ovrAppl::GetFrameBuffer(eye);
+    }
+
+    void 			AppEyeGLStateSetup( const OVRFW::ovrApplFrameIn & in, const ovrFramebuffer * fb, int eye ) override
+    {
+        ovrAppl::AppEyeGLStateSetup( in,  fb, eye );
+    }
 
 public:
 	OVRFW::OvrGuiSys *				GuiSys;

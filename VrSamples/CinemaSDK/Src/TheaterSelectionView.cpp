@@ -408,7 +408,7 @@ void TheaterSelectionView::Frame( const ovrApplFrameIn & vrFrame )
         Cinema.AppSelection( false );
 	}
 */
-	Cinema.SceneMgr.Frame( vrFrame );
+	//Cinema.SceneMgr.Frame( vrFrame );
 }
 
 } // namespace OculusCinema
