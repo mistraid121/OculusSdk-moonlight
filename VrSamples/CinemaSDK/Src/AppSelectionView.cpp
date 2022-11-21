@@ -41,8 +41,6 @@ static const int PosterHeight = 344;
 
 static const Vector3f PosterScale(4.4859375f * 0.98f);
 
-static const double TimerTotalTime = 10;
-
 static const int NumSwipeTrails = 3;
 static const char* Guuid;
 
@@ -65,9 +63,6 @@ static const char* Guuid;
             CenterPosition(),
             LeftSwipes(),
             RightSwipes(),
-            TimerStartTime(0),
-            TimerValue(0),
-            ShowTimer(false),
             MoveScreenAlpha(),
             SelectionFader(),
             MoviePanelPositions(),
@@ -151,7 +146,6 @@ static const char* Guuid;
 
 
             ResumeIcon->SetVisible(false);
-            TimerIcon->SetVisible(false);
             CenterRoot->SetVisible(true);
 
             MoveScreenLabel->SetVisible(false);
@@ -325,7 +319,6 @@ static const char* Guuid;
 
     void AppSelectionView::OnClose() {
         OVR_LOG("OnClose");
-        ShowTimer = false;
         CurViewState = VIEWSTATE_CLOSED;
         CenterRoot->SetVisible(false);
         Menu->Close();
@@ -701,37 +694,6 @@ static const char* Guuid;
         SettingsButton->SetOnClick( SettingsButtonCallback, this );
 
 
-
-        // ==============================================================================
-        //
-        // timer
-        //
-        TimerIcon = new UILabel(Cinema.GetGuiSys());
-        TimerIcon->AddToMenu(Menu, MovieRoot);
-        TimerIcon->SetLocalPose(forward, CenterPosition + Vector3f(0.0f, 0.0f, 0.5f));
-        TimerIcon->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
-        TimerIcon->SetFontScale(1.0f);
-        TimerIcon->SetLocalScale(2.0f);
-        TimerIcon->SetText("10");
-        TimerIcon->SetVisible(false);
-
-        VRMenuSurfaceParms timerSurfaceParms("timer",
-                                             "apk:///assets/timer.tga", SURFACE_TEXTURE_DIFFUSE,
-                                             "apk:///assets/timer_fill.tga",
-                                             SURFACE_TEXTURE_COLOR_RAMP_TARGET,
-                                             "apk:///assets/color_ramp_timer.tga",
-                                             SURFACE_TEXTURE_COLOR_RAMP);
-
-        TimerIcon->SetImage(0, timerSurfaceParms);
-
-        // text
-        TimerText = new UILabel(Cinema.GetGuiSys());
-        TimerText->AddToMenu(Menu, TimerIcon);
-        TimerText->SetLocalPose(forward, Vector3f(0.0f, -0.3f, 0.0f));
-        TimerText->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
-        TimerText->SetFontScale(1.0f);
-        TimerText->SetText(Cinema.GetCinemaStrings().MovieSelection_Next);
-
         // ==============================================================================
         //
         // reorient message
@@ -1068,279 +1030,245 @@ bool AppSelectionView::SettingsIsActive( UIButton *button)
     return false;
 }
 
-    Vector3f AppSelectionView::ScalePosition(const Vector3f &startPos, const float scale,
-                                             const float menuOffset) const {
-        const float eyeHieght = Cinema.SceneMgr.Scene.GetEyeHeight();
+Vector3f AppSelectionView::ScalePosition(const Vector3f &startPos, const float scale,
+                                         const float menuOffset) const {
+    const float eyeHieght = Cinema.SceneMgr.Scene.GetEyeHeight();
 
-        Vector3f pos = startPos;
-        pos.x *= scale;
-        pos.y = (pos.y - eyeHieght) * scale + eyeHieght + menuOffset;
-        pos.z *= scale;
-        pos += Cinema.SceneMgr.Scene.GetFootPos();
+    Vector3f pos = startPos;
+    pos.x *= scale;
+    pos.y = (pos.y - eyeHieght) * scale + eyeHieght + menuOffset;
+    pos.z *= scale;
+    pos += Cinema.SceneMgr.Scene.GetFootPos();
 
-        return pos;
-    }
+    return pos;
+}
 
-    bool AppSelectionView::BackPressed()
+bool AppSelectionView::BackPressed()
+{
+    if(ErrorShown())
     {
-        if(ErrorShown())
-        {
-            ClearError();
-            return true;
-        }
-
-        if(settingsMenu->GetVisible())
-        {
-            settingsMenu->SetVisible(false);
-
-            return true;
-        }
-
-        //Cinema.PcSelection(true);
-        return false;
+        ClearError();
+        return true;
     }
 
+    if(settingsMenu->GetVisible())
+    {
+        settingsMenu->SetVisible(false);
 
-
-    bool AppSelectionView::OnKeyEvent(const int keyCode, const int repeatCount,
-                                      const UIKeyboard::KeyEventType eventType) {
-        OVR_UNUSED(keyCode);
-        OVR_UNUSED(repeatCount);
-        OVR_UNUSED(eventType);
-        switch ( keyCode ) {/*
-            case OVR_KEY_BACK: {
-                switch (eventType) {
-                    case KEY_EVENT_SHORT_PRESS:
-                        OVR_LOG("KEY_EVENT_SHORT_PRESS");
-                        BackPressed();
-                        return true;
-                        break;
-                    default:
-                        //OVR_LOG( "unexpected back key state %i", eventType );
-                        break;
-                }
-            }*/
-        }
-        return false;
+        return true;
     }
 
-    void AppSelectionView::UpdateMenuPosition() {
-        // scale down when in a theater
-        const float scale = Cinema.InLobby ? 1.0f : 0.55f;
-        CenterRoot->GetMenuObject()->SetLocalScale(Vector3f(scale));
+    //Cinema.PcSelection(true);
+    return false;
+}
 
-        if (!Cinema.InLobby && Cinema.SceneMgr.SceneInfo.UseFreeScreen) {
-            Quatf orientation = Quatf(Cinema.SceneMgr.FreeScreenPose);
-            CenterRoot->GetMenuObject()->SetLocalRotation(orientation);
-            CenterRoot->GetMenuObject()->SetLocalPosition(
-                    Cinema.SceneMgr.FreeScreenPose.Transform(
-                            Vector3f(0.0f, -1.76f * scale, 0.0f)));
-        } else {
-            const float menuOffset = Cinema.InLobby ? 0.0f : 0.5f;
-            CenterRoot->GetMenuObject()->SetLocalRotation(Quatf());
-            CenterRoot->GetMenuObject()->SetLocalPosition(
-                    ScalePosition(Vector3f::ZERO, scale, menuOffset));
-        }
-    }
 
-    void AppSelectionView::Select() {
-        OVR_LOG( "AppSelectionView::Select");
 
-        // ignore selection while repositioning screen
-        if (RepositionScreen) {
-            return;
-        }
-
-        int lastIndex = AppIndex;
-        AppIndex = MovieBrowser->GetSelection();
-        Cinema.SetPlaylist(AppList, AppIndex);
-
-        Cinema.InLobby = true;
-        if (!Cinema.InLobby) {
-            if (lastIndex == AppIndex) {
-                // selected the poster we were just watching
-                Cinema.PlayOrResumeOrRestartApp();
-            } else {
-                Cinema.PlayOrResumeOrRestartApp();
+bool AppSelectionView::OnKeyEvent(const int keyCode, const int repeatCount,
+                                  const UIKeyboard::KeyEventType eventType) {
+    OVR_UNUSED(keyCode);
+    OVR_UNUSED(repeatCount);
+    OVR_UNUSED(eventType);
+    switch ( keyCode ) {/*
+        case OVR_KEY_BACK: {
+            switch (eventType) {
+                case KEY_EVENT_SHORT_PRESS:
+                    OVR_LOG("KEY_EVENT_SHORT_PRESS");
+                    BackPressed();
+                    return true;
+                    break;
+                default:
+                    //OVR_LOG( "unexpected back key state %i", eventType );
+                    break;
             }
+        }*/
+    }
+    return false;
+}
+
+void AppSelectionView::UpdateMenuPosition() {
+    // scale down when in a theater
+    const float scale = Cinema.InLobby ? 1.0f : 0.55f;
+    CenterRoot->GetMenuObject()->SetLocalScale(Vector3f(scale));
+
+    if (!Cinema.InLobby && Cinema.SceneMgr.SceneInfo.UseFreeScreen) {
+        Quatf orientation = Quatf(Cinema.SceneMgr.FreeScreenPose);
+        CenterRoot->GetMenuObject()->SetLocalRotation(orientation);
+        CenterRoot->GetMenuObject()->SetLocalPosition(
+                Cinema.SceneMgr.FreeScreenPose.Transform(
+                        Vector3f(0.0f, -1.76f * scale, 0.0f)));
+    } else {
+        const float menuOffset = Cinema.InLobby ? 0.0f : 0.5f;
+        CenterRoot->GetMenuObject()->SetLocalRotation(Quatf());
+        CenterRoot->GetMenuObject()->SetLocalPosition(
+                ScalePosition(Vector3f::ZERO, scale, menuOffset));
+    }
+}
+
+void AppSelectionView::Select() {
+    OVR_LOG( "AppSelectionView::Select");
+
+    // ignore selection while repositioning screen
+    if (RepositionScreen) {
+        return;
+    }
+
+    int lastIndex = AppIndex;
+    AppIndex = MovieBrowser->GetSelection();
+    Cinema.SetPlaylist(AppList, AppIndex);
+
+    Cinema.InLobby = true;
+    if (!Cinema.InLobby) {
+        if (lastIndex == AppIndex) {
+            // selected the poster we were just watching
+            Cinema.PlayOrResumeOrRestartApp();
         } else {
-            Cinema.TheaterSelection();
+            Cinema.PlayOrResumeOrRestartApp();
+        }
+    } else {
+        Cinema.TheaterSelection();
+    }
+}
+
+
+void AppSelectionView::SetCategory(const PcCategory category) {
+    // default to category in index 0
+    OVR::UPInt categoryIndex = 0;
+    for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
+        if (category == Categories[i].Category) {
+            categoryIndex = i;
+            break;
         }
     }
 
-    void AppSelectionView::StartTimer() {
-        const double now = vrapi_GetTimeInSeconds();
-        TimerStartTime = now;
-        TimerValue = -1;
-        ShowTimer = true;
+    OVR_LOG("SetCategory: %s", Categories[categoryIndex].Text.c_str());
+    CurrentCategory = Categories[categoryIndex].Category;
+    for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
+        Categories[i].Button->SetHilighted(i == categoryIndex);
     }
 
+    // reset all the swipe icons so they match the current poster
+    for (int i = 0; i < NumSwipeTrails; i++) {
+        CarouselSwipeHintComponent *compLeft = LeftSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
+        compLeft->Reset(LeftSwipes[i]->GetMenuObject());
+        CarouselSwipeHintComponent *compRight = RightSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
+        compRight->Reset(RightSwipes[i]->GetMenuObject());
+    }
+    Cinema.AppMgr.LoadPosters();
+    SetAppList(Cinema.AppMgr.GetAppList(CurrentCategory),  NULL);
 
+    OVR_LOG("%zu movies added", AppList.size());
+}
 
+void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
+                                  const AppDef *nextApp) {
+    //OVR_LOG( "AppSelectionView::SetAppList: %d movies", movies.size());
 
+    AppList = apps;
+    DeletePointerArray(MovieBrowserItems);
+    for (OVR::UPInt i = 0; i < AppList.size(); i++) {
+        const AppDef *app = AppList[i];
 
-    void AppSelectionView::SetCategory(const PcCategory category) {
-        // default to category in index 0
-        OVR::UPInt categoryIndex = 0;
-        for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-            if (category == Categories[i].Category) {
-                categoryIndex = i;
+        OVR_LOG( "AddMovie: %s", app->Name.c_str());
+
+        CarouselItem *item = new CarouselItem();
+        item->Texture = app->Poster;
+        item->TextureWidth = app->PosterWidth;
+        item->TextureHeight = app->PosterHeight;
+        MovieBrowserItems.push_back(item);
+    }
+    MovieBrowser->SetItems(MovieBrowserItems);
+
+    MovieTitle->SetText("");
+    LastAppDisplayed = NULL;
+
+    //AppIndex = 0;
+    if (nextApp != NULL) {
+        for (OVR::UPInt i = 0; i < AppList.size(); i++) {
+            if (apps[i] == nextApp) {
+                AppIndex = i;
                 break;
             }
         }
-
-        OVR_LOG("SetCategory: %s", Categories[categoryIndex].Text.c_str());
-        CurrentCategory = Categories[categoryIndex].Category;
-        for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-            Categories[i].Button->SetHilighted(i == categoryIndex);
-        }
-
-        // reset all the swipe icons so they match the current poster
-        for (int i = 0; i < NumSwipeTrails; i++) {
-            CarouselSwipeHintComponent *compLeft = LeftSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-            compLeft->Reset(LeftSwipes[i]->GetMenuObject());
-            CarouselSwipeHintComponent *compRight = RightSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-            compRight->Reset(RightSwipes[i]->GetMenuObject());
-        }
-        Cinema.AppMgr.LoadPosters();
-        SetAppList(Cinema.AppMgr.GetAppList(CurrentCategory),  NULL);
-
-        OVR_LOG("%zu movies added", AppList.size());
     }
 
-    void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
-                                      const AppDef *nextApp) {
-        //OVR_LOG( "AppSelectionView::SetAppList: %d movies", movies.size());
+    MovieBrowser->SetSelectionIndex(AppIndex);
 
-        AppList = apps;
-        DeletePointerArray(MovieBrowserItems);
-        for (OVR::UPInt i = 0; i < AppList.size(); i++) {
-            const AppDef *app = AppList[i];
-
-            OVR_LOG( "AddMovie: %s", app->Name.c_str());
-
-            CarouselItem *item = new CarouselItem();
-            item->Texture = app->Poster;
-            item->TextureWidth = app->PosterWidth;
-            item->TextureHeight = app->PosterHeight;
-            MovieBrowserItems.push_back(item);
-        }
-        MovieBrowser->SetItems(MovieBrowserItems);
-
-        MovieTitle->SetText("");
-        LastAppDisplayed = NULL;
-
-        //AppIndex = 0;
-        if (nextApp != NULL) {
-            for (OVR::UPInt i = 0; i < AppList.size(); i++) {
-                if (apps[i] == nextApp) {
-                    StartTimer();
-                    AppIndex = i;
-                    break;
-                }
-            }
-        }
-
-        MovieBrowser->SetSelectionIndex(AppIndex);
-
-        if (AppList.size() == 0) {
-            SetError("error", false);
-            ErrorMessageClicked = true;
-        } else {
-            ClearError();
-        }
-    }
-
-    void AppSelectionView::SelectionHighlighted(bool isHighlighted) {
-        if (isHighlighted && !ShowTimer && !Cinema.InLobby &&
-            (AppIndex == MovieBrowser->GetSelection())) {
-            // dim the poster when the resume icon is up and the poster is highlighted
-            CenterPoster->SetColor(Vector4f(0.55f, 0.55f, 0.55f, 1.0f));
-        } else if (MovieBrowser->HasSelection()) {
-            CenterPoster->SetColor(Vector4f(1.0f));
-        }
-    }
-
-    void AppSelectionView::UpdateSelectionFrame(const ovrApplFrameIn &vrFrame) {
-        const double now = vrapi_GetTimeInSeconds();
-        if (!MovieBrowser->HasSelection()) {
-            SelectionFader.Set(now, 0, now + 0.1, 1.0f);
-            TimerStartTime = 0;
-        }
-
-        if (!SelectionFrame->GetMenuObject()->IsHilighted()) {
-            SelectionFader.Set(now, 0, now + 0.1, 1.0f);
-        } else {
-            MovieBrowser->CheckGamepad(Cinema.GetGuiSys(), vrFrame, MovieRoot->GetMenuObject());
-        }
-
-        SelectionFrame->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
-
-        int selected = MovieBrowser->GetSelection();
-        if ( selected >= 0 && static_cast<int>(AppList.size()) > selected && AppList[ selected ]->isRunning ){
-            ResumeIcon->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
-            ResumeIcon->SetTextColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
-            ResumeIcon->SetVisible(true);
-            CloseAppButton->SetVisible( true );
-        } else {
-            ResumeIcon->SetVisible(false);
-            CloseAppButton->SetVisible( false );
-        }
-
-        if (ShowTimer && (TimerStartTime != 0)) {
-            double frac = (now - TimerStartTime) / TimerTotalTime;
-            if (frac > 1.0f) {
-                frac = 1.0f;
-                Cinema.SetPlaylist(AppList, MovieBrowser->GetSelection());
-                Cinema.PlayOrResumeOrRestartApp();
-            }
-            Vector2f offset(0.0f, 1.0f - static_cast<float>( frac ));
-            TimerIcon->SetColorTableOffset(offset);
-
-            int seconds = static_cast<int>( TimerTotalTime - (TimerTotalTime * frac));
-            if (TimerValue != seconds) {
-                TimerValue = seconds;
-                const char *text = std::to_string(seconds).c_str();
-                TimerIcon->SetText(text);
-            }
-            TimerIcon->SetVisible(true);
-            CenterPoster->SetColor(Vector4f(0.55f, 0.55f, 0.55f, 1.0f));
-        } else {
-            TimerIcon->SetVisible(false);
-        }
-    }
-
-    void AppSelectionView::SetError(const char *text, bool showErrorIcon) {
+    if (AppList.size() == 0) {
+        SetError("error", false);
+        ErrorMessageClicked = true;
+    } else {
         ClearError();
+    }
+}
 
-        OVR_LOG("SetError: %s", text);
-        if (showErrorIcon) {
-            ErrorMessage->SetVisible(true);
-            ErrorMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f);
-        } else {
-            PlainErrorMessage->SetVisible(true);
-            PlainErrorMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(),
-                                                  1.0f);
-        }
-        TitleRoot->SetVisible(false);
-        MovieRoot->SetVisible(false);
+void AppSelectionView::SelectionHighlighted(bool isHighlighted) {
+    if (isHighlighted && !Cinema.InLobby &&
+        (AppIndex == MovieBrowser->GetSelection())) {
+        // dim the poster when the resume icon is up and the poster is highlighted
+        CenterPoster->SetColor(Vector4f(0.55f, 0.55f, 0.55f, 1.0f));
+    } else if (MovieBrowser->HasSelection()) {
+        CenterPoster->SetColor(Vector4f(1.0f));
+    }
+}
 
-        CarouselSwipeHintComponent::ShowSwipeHints = false;
+void AppSelectionView::UpdateSelectionFrame(const ovrApplFrameIn &vrFrame) {
+    const double now = vrapi_GetTimeInSeconds();
+    if (!MovieBrowser->HasSelection()) {
+        SelectionFader.Set(now, 0, now + 0.1, 1.0f);
     }
 
-    void AppSelectionView::ClearError() {
-        OVR_LOG("ClearError");
-        ErrorMessageClicked = false;
-        ErrorMessage->SetVisible(false);
-        PlainErrorMessage->SetVisible(false);
-        TitleRoot->SetVisible(true);
-        MovieRoot->SetVisible(true);
-
-        CarouselSwipeHintComponent::ShowSwipeHints = true;
+    if (!SelectionFrame->GetMenuObject()->IsHilighted()) {
+        SelectionFader.Set(now, 0, now + 0.1, 1.0f);
+    } else {
+        MovieBrowser->CheckGamepad(Cinema.GetGuiSys(), vrFrame, MovieRoot->GetMenuObject());
     }
 
-    bool AppSelectionView::ErrorShown() const {
-        return ErrorMessage->GetVisible()  ||
-               PlainErrorMessage->GetVisible();
+    SelectionFrame->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
+
+    int selected = MovieBrowser->GetSelection();
+    if ( selected >= 0 && static_cast<int>(AppList.size()) > selected && AppList[ selected ]->isRunning ){
+        ResumeIcon->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
+        ResumeIcon->SetTextColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
+        ResumeIcon->SetVisible(true);
+        CloseAppButton->SetVisible( true );
+    } else {
+        ResumeIcon->SetVisible(false);
+        CloseAppButton->SetVisible( false );
     }
+}
+
+void AppSelectionView::SetError(const char *text, bool showErrorIcon) {
+    ClearError();
+
+    OVR_LOG("SetError: %s", text);
+    if (showErrorIcon) {
+        ErrorMessage->SetVisible(true);
+        ErrorMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(), 1.0f);
+    } else {
+        PlainErrorMessage->SetVisible(true);
+        PlainErrorMessage->SetTextWordWrapped(text, Cinema.GetGuiSys().GetDefaultFont(),
+                                              1.0f);
+    }
+    TitleRoot->SetVisible(false);
+    MovieRoot->SetVisible(false);
+
+    CarouselSwipeHintComponent::ShowSwipeHints = false;
+}
+
+void AppSelectionView::ClearError() {
+    OVR_LOG("ClearError");
+    ErrorMessageClicked = false;
+    ErrorMessage->SetVisible(false);
+    PlainErrorMessage->SetVisible(false);
+    TitleRoot->SetVisible(true);
+    MovieRoot->SetVisible(true);
+
+    CarouselSwipeHintComponent::ShowSwipeHints = true;
+}
+
+bool AppSelectionView::ErrorShown() const {
+    return ErrorMessage->GetVisible()  ||
+           PlainErrorMessage->GetVisible();
+}
 }

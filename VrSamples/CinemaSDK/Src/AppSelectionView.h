@@ -121,13 +121,6 @@ private:
 	OVRFW::UIButton *                          CloseAppButton;
 	OVRFW::UIButton *                          SettingsButton;
 
-
-	OVRFW::UILabel *							TimerIcon;
-	OVRFW::UILabel *							TimerText;
-	double								TimerStartTime;
-	int									TimerValue;
-	bool								ShowTimer;
-
 	OVRFW::UILabel *							MoveScreenLabel;
 	OVRFW::Lerp								MoveScreenAlpha;
 
@@ -192,8 +185,6 @@ private:
 	void 								CreateMenu( OVRFW::OvrGuiSys & guiSys );
 	OVR::Vector3f 							ScalePosition( const OVR::Vector3f &startPos, const float scale, const float menuOffset ) const;
 	void 								UpdateMenuPosition();
-
-	void								StartTimer();
 
 	void								UpdateAppTitle();
 	void								UpdateSelectionFrame( const OVRFW::ovrApplFrameIn & vrFrame );
