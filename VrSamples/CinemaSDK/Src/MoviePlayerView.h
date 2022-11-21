@@ -251,7 +251,6 @@ private:
 	OVRFW::UIButton *               ScreenMenuButton;
 	OVRFW::UIContainer *            ScreenMenu;
     OVRFW::UIButton *           ButtonSBS;
-    OVRFW::UIButton *           ButtonChangeSeat;
 	OVRFW::UILabel *                  ScreenDistance;
 	OVRFW::UIImage *                   DistanceSliderBackground;
 	OVRFW::UIImage *                   DistanceSliderIndicator;
@@ -476,19 +475,12 @@ private:
 	friend void        VRYCallback( SliderComponent *button, void *object, const float value );
 	void            VRYPressed(const float value);
 
-
-
-	friend void        ChangeSeatCallback( OVRFW::UIButton *button, void *object );
-	void            ChangeSeatPressed();
 	friend void        SBSCallback( OVRFW::UIButton *button, void *object );
 	void            SBSPressed();
 	friend void        DistanceCallback( SliderComponent *button, void *object, const float value );
 	void            DistancePressed( const float value);
 	friend void        SizeCallback( SliderComponent *button, void *object, const float value );
 	void            SizePressed( const float value);
-
-	friend bool        IsChangeSeatsEnabledCallback( OVRFW::UIButton *button, void *object );
-	bool            IsChangeSeatsEnabled();
 
     void                    UpdateMenus();
 

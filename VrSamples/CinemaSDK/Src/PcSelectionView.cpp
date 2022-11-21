@@ -920,12 +920,6 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
     eyeBufferParms.multisamples = 4;
     Cinema.app->SetEyeBufferParms( eyeBufferParms );
 */
-#if 0
-    if ( !Cinema.InLobby && Cinema.SceneMgr.ChangeSeats( vrFrame ) )
-    {
-        UpdateMenuPosition();
-    }
-#endif
 
     //if ( vrFrame.AllButtons & BUTTON_B )
     {

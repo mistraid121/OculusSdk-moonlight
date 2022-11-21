@@ -187,13 +187,6 @@ static const char* Guuid;
             eyeBufferParms.multisamples = 4;
             Cinema.app->SetEyeBufferParms(eyeBufferParms);*/
 
-#if 0
-            if ( !Cinema.InLobby && Cinema.SceneMgr.ChangeSeats( vrFrame ) )
-            {
-                UpdateMenuPosition();
-            }
-#endif
-
             //if (vrFrame.Input.buttonPressed & BUTTON_B) {
                 /*if (Cinema.InLobby) {
                     Cinema.app->ShowSystemUI(VRAPI_SYS_UI_CONFIRM_QUIT_MENU);

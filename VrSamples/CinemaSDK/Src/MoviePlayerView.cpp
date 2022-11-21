@@ -192,7 +192,6 @@ void HostAudioCallback				( UIButton *button, void *object ) { ( ( MoviePlayerVi
 void ApplyVideoCallback			( UIButton *button, void *object ) { ( ( MoviePlayerView * )object )->ApplyVideoPressed(); }
 void BitrateCallback                ( SliderComponent *button, void *object, const float value ) { ( ( MoviePlayerView * )object )->BitratePressed( value ); }
 void SBSCallback					( UIButton *button, void *object ) { ( ( MoviePlayerView * )object )->SBSPressed(); }
-void ChangeSeatCallback				( UIButton *button, void *object ) { ( ( MoviePlayerView * )object )->ChangeSeatPressed(); }
 void DistanceCallback				( SliderComponent *button, void *object, const float value ) { ( ( MoviePlayerView * )object )->DistancePressed( value ); }
 void SizeCallback					( SliderComponent *button, void *object, const float value ) { ( ( MoviePlayerView * )object )->SizePressed( value ); }
 void LatencyCallback                ( SliderComponent *button, void *object, const float value ) { ( ( MoviePlayerView * )object )->LatencyPressed( value ); }
@@ -764,16 +763,6 @@ void MoviePlayerView::CreateMenu( OvrGuiSys & guiSys )
 	TextButtonHelper(ButtonSBS);
 	ButtonSBS->SetOnClick( SBSCallback, this);
     ButtonSBS->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-
-	ButtonChangeSeat=new UIButton( Cinema.GetGuiSys()  );
-	ButtonChangeSeat->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
-	ButtonChangeSeat->SetLocalPosition( PixelPos( MENU_X * -2, MENU_Y * 1.25, 1 ) );
-	ButtonChangeSeat->SetText( Cinema.GetCinemaStrings().ButtonText_ButtonChangeSeat.c_str() );
-	TextButtonHelper(ButtonChangeSeat);
-	ButtonChangeSeat->SetOnClick( ChangeSeatCallback, this);
-    ButtonChangeSeat->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-
-	//ButtonChangeSeat->SetIsEnabled( IsChangeSeatsEnabledCallback, this );
 
 	ScreenDistance=new UILabel( Cinema.GetGuiSys() );
 	ScreenDistance->AddToMenu(  PlaybackControlsMenu, ScreenMenu );
@@ -2105,10 +2094,6 @@ bool MoviePlayerView::ApplyVideoIsEnabled()
 
 
 // Screen controls
-void MoviePlayerView::ChangeSeatPressed()
-{
-	Cinema.SceneMgr.NextSeat();
-}
 void MoviePlayerView::DistancePressed( const float value)
 {
 	Cinema.SceneMgr.FreeScreenDistance =  value;
@@ -2118,11 +2103,6 @@ void MoviePlayerView::SizePressed( const float value)
 {
 	Cinema.SceneMgr.FreeScreenScale = value;
 	SizeSlider.SetValue( value );
-}
-
-bool MoviePlayerView::IsChangeSeatsEnabled()
-{
-	return Cinema.SceneMgr.SceneSeatCount > 1;
 }
 
 
@@ -2145,7 +2125,6 @@ void MoviePlayerView::UpdateMenus()
 	ButtonApply->UpdateButtonState();
 
 	ButtonSBS->UpdateButtonState();
-	ButtonChangeSeat->UpdateButtonState();
 }
 
 

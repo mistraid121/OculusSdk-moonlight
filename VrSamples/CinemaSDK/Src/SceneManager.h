@@ -36,18 +36,14 @@ public:
 
 	bool 				Command( const char * msg );
 	void				AppRenderFrame( const OVRFW::ovrApplFrameIn & in, OVRFW::ovrRendererOutput & out );
-	//void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 				SetSeat( int newSeat );
-	bool 				ChangeSeats( const OVRFW::ovrApplFrameIn & vrFrame );
-	void                		NextSeat();
 
 	void 				ClearMovie();
 	void 				PutScreenInFront();
 
 	void				ClearGazeCursorGhosts();  	// clear gaze cursor to avoid seeing it lerp
 
-	void 				ToggleLights( const float duration, const double currTimeInSeconds );
 	void 				LightsOn( const float duration, const double currTimeInSeconds );
 	void 				LightsOff( const float duration, const double currTimeInSeconds );
 
@@ -63,8 +59,6 @@ public:
 	OVR::Matrix4f 			BoundsScreenMatrix( const OVR::Bounds3f & bounds, const float movieAspect ) const;
 	OVR::Matrix4f 			ScreenMatrix() const;
 
-	void				AllowMovement( bool allow ) { AllowMove = allow; }
-	bool				MovementAllowed() const { return AllowMove; }
 
 public:
 	CinemaApp &			Cinema;
@@ -136,7 +130,6 @@ public:
 
 	OVR::Bounds3f			SceneScreenBounds;
 
-	bool 				AllowMove;
 
 	bool				VoidedScene;
 	bool				FixVoidedScene;		// For some reason the void screen is placed in the wrong position when

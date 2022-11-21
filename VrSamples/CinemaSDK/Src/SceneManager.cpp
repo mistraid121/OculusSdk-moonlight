@@ -74,7 +74,6 @@ SceneManager::SceneManager( CinemaApp &cinema ) :
         SceneSeatCount( 0 ),
         SeatPosition( 0 ),
         SceneScreenBounds(),
-        AllowMove( false ),
         VoidedScene( false ),
         FixVoidedScene( false )
 
@@ -288,6 +287,7 @@ void SceneManager::SetSceneModel( const SceneDef & sceneDef )
 
 	SceneInfo = sceneDef;
 	Scene.SetWorldModel( *SceneInfo.SceneModel );
+	Scene.SetFreeMove( false );
 	SceneScreenSurface = const_cast<ovrSurfaceDef *>( Scene.FindNamedSurface( "screen" ) );
 
 	// Copy the geo off to the individual surface types we may need to render during the frame.
@@ -564,11 +564,6 @@ void SceneManager::ClearGazeCursorGhosts()
 	ClearGhostsFrames = 3;
 }
 
-void SceneManager::ToggleLights( const float duration, const double currTimeInSeconds )
-{
-	StaticLighting.Set( currTimeInSeconds, StaticLighting.Value( currTimeInSeconds ), currTimeInSeconds + duration, 1.0 - StaticLighting.endValue );
-}
-
 void SceneManager::LightsOn( const float duration, const double currTimeInSeconds )
 {
 	StaticLighting.Set( currTimeInSeconds, StaticLighting.Value( currTimeInSeconds ), currTimeInSeconds + duration, 1.0 );
@@ -684,87 +679,6 @@ void SceneManager::SetSeat( int newSeat )
 	Scene.SetFootPos( SceneSeatPositions[ SeatPosition ] );
 }
 
-bool SceneManager::ChangeSeats( const ovrApplFrameIn & vrFrame )
-{
-	bool changed = false;
-	if ( SceneSeatCount > 0 )
-	{
-		unsigned int controllerInput = vrFrame.AllButtons;
-		bool rightPressed 	= ( controllerInput & ( ovrButton_Right ) ) != 0;
-		bool leftPressed 	= ( controllerInput & ( ovrButton_Left ) ) != 0;
-		bool downPressed 	= ( controllerInput & ( ovrButton_Down ) ) != 0;
-		bool upPressed 		= ( controllerInput & ( ovrButton_Up ) ) != 0;
-
-		Vector3f direction( 0.0f );
-		if ( upPressed )
-		{
-			changed = true;
-			direction[2] += 1.0f;
-		}
-		if ( downPressed )
-		{
-			changed = true;
-			direction[2] -= 1.0f;
-		}
-		if ( rightPressed )
-		{
-			changed = true;
-			direction[0] += 1.0f;
-		}
-		if ( leftPressed )
-		{
-			changed = true;
-			direction[0] -= 1.0f;
-		}
-
-		if ( changed )
-		{
-			// Find the closest seat in the desired direction away from the current seat.
-			direction.Normalize();
-			const float distance = direction.Dot( Scene.GetFootPos() );
-			float bestSeatDistance = FLT_MAX;
-			int bestSeat = -1;
-			for ( int i = 0; i < SceneSeatCount; i++ )
-			{
-				const float d = direction.Dot( SceneSeatPositions[i] ) - distance;
-				if ( d > 0.01f && d < bestSeatDistance )
-				{
-					bestSeatDistance = d;
-					bestSeat = i;
-				}
-			}
-			if ( bestSeat != -1 )
-			{
-				SetSeat( bestSeat );
-			}
-		}
-	}
-
-	return changed;
-}
-
-void SceneManager::NextSeat()
-{
-	// Find the next seat after the current one
-	//TODO RAFA
-	//float closestSeatDistance = Math<float>::MaxValue;
-	float closestSeatDistance = 99999999;
-	int closestSeat = -1;
-	for ( int i = 0; i < SceneSeatCount; i++ )
-	{
-	    const float d = SceneSeatPositions[i].Distance(Scene.GetFootPos());
-	    if ( d < closestSeatDistance )
-	    {
-		closestSeatDistance = d;
-		closestSeat = i;
-	    }
-	}
-	if ( closestSeat != -1 )
-	{
-	    closestSeat = ( closestSeat + 1 ) % SceneSeatCount;
-	    SetSeat( closestSeat );
-	}
-}
 
 /*
  * Command
@@ -962,15 +876,11 @@ static void GetTextureMatrix( const MovieFormat format, const int movieRotation,
 
 
 void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput & out )
-//void SceneManager::Frame( const ovrApplFrameIn & vrFrame )
 {
 	// disallow player movement
 	ovrApplFrameIn vrFrameWithoutMove = in;
-	if ( !AllowMove )
-	{
-		vrFrameWithoutMove.LeftRemote.Joystick.x = 0.0f;
-		vrFrameWithoutMove.LeftRemote.Joystick.y = 0.0f;
-	}
+	vrFrameWithoutMove.LeftRemote.Joystick.x = 0.0f;
+	vrFrameWithoutMove.LeftRemote.Joystick.y = 0.0f;
 
 	// Suppress scene surfaces when Free Screen is active.
 	Scene.Frame( vrFrameWithoutMove, SceneInfo.UseFreeScreen ? 0 : -1 );

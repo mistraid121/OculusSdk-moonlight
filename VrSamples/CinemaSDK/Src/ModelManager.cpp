@@ -89,8 +89,6 @@ void ModelManager::LoadModels(std::string launchIntent)
 		VoidScene->UseSeats = false;
 		VoidScene->UseDynamicProgram = false;
 		VoidScene->UseFreeScreen = true;
-		//        VoidScene->UseVRScreen = true;
-
 
 		int width = 0, height = 0;
 		VoidScene->IconTexture = LoadTextureFromApplicationPackage( "assets/VoidTheater.png",
