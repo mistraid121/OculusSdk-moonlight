@@ -61,7 +61,6 @@ CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
 	AppSelectionMenu(*this),
 	TheaterSelectionMenu( *this ),
 	MessageQueue( 100 ),
-	FrameCount( 0 ),
 	PlayList(),
 	MovieFinishedPlaying( false ),
 	MountState( true ),			// We assume that the device is mounted at start since we can only detect changes in mount state
@@ -309,7 +308,7 @@ void CinemaApp::SetPlaylist( const std::vector<const AppDef *> &playList, const 
 
 void CinemaApp::SetApp( const AppDef *app )
 {
-	OVR_LOG( "SetMovie( %s )", app->Name.c_str() );
+	OVR_LOG( "SetApp( %s )", app->Name.c_str() );
 	CurrentApp = app;
 	MovieFinishedPlaying = false;
 }
@@ -464,7 +463,6 @@ ovrApplFrameOut CinemaApp::AppFrame( const ovrApplFrameIn & vrFrame )
 		free( (void *)msg );
 	}
 
-	FrameCount++;
 	VrFrame = vrFrame;
 
 	// update mount state

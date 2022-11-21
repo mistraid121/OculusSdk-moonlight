@@ -159,8 +159,6 @@ private:
 
     OVRFW::ovrMessageQueue			MessageQueue;
 
-	int						FrameCount;
-
 	const AppDef *            CurrentApp;
 	const PcDef *            CurrentPc;
 	std::vector<const AppDef *>    PlayList;
