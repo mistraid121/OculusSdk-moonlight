@@ -14,8 +14,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 *************************************************************************************/
 
 #include <android/keycodes.h>
-//#include "OVR_Input.h"
-//#include "App.h"
 #include "PcSelectionView.h"
 #include "CinemaApp.h"
 #include "GUI/VRMenuMgr.h"
@@ -43,7 +41,6 @@ static const int PosterHeight = 344;
 
 static const Vector3f PosterScale( 4.4859375f * 0.98f );
 
-static const double TimerTotalTime = 10;
 
 static const int NumSwipeTrails = 3;
 
@@ -67,9 +64,6 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	CenterPosition(),
 	LeftSwipes(),
 	RightSwipes(),
-	TimerStartTime( 0 ),
-	TimerValue( 0 ),
-	ShowTimer( false ),
 	MoveScreenAlpha(),
 	SelectionFader(),
 	PcPanelPositions(),
@@ -150,7 +144,6 @@ void PcSelectionView::OnOpen(const double currTimeInSeconds )
 
 
 	ResumeIcon->SetVisible( false );
-	TimerIcon->SetVisible( false );
 	CenterRoot->SetVisible( true );
 	
 	MoveScreenLabel->SetVisible( false );
@@ -172,7 +165,6 @@ void PcSelectionView::OnOpen(const double currTimeInSeconds )
 void PcSelectionView::OnClose()
 {
 	OVR_LOG( "OnClose" );
-	ShowTimer = false;
 	CurViewState = VIEWSTATE_CLOSED;
 	CenterRoot->SetVisible( false );
 	Menu->Close();
@@ -515,36 +507,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	CloseAppButton->SetOnClick( CloseAppButtonCallback, this );
 
 
-
-	// ==============================================================================
-	//
-	// timer
-	//
-	TimerIcon = new UILabel( Cinema.GetGuiSys() );
-	TimerIcon->AddToMenu( Menu, PcRoot );
-	TimerIcon->SetLocalPose( forward, CenterPosition + Vector3f( 0.0f, 0.0f, 0.5f ) );
-	TimerIcon->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-	TimerIcon->SetFontScale( 1.0f );
-	TimerIcon->SetLocalScale( 2.0f );
-	TimerIcon->SetText( "10" );
-    //TimerIcon->SetButtonImages( ButtonTexture, ButtonHoverTexture, ButtonPressedTexture );
-	TimerIcon->SetVisible( false );
-
-	VRMenuSurfaceParms timerSurfaceParms( "timer",
-		"apk:///assets/timer.tga", SURFACE_TEXTURE_DIFFUSE,
-		"apk:///assets/timer_fill.tga", SURFACE_TEXTURE_COLOR_RAMP_TARGET,
-		"apk:///assets/color_ramp_timer.tga", SURFACE_TEXTURE_COLOR_RAMP );
-
-	TimerIcon->SetImage( 0, timerSurfaceParms );
-
-	// text
-	TimerText = new UILabel( Cinema.GetGuiSys() );
-	TimerText->AddToMenu( Menu, TimerIcon );
-	TimerText->SetLocalPose( forward, Vector3f( 0.0f, -0.3f, 0.0f ) );
-	TimerText->GetMenuObject()->AddFlags( VRMenuObjectFlags_t( VRMENUOBJECT_DONT_HIT_ALL ) );
-	TimerText->SetFontScale( 1.0f );
-	TimerText->SetText( Cinema.GetCinemaStrings().MovieSelection_Next );
-
 	// ==============================================================================
 	//
 	// reorient message
@@ -761,14 +723,6 @@ void PcSelectionView::Select()
 	}
 }
 
-void PcSelectionView::StartTimer()
-{
-	const double now = vrapi_GetTimeInSeconds();
-	TimerStartTime = now;
-	TimerValue = -1;
-	ShowTimer = true;
-}
-
 const PcDef *PcSelectionView::GetSelectedPc() const
 {
 	int selectedItem = PcBrowser->GetSelection();
@@ -873,7 +827,7 @@ void PcSelectionView::UpdatePcTitle()
 
 void PcSelectionView::SelectionHighlighted( bool isHighlighted )
 {
-    if ( isHighlighted && !ShowTimer && !Cinema.InLobby && ( PcsIndex == PcBrowser->GetSelection() ) )
+    if ( isHighlighted && !Cinema.InLobby && ( PcsIndex == PcBrowser->GetSelection() ) )
     {
         // dim the poster when the resume icon is up and the poster is highlighted
         CenterPoster->SetColor( Vector4f( 0.55f, 0.55f, 0.55f, 1.0f ) );
@@ -890,7 +844,6 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
     if ( !PcBrowser->HasSelection() )
     {
         SelectionFader.Set( now, 0, now + 0.1, 1.0f );
-        TimerStartTime = 0;
     }
 
     if ( !SelectionFrame->GetMenuObject()->IsHilighted() )
@@ -919,33 +872,6 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
 		CloseAppButton->SetVisible( false );
 
 	}
-
-    if ( ShowTimer && ( TimerStartTime != 0 ) )
-    {
-        double frac = ( now - TimerStartTime ) / TimerTotalTime;
-        if ( frac > 1.0f )
-        {
-            frac = 1.0f;
-            //Cinema.SetPlaylist( PcList, PcBrowser->GetSelection() );
-            Cinema.PlayOrResumeOrRestartApp();
-        }
-        Vector2f offset( 0.0f, 1.0f - static_cast<float>( frac ) );
-        TimerIcon->SetColorTableOffset( offset );
-
-        int seconds = static_cast<int>( TimerTotalTime - ( TimerTotalTime * frac ) );
-        if ( TimerValue != seconds )
-        {
-            TimerValue = seconds;
-            const char * text =std::to_string( seconds ).c_str();
-            TimerIcon->SetText( text );
-        }
-        TimerIcon->SetVisible( true );
-        CenterPoster->SetColor( Vector4f( 0.55f, 0.55f, 0.55f, 1.0f ) );
-    }
-    else
-    {
-        TimerIcon->SetVisible( false );
-    }
 }
 
 void PcSelectionView::SetError( const char *text, bool showErrorIcon )
