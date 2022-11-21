@@ -27,14 +27,14 @@ class CinemaApp;
 class SceneDef
 {
 public:
-						SceneDef() : 
-							SceneModel( NULL ),
-							Filename(),
-							UseFreeScreen( false ),
-							UseSeats( false ),
-							UseDynamicProgram( false ),
-							Loaded( false ),
-							UseVRScreen( false ) { }
+    SceneDef() :
+        SceneModel( NULL ),
+        Filename(),
+        UseFreeScreen( false ),
+        UseSeats( false ),
+        UseDynamicProgram( false ),
+        Loaded( false )
+        { }
 
 
     OVRFW::ModelFile *			SceneModel;
@@ -44,8 +44,6 @@ public:
 	bool 				UseSeats;
 	bool 				UseDynamicProgram;
 	bool				Loaded;
-	bool                UseVRScreen;
-
 };
 
 class ModelManager
@@ -66,16 +64,11 @@ public:
 	std::vector<SceneDef *>	Theaters;
 	SceneDef *			BoxOffice;
 	SceneDef *			VoidScene;
-	SceneDef *          VRScene;
-
-	std::string			LaunchIntent;
-
-    OVRFW::ModelFile *			DefaultSceneModel;
 
 private:
 	ModelManager &		operator=( const ModelManager & );
 
-	void 				LoadModels();
+	void 				LoadModels(std::string launchIntent);
 	void 				ScanDirectoryForScenes( const std::string & directoryString, bool useDynamicProgram, std::vector<SceneDef *> &scenes ) const;
 	SceneDef *			LoadScene( const char * filename, bool useDynamicProgram, bool loadFromApplicationPackage ) const;
 };

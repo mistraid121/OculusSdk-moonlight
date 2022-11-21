@@ -36,10 +36,7 @@ ModelManager::ModelManager( CinemaApp &cinema ) :
 	Cinema( cinema ),
 	Theaters(),
 	BoxOffice( NULL ),
-	VoidScene( NULL ),
-	LaunchIntent(),
-	DefaultSceneModel( NULL )
-
+	VoidScene( NULL )
 {
 }
 
@@ -51,11 +48,8 @@ void ModelManager::OneTimeInit( const char * launchIntent )
 {
 	OVR_LOG( "ModelManager::OneTimeInit" );
 	const double start = GetTimeInSeconds();
-	LaunchIntent = launchIntent;
 
-	DefaultSceneModel = new ModelFile( "default" );
-
-	LoadModels();
+	LoadModels(launchIntent);
 
 	OVR_LOG( "ModelManager::OneTimeInit: %i theaters loaded, %3.1f seconds", static_cast< int >( Theaters.size() ),  GetTimeInSeconds() - start );
 }
@@ -72,7 +66,7 @@ void ModelManager::OneTimeShutdown()
 	}
 }
 
-void ModelManager::LoadModels()
+void ModelManager::LoadModels(std::string launchIntent)
 {
 	OVR_LOG( "ModelManager::LoadModels" );
 	const double start =  GetTimeInSeconds();
@@ -80,9 +74,9 @@ void ModelManager::LoadModels()
 	BoxOffice = LoadScene( "assets/scenes/BoxOffice.ovrscene", false, true );
 	BoxOffice->UseSeats = false;
 
-	if ( LaunchIntent.length() > 0 )
+	if ( launchIntent.length() > 0 )
 	{
-		Theaters.push_back( LoadScene( LaunchIntent.c_str(), true, false ) );
+		Theaters.push_back( LoadScene( launchIntent.c_str(), true, false ) );
 	}
 	else
 	{
@@ -107,25 +101,6 @@ void ModelManager::LoadModels()
 		MakeTextureClamped( GlTexture( VoidScene->IconTexture, width, height ) );
 
 		Theaters.push_back( VoidScene );
-
-		// create void scene
-		VRScene = new SceneDef();
-		VRScene->SceneModel = new ModelFile( "VR" );
-		VRScene->UseSeats = false;
-		VRScene->UseDynamicProgram = false;
-		VRScene->UseFreeScreen = true;
-		VRScene->UseVRScreen = true;
-
-		VRScene->IconTexture = LoadTextureFromApplicationPackage( "assets/VRTheater.png",
-																  TextureFlags_t( TEXTUREFLAG_NO_DEFAULT ), width, height );
-
-		BuildTextureMipmaps( VRScene->IconTexture );
-		MakeTextureTrilinear( VRScene->IconTexture );
-		MakeTextureClamped( VRScene->IconTexture );
-
-		//TODO activar el modo vr
-		//Theaters.push_back( VRScene );
-
 
 		// load all scenes on startup, so there isn't a delay when switching theaters
 		ScanDirectoryForScenes( Cinema.ExternalRetailDir( TheatersDirectory ), true, Theaters );

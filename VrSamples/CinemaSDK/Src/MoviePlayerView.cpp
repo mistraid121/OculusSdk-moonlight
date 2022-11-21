@@ -294,19 +294,6 @@ void MoviePlayerView::InitializeSettings()
 			defaultSettings->Define("VoidScreenScaleMax", &VoidScreenScaleMax);
 			defaultSettings->Define("VoidScreenScaleMin", &VoidScreenScaleMin);
 
-			if(Cinema.SceneMgr.SceneInfo.UseVRScreen)
-			{ // Don't save or load VR screen settings if we're not using it
-				defaultSettings->Define("VRScreenLatency", &latencyAddition);
-				defaultSettings->Define("VRScreenXScale", &vrXscale);
-				defaultSettings->Define("VRScreenYScale", &vrYscale);
-				defaultSettings->Define("VRScreenLatencyMax", &VRLatencyMax);
-				defaultSettings->Define("VRScreenLatencyMin", &VRLatencyMin);
-				defaultSettings->Define("VRScreenXScaleMax", &VRXScaleMax);
-				defaultSettings->Define("VRScreenXScaleMin", &VRXScaleMin);
-				defaultSettings->Define("VRScreenYScaleMax", &VRYScaleMax);
-				defaultSettings->Define("VRScreenYScaleMin", &VRYScaleMin);
-			}
-
 			defaultSettings->Load();
 		}
 
@@ -917,22 +904,11 @@ void MoviePlayerView::OnOpen( const double currTimeInSeconds )
 	Cinema.SceneMgr.LightsOff( 1.5f ,currTimeInSeconds);
 
     Cinema.StartMoviePlayback(WidthByAspect(), streamHeight, streamFPS, streamHostAudio, bitrate);
-	if ( Cinema.SceneMgr.SceneInfo.UseVRScreen )
-	{
-		VRModeMenuButton->SetVisible(true);
-		screenMotionPaused = true;
-	}
-	else
-	{
-		//VRModeMenuButton.SetVisible(false);
-	}
 
 
 	MovieTitleLabel->SetText( Cinema.GetCurrentApp()->Name.c_str() );
 	Bounds3f titleBounds = MovieTitleLabel->GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() ) * VRMenuObject::TEXELS_PER_METER;
 	MovieTitleLabel->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, BackgroundTintTexture, titleBounds.GetSize().x + 88, titleBounds.GetSize().y + 32 );
-
-
 }
 
 void MoviePlayerView::OnClose()
@@ -1000,18 +976,7 @@ void MoviePlayerView::BackPressedDouble()
     OVR_LOG( "BackPressed" );
     HideUI();
 
-	if ( Cinema.SceneMgr.SceneInfo.UseVRScreen )
-	{
-		if ( calibrationStage > 0 )
-		{
-			calibrationStage = -1;
-		}
-		else
-		{
-			uiActive = !uiActive;
-		}
-	}
-	else if ( Cinema.AllowTheaterSelection() )
+	if ( Cinema.AllowTheaterSelection() )
 	{
         OVR_LOG( "Opening TheaterSelection" );
         Cinema.TheaterSelection();
@@ -1262,27 +1227,7 @@ void MoviePlayerView::HandleCalibration( const  ovrApplFrameIn & vrFrame )
 // to minimize the number of times where we have the wrong timestamp
 void MoviePlayerView::MovieScreenUpdated()
 {
-    if(Cinema.SceneMgr.SceneInfo.UseVRScreen && !uiActive && !screenMotionPaused )
 
-    {  // Move screen around according to lag delay
-        Matrix4f pose;
-
-        //FIXME: MovieTextureTimestamp should be used here but it's broken on lollipop!
-        long timestamp = Native::getLastFrameTimestamp();
-        //LOG("Timestamp %lu %lu !!!!!!!!!!!! %lu", newts, currentPoseTime, currentPoseTime - newts);
-
-        if(timestamp != 0)
-        {
-            pose = InterpolatePoseAtTime(timestamp - latencyAddition);
-        } else {
-            pose = lastPose;
-        }
-        float y, p, r;
-        pose.ToEulerAngles<OVR::Axis_Y,OVR::Axis_X,OVR::Axis_Z,OVR::Rotate_CCW, OVR::Handed_R>(&y, &p, &r);
-        Matrix4f unrotRollMatrix( Quatf( OVR::Axis_Z, -r ) );
-        pose = pose * unrotRollMatrix;
-        Cinema.SceneMgr.FreeScreenPose = pose;
-    }
 }
 
 #define SCROLL_CLICKS 8
