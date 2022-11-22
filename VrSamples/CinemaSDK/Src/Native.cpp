@@ -33,12 +33,12 @@ long Java_com_oculus_cinemasdk_MainActivity_nativeSetAppInterface( JNIEnv *jni, 
 	return reinterpret_cast<jlong>( appPtr );
 }
 
-void Java_com_oculus_cinemasdk_MainActivity_nativeSetVideoSize( JNIEnv *jni, jclass clazz, jlong interfacePtr, int width, int height, int rotation, int duration )
+void Java_com_oculus_cinemasdk_MainActivity_nativeSetVideoSize( JNIEnv *jni, jclass clazz, jlong interfacePtr, int width, int height)
 {
-	OVR_LOG( "nativeSetVideoSizes: width=%i height=%i rotation=%i duration=%i", width, height, rotation, duration );
+	OVR_LOG( "nativeSetVideoSizes: width=%i height=%i", width, height);
 
 	OculusCinema::CinemaApp * cinema = appPtr;//static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
-	cinema->GetMessageQueue().PostPrintf( "video %i %i %i %i", width, height, rotation, duration );
+	cinema->GetMessageQueue().PostPrintf( "video %i %i", width, height);
 
 }
 

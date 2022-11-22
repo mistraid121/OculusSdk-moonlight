@@ -76,18 +76,12 @@ public:
 	float				FreeScreenDistance;
 	OVR::Matrix4f			FreeScreenPose;
 
-	// don't make these bool, or sscanf %i will trash adjacent memory!
-	int					ForceMono;			// only show the left eye of 3D movies
-
 	// Set when MediaPlayer knows what the stream size is.
 	// current is the aspect size, texture may be twice as wide or high for 3D content.
 	int					CurrentMovieWidth;	// set to 0 when a new movie is started, don't render until non-0
 	int					CurrentMovieHeight;
 	int					MovieTextureWidth;
 	int					MovieTextureHeight;
-	int					MovieRotation;
-	int					MovieDuration;
-
 	bool				FrameUpdateNeeded;
 	int					ClearGhostsFrames;
 

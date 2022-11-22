@@ -81,7 +81,7 @@ void MoviePosterComponent::SetItem( VRMenuObject * self, const CarouselItem * it
 		{
 			PosterImage->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, item->Texture, 
 				static_cast<short>( Width ), static_cast<short>( Height ) );
-			
+
 			Shadow->SetVisible( ShowShadows );
 			PosterImage->SetVisible( true );
 		}

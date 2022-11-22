@@ -82,7 +82,7 @@ public class MainActivity extends android.app.NativeActivity implements AudioMan
 	}
 
 
-	public static native void 			nativeSetVideoSize( long appPtr, int width, int height, int rotation, int duration );
+	public static native void 			nativeSetVideoSize( long appPtr, int width, int height);
 	public static native SurfaceTexture nativePrepareNewVideo( long appPtr );
 	public static native long nativeSetAppInterface( android.app.NativeActivity act);
 
@@ -100,19 +100,11 @@ public class MainActivity extends android.app.NativeActivity implements AudioMan
 	public static native void nativeShowError(long appPtr, String message );
 	public static native void nativeClearError(long appPtr );
 
-	public static final int MinimumRemainingResumeTime = 60000;	// 1 minute
-	public static final int MinimumSeekTimeForResume = 60000;	// 1 minute
-
 	public String 				currentAppName;
 	
 	boolean				playbackFinished = true;
 	boolean				playbackFailed = false;
-	
-	private boolean 	waitingForSeek = false;
-	private boolean 	haveSeekWaiting = false;
-	private int 		nextSeekPosition = 0;
-	private long       	startTime = 0;
-	
+
 	SurfaceTexture 		movieTexture = null;
 	Surface 			movieSurface = null;
 
@@ -186,45 +178,11 @@ public class MainActivity extends android.app.NativeActivity implements AudioMan
 			break;
 		}
 	}
-    
-	private int getRotationFromMetadata( final String filePath ) 
-	{
-		MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-		metaRetriever.setDataSource( filePath );
-		String value = metaRetriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION );
-		metaRetriever.release();
 
-		if ( value == null ) 
-		{
-			return 0;
-		}
-
-		if ( value.equals( "0" ) ) 
-		{
-			return 0;
-		} 
-		else if ( value.equals( "90" ) ) 
-		{
-			return 90;
-		} 
-		else if ( value.equals( "180" ) ) 
-		{
-			return 180;
-		} 
-		else if ( value.equals( "270" ) ) 
-		{
-			return 270;
-		} 
-
-		return 0;
-	}
-	
 	public void onVideoSizeChanged( int width, int height )
 	{
 		Log.v( TAG, String.format( "onVideoSizeChanged: %dx%d", width, height ) );
-		//int rotation = getRotationFromMetadata( currentMovieFilename );
-		//int duration = getDuration();
-		nativeSetVideoSize( appPtr, width, height, 0,0);
+		nativeSetVideoSize( appPtr, width, height);
 	}
 
 	private void requestAudioFocus()
@@ -436,10 +394,6 @@ public class MainActivity extends android.app.NativeActivity implements AudioMan
 	
 			playbackFinished = false;
 			playbackFailed = false;
-			
-			waitingForSeek = false;
-			haveSeekWaiting = false;
-			nextSeekPosition = 0;
 
 			currentAppName = appName;
 			

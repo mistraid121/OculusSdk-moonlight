@@ -48,13 +48,10 @@ SceneManager::SceneManager( CinemaApp &cinema ) :
         FreeScreenScale( 1.0f ),
         FreeScreenDistance( 1.5f ),
         FreeScreenPose(),
-        ForceMono( false ),
         CurrentMovieWidth( 0 ),
         CurrentMovieHeight( 480 ),
         MovieTextureWidth( 0 ),
         MovieTextureHeight( 0 ),
-        MovieRotation( 0 ),
-        MovieDuration( 0 ),
         FrameUpdateNeeded( false ),
         ClearGhostsFrames( 0 ),
         UnitSquare(),
@@ -536,8 +533,6 @@ void SceneManager::ClearMovie()
 	MovieTextureTimestamp = 0;
 	FrameUpdateNeeded = true;
 	CurrentMovieWidth = 0;
-	MovieRotation = 0;
-	MovieDuration = 0;
 
 	delete MovieTexture;
 	MovieTexture = NULL;
@@ -702,7 +697,7 @@ bool SceneManager::Command( const char * msg )
 	if ( MatchesHead( "video ", msg ) )
 	{
 		int width, height;
-		sscanf( msg, "video %i %i %i %i", &width, &height, &MovieRotation, &MovieDuration );
+		sscanf( msg, "video %i %i", &width, &height);
 
 		MovieTextureWidth = width;
 		MovieTextureHeight = height;
@@ -742,49 +737,6 @@ bool SceneManager::Command( const char * msg )
 
 	return false;
 }
-
-
-static void GetTextureMatrix(const int movieRotation, Matrix4f & textureMatrix, ovrRectf & textureRect )
-{
-	const Matrix4f rotate90(
-			0.0f, 1.0f, 0.0f, 0.0f,
-		   -1.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-
-	const Matrix4f rotate180(
-		   -1.0f, 0.0f, 1.0f, 0.0f,
-			0.0f,-1.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-
-	const Matrix4f rotate270(
-			0.0f,-1.0f, 1.0f, 0.0f,
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-
-
-	switch( movieRotation )
-	{
-		case 0 :
-			textureMatrix = Matrix4f::Identity();
-			break;
-		case 90 :
-			textureMatrix = rotate90;
-			break;
-		case 180 :
-			textureMatrix = rotate180;
-			break;
-		case 270 :
-			textureMatrix = rotate270;
-			break;
-	}
-	textureRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-
-
-}
-
 
 void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput & out )
 {
@@ -968,7 +920,8 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 		ovrRectf texRect[2];
 		for ( int eye = 0; eye < 2; eye++ )
 		{
-			GetTextureMatrix( MovieRotation,  texMatrix[eye], texRect[eye] );
+			texMatrix[eye] = Matrix4f::Identity();
+			texRect[eye] = { 0.0f, 0.0f, 1.0f, 1.0f };
 		}
 
 		// Draw the movie texture layer

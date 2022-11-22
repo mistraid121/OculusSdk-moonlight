@@ -905,7 +905,6 @@ static bool InsideUnit( const Vector2f v )
 void MoviePlayerView::ShowUI( const double currTimeInSeconds )
 {
 	OVR_LOG( "ShowUI" );
-	Cinema.SceneMgr.ForceMono = true;
 	Cinema.GetGuiSys().GetGazeCursor().ShowCursor();
 
 	PlaybackControlsMenu->Open();
@@ -928,7 +927,6 @@ void MoviePlayerView::HideUI()
 	PlaybackControlsMenu->Close();
 
 	Cinema.GetGuiSys().GetGazeCursor().HideCursor();
-	Cinema.SceneMgr.ForceMono = false;
 	uiActive = false;
 
 	BackgroundClicked = false;
