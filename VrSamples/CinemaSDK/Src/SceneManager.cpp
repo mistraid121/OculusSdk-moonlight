@@ -53,7 +53,6 @@ SceneManager::SceneManager( CinemaApp &cinema ) :
         CurrentMovieHeight( 480 ),
         MovieTextureWidth( 0 ),
         MovieTextureHeight( 0 ),
-        //CurrentMovieFormat( VT_2D ),
         MovieRotation( 0 ),
         MovieDuration( 0 ),
         FrameUpdateNeeded( false ),
@@ -66,7 +65,6 @@ SceneManager::SceneManager( CinemaApp &cinema ) :
         MipMappedMovieFBOs( NULL ),
         BufferSize(),
         ScreenVignetteTexture( 0 ),
-        ScreenVignetteSbsTexture( 0 ),
         SceneProgramIndex( SCENE_PROGRAM_DYNAMIC_ONLY ),
         Scene(),
         SceneScreenSurface( NULL ),
@@ -166,7 +164,6 @@ void SceneManager::OneTimeInit( const char * launchIntent )
     UnitSquare = BuildTesselatedQuad( 1, 1 );
 
     ScreenVignetteTexture = BuildScreenVignetteTexture( 1 );
-    ScreenVignetteSbsTexture = BuildScreenVignetteTexture( 2 );
 
     FadedScreenMaskSquareDef.graphicsCommand.Program = GlProgram::Build(
             overlayScreenFadeMaskVertexShaderSrc,
@@ -207,12 +204,6 @@ void SceneManager::OneTimeShutdown()
     {
         glDeleteTextures( 1, & ScreenVignetteTexture );
         ScreenVignetteTexture = 0;
-    }
-
-    if ( ScreenVignetteSbsTexture != 0 )
-    {
-        glDeleteTextures( 1, & ScreenVignetteSbsTexture );
-        ScreenVignetteSbsTexture = 0;
     }
 
     if ( MipMappedMovieFBOs != NULL )
@@ -713,38 +704,6 @@ bool SceneManager::Command( const char * msg )
 		int width, height;
 		sscanf( msg, "video %i %i %i %i", &width, &height, &MovieRotation, &MovieDuration );
 
-		/*const MovieDef *movie = Cinema.GetCurrentMovie();
-		OVR_ASSERT( movie );
-
-		if ( movie == NULL )
-		{
-			CurrentMovieFormat = VT_2D;
-		}
-		else
-		{
-			CurrentMovieFormat = movie->Format;
-
-			// if movie format is not set, make some assumptions based on the width and if it's 3D
-			if ( movie->Format == VT_UNKNOWN )
-			{
-				if ( movie->Is3D )
-				{
-					if ( width > height * 3 )
-					{
-						CurrentMovieFormat = VT_LEFT_RIGHT_3D_FULL;
-					}
-					else
-					{
-						CurrentMovieFormat = VT_LEFT_RIGHT_3D;
-					}
-				}
-				else
-				{
-					CurrentMovieFormat = VT_2D;
-				}
-			}
-		}
-		*/
 		MovieTextureWidth = width;
 		MovieTextureHeight = height;
 
@@ -761,37 +720,22 @@ bool SceneManager::Command( const char * msg )
 			VoidedScene = true;
 			FixVoidedScene = true;
 
-		        // downsize the screen resolution to fit into a 960x540 buffer
-		        /*float aspectRatio = ( float )width / ( float )height;
-		        if ( aspectRatio < 1.0f )
-		        {
-		            MovieTextureWidth = static_cast<int>( aspectRatio * 540.0f );
-		            MovieTextureHeight = 540;
-		        }
-		        else
-		        {
-		            MovieTextureWidth = 960;
-		            MovieTextureHeight = static_cast<int>( aspectRatio * 960.0f );
-		        }*/
-		    }
-
-		switch( CurrentMovieFormat )
-		{
-			case VT_LEFT_RIGHT_3D_FULL:
-				CurrentMovieWidth = width / 2;
-				CurrentMovieHeight = height;
-				break;
-
-			case VT_TOP_BOTTOM_3D_FULL:
-				CurrentMovieWidth = width;
-				CurrentMovieHeight = height / 2;
-				break;
-
-			default:
-				CurrentMovieWidth = width;
-				CurrentMovieHeight = height;
-				break;
+			// downsize the screen resolution to fit into a 960x540 buffer
+			/*float aspectRatio = ( float )width / ( float )height;
+			if ( aspectRatio < 1.0f )
+			{
+				MovieTextureWidth = static_cast<int>( aspectRatio * 540.0f );
+				MovieTextureHeight = 540;
+			}
+			else
+			{
+				MovieTextureWidth = 960;
+				MovieTextureHeight = static_cast<int>( aspectRatio * 960.0f );
+			}*/
 		}
+
+		CurrentMovieWidth = width;
+		CurrentMovieHeight = height;
 		FrameUpdateNeeded = true;
 		return true;
 	}
@@ -799,30 +743,9 @@ bool SceneManager::Command( const char * msg )
 	return false;
 }
 
-// Allow stereo movies to also be played in mono.
-static void GetTextureMatrix( const MovieFormat format, const int movieRotation, const int stereoEye, Matrix4f & textureMatrix, ovrRectf & textureRect )
-{
-	const Matrix4f stretchTop(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-	const Matrix4f stretchBottom(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.5f, 0.5f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-	const Matrix4f stretchRight(
-			0.5f, 0.0f, 0.5f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
-	const Matrix4f stretchLeft(
-			0.5f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f );
 
+static void GetTextureMatrix(const int movieRotation, Matrix4f & textureMatrix, ovrRectf & textureRect )
+{
 	const Matrix4f rotate90(
 			0.0f, 1.0f, 0.0f, 0.0f,
 		   -1.0f, 0.0f, 1.0f, 0.0f,
@@ -841,37 +764,25 @@ static void GetTextureMatrix( const MovieFormat format, const int movieRotation,
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f );
 
-	switch ( format )
+
+	switch( movieRotation )
 	{
-		case VT_LEFT_RIGHT_3D:
-		case VT_LEFT_RIGHT_3D_FULL:
-			textureMatrix = ( stereoEye ) ? stretchRight : stretchLeft;
-			textureRect = { stereoEye ? 0.5f : 0.0f, 0.0f, 0.5f, 1.0f };
+		case 0 :
+			textureMatrix = Matrix4f::Identity();
 			break;
-		case VT_TOP_BOTTOM_3D:
-		case VT_TOP_BOTTOM_3D_FULL:
-			textureMatrix = ( stereoEye ) ? stretchBottom : stretchTop;
-			textureRect = { 0.0f, stereoEye ? 0.0f : 0.5f, 1.0f, 0.5f };
+		case 90 :
+			textureMatrix = rotate90;
 			break;
-		default:
-			switch( movieRotation )
-			{
-				case 0 :
-					textureMatrix = Matrix4f::Identity();
-					break;
-				case 90 :
-					textureMatrix = rotate90;
-					break;
-				case 180 :
-					textureMatrix = rotate180;
-					break;
-				case 270 :
-					textureMatrix = rotate270;
-					break;
-			}
-			textureRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		case 180 :
+			textureMatrix = rotate180;
+			break;
+		case 270 :
+			textureMatrix = rotate270;
 			break;
 	}
+	textureRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+
 }
 
 
@@ -924,14 +835,7 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 		FrameUpdateNeeded = false;
 		CurrentMipMappedMovieTexture = ( CurrentMipMappedMovieTexture + 1 ) % MipMappedMovieTextureSwapChainLength;
 		glActiveTexture( GL_TEXTURE1 );
-		if ( CurrentMovieFormat == VT_LEFT_RIGHT_3D || CurrentMovieFormat == VT_LEFT_RIGHT_3D_FULL || CurrentMovieFormat == VT_LEFT_RIGHT_3D_CROP)
-		{
-			glBindTexture( GL_TEXTURE_2D, ScreenVignetteSbsTexture );
-		}
-		else
-		{
-			glBindTexture( GL_TEXTURE_2D, ScreenVignetteTexture );
-		}
+		glBindTexture( GL_TEXTURE_2D, ScreenVignetteTexture );
 		glActiveTexture( GL_TEXTURE0 );
 		glBindFramebuffer( GL_FRAMEBUFFER, MipMappedMovieFBOs[CurrentMipMappedMovieTexture] );
 		glDisable( GL_DEPTH_TEST );
@@ -1064,7 +968,7 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 		ovrRectf texRect[2];
 		for ( int eye = 0; eye < 2; eye++ )
 		{
-			GetTextureMatrix( CurrentMovieFormat, MovieRotation, ForceMono ? 0 : eye, texMatrix[eye], texRect[eye] );
+			GetTextureMatrix( MovieRotation,  texMatrix[eye], texRect[eye] );
 		}
 
 		// Draw the movie texture layer

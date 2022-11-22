@@ -85,7 +85,6 @@ public:
 	int					CurrentMovieHeight;
 	int					MovieTextureWidth;
 	int					MovieTextureHeight;
-	MovieFormat			CurrentMovieFormat;
 	int					MovieRotation;
 	int					MovieDuration;
 
@@ -115,7 +114,6 @@ public:
 	OVR::Vector2i			BufferSize;						// rebuild if != MovieTextureWidth / Height
 
 	GLuint				ScreenVignetteTexture;
-	GLuint				ScreenVignetteSbsTexture;	// for side by side 3D
 
 	sceneProgram_t		SceneProgramIndex;
 

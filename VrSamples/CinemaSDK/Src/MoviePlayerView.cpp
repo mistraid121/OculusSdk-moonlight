@@ -288,8 +288,6 @@ void MoviePlayerView::InitializeSettings()
 			settings3 = new Settings(settings3Path.c_str());
 
 			settings1->CopyDefines(*defaultSettings);
-			settings1->Define("3dMode", (int*)&Cinema.SceneMgr.CurrentMovieFormat);
-
 			settings2->CopyDefines(*settings1);
 			settings3->CopyDefines(*settings1);
 		}
@@ -304,11 +302,6 @@ void MoviePlayerView::InitializeSettings()
 		appSettings = new Settings(appSettingsPath.c_str());
 		appSettings->CopyDefines(*defaultSettings);
 		appSettings->Load();
-
-		if( Cinema.SceneMgr.CurrentMovieFormat == VT_LEFT_RIGHT_3D )
-		{
-			Cinema.SceneMgr.CurrentMovieWidth /= 2;
-		}
 
 		UpdateMenus();
 	}
@@ -1683,7 +1676,6 @@ void MoviePlayerView::Load3Pressed()
 }
 void MoviePlayerView::LoadSettings(Settings* set)
 {
-	MovieFormat oldFormat = Cinema.SceneMgr.CurrentMovieFormat;
 	int oldWidth = 	streamWidth;
 	int oldHeight = streamHeight;
 	int oldFPS = streamFPS;
@@ -1707,16 +1699,6 @@ void MoviePlayerView::LoadSettings(Settings* set)
 	DistanceSlider.SetValue(Cinema.SceneMgr.FreeScreenDistance);
 	SizeSlider.SetExtents(VoidScreenScaleMax,VoidScreenScaleMin,2);
 	SizeSlider.SetValue(Cinema.SceneMgr.FreeScreenScale);
-
-	if( Cinema.SceneMgr.CurrentMovieFormat == VT_LEFT_RIGHT_3D && oldFormat != VT_LEFT_RIGHT_3D )
-	{
-		Cinema.SceneMgr.CurrentMovieWidth /= 2;
-	}
-
-	if( oldFormat == VT_LEFT_RIGHT_3D && Cinema.SceneMgr.CurrentMovieFormat != VT_LEFT_RIGHT_3D )
-	{
-		Cinema.SceneMgr.CurrentMovieWidth *= 2;
-	}
 
 	UpdateMenus();
 }
