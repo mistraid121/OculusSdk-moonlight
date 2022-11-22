@@ -50,7 +50,6 @@ static const char* Guuid;
             SelectionView("AppSelectionView"),
             Cinema(cinema),
             SelectionTexture(),
-            Is3DIconTexture(),
             ShadowTexture(), BorderTexture(),
             SwipeIconLeftTexture(),
             SwipeIconRightTexture(),
@@ -366,7 +365,6 @@ static const char* Guuid;
         // load textures
         //
         SelectionTexture.LoadTextureFromApplicationPackage("assets/selection.png");
-        Is3DIconTexture.LoadTextureFromApplicationPackage("assets/3D_icon.png");
         ShadowTexture.LoadTextureFromApplicationPackage("assets/shadow.png");
         BorderTexture.LoadTextureFromApplicationPackage("assets/category_border.png");
         SwipeIconLeftTexture.LoadTextureFromApplicationPackage(
@@ -477,7 +475,7 @@ static const char* Guuid;
 
         // ==============================================================================
         //
-        // add shadow and 3D icon to movie poster panels
+        // add shadow to movie poster panels
         //
         std::vector<VRMenuObject *> menuObjs;
         for (OVR::UPInt i = 0; i < MoviePanelPositions.size(); ++i) {
@@ -505,18 +503,6 @@ static const char* Guuid;
             }
 
             //
-            // 3D icon
-            //
-            UIImage *is3DIcon = new UIImage(Cinema.GetGuiSys());
-            is3DIcon->AddToMenu(Menu, posterContainer);
-            is3DIcon->SetLocalPose(forward, Vector3f(0.75f, 1.3f, 0.02f));
-            is3DIcon->SetImage(0, SURFACE_TEXTURE_DIFFUSE, Is3DIconTexture);
-            is3DIcon->SetLocalScale(PosterScale);
-            is3DIcon->GetMenuObject()->AddFlags(
-                    VRMenuObjectFlags_t(VRMENUOBJECT_FLAG_NO_FOCUS_GAINED) |
-                    VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
-
-            //
             // shadow
             //
             UIImage *shadow = new UIImage(Cinema.GetGuiSys());
@@ -532,8 +518,7 @@ static const char* Guuid;
             // add the component
             //
             MoviePosterComponent *posterComp = new MoviePosterComponent();
-            posterComp->SetMenuObjects(PosterWidth, PosterHeight, posterContainer, posterImage,
-                                       is3DIcon, shadow);
+            posterComp->SetMenuObjects(PosterWidth, PosterHeight, posterContainer, posterImage, shadow);
             posterContainer->AddComponent(posterComp);
 
             menuObjs.push_back(posterContainer->GetMenuObject());

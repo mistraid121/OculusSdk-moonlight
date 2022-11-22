@@ -79,7 +79,6 @@ private:
 	CinemaApp &							Cinema;
 
 	OVRFW::UITexture 							SelectionTexture;
-	OVRFW::UITexture							Is3DIconTexture;
 	OVRFW::UITexture							ShadowTexture;
 	OVRFW::UITexture							BorderTexture;
 	OVRFW::UITexture							SwipeIconLeftTexture;

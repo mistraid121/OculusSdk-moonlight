@@ -31,7 +31,6 @@ MoviePosterComponent::MoviePosterComponent() :
 	Movie( NULL ),
     Poster( NULL ),
 	PosterImage( NULL ),
-    Is3DIcon( NULL ),
     Shadow( NULL )
 {
 }
@@ -51,17 +50,15 @@ eMsgStatus MoviePosterComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameI
 
 //==============================
 //  MoviePosterComponent::SetMenuObjects
-void MoviePosterComponent::SetMenuObjects( const int width, const int height, UIContainer * poster, UIImage * posterImage, UIImage * is3DIcon, UIImage * shadow )
+void MoviePosterComponent::SetMenuObjects( const int width, const int height, UIContainer * poster, UIImage * posterImage, UIImage * shadow )
 {
 	Width = width;
 	Height = height;
 	Poster = poster;
 	PosterImage = posterImage;
-    Is3DIcon = is3DIcon;
     Shadow = shadow;
 
     Movie = NULL;
-    Is3DIcon->SetVisible( false );
 	Shadow->SetVisible( false );
 	PosterImage->SetVisible( false );
 }
@@ -76,7 +73,6 @@ void MoviePosterComponent::SetItem( VRMenuObject * self, const CarouselItem * it
 
 	Poster->SetLocalPose( pose.Orientation, pose.Position );
 	PosterImage->SetColor( pose.Color );
-	Is3DIcon->SetColor( pose.Color );
 	Shadow->SetColor( pose.Color );
 
 	if ( movie != Movie )
@@ -85,14 +81,12 @@ void MoviePosterComponent::SetItem( VRMenuObject * self, const CarouselItem * it
 		{
 			PosterImage->SetImage( 0, SURFACE_TEXTURE_DIFFUSE, item->Texture, 
 				static_cast<short>( Width ), static_cast<short>( Height ) );
-
-			//Is3DIcon->SetVisible( movie->Is3D );
+			
 			Shadow->SetVisible( ShowShadows );
 			PosterImage->SetVisible( true );
 		}
 		else
 		{
-			Is3DIcon->SetVisible( false );
 			Shadow->SetVisible( false );
 			PosterImage->SetVisible( false );
 		}

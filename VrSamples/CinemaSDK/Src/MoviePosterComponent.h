@@ -33,7 +33,7 @@ public:
 
 	static bool 			ShowShadows;
 
-	void 					SetMenuObjects( const int width, const int height, OVRFW::UIContainer * poster, OVRFW::UIImage * posterImage, OVRFW::UIImage * is3DIcon, OVRFW::UIImage * shadow );
+	void 					SetMenuObjects( const int width, const int height, OVRFW::UIContainer * poster, OVRFW::UIImage * posterImage, OVRFW::UIImage * shadow );
 	virtual void 			SetItem( OVRFW::VRMenuObject * self, const CarouselItem * item, const PanelPose &pose );
 
 private:
@@ -47,7 +47,6 @@ private:
 
     OVRFW::UIContainer * 			Poster;
     OVRFW::UIImage * 				PosterImage;
-    OVRFW::UIImage * 				Is3DIcon;
     OVRFW::UIImage * 				Shadow;
 };
 
