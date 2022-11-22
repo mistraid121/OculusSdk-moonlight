@@ -182,10 +182,6 @@ private:
 	OVRFW::UITexture                ScreenHoverTexture;
 	OVRFW::UITexture                ScreenPressedTexture;
 
-	OVRFW::UITexture                VRModeTexture;
-	OVRFW::UITexture                VRModeHoverTexture;
-	OVRFW::UITexture                VRModePressedTexture;
-
 	OVRFW::UITexture                ExitTexture;
 	OVRFW::UITexture                ExitHoverTexture;
 	OVRFW::UITexture                ExitPressedTexture;
@@ -250,7 +246,6 @@ private:
 
 	OVRFW::UIButton *               ScreenMenuButton;
 	OVRFW::UIContainer *            ScreenMenu;
-    OVRFW::UIButton *           ButtonSBS;
 	OVRFW::UILabel *                  ScreenDistance;
 	OVRFW::UIImage *                   DistanceSliderBackground;
 	OVRFW::UIImage *                   DistanceSliderIndicator;
@@ -264,36 +259,7 @@ private:
 	OVRFW::UILabel *                SizeCurrentSetting;
 	OVRFW::UILabel *                SizeNewSetting;
 	SliderComponent         SizeSlider;
-
-	OVRFW::UIButton *               HelpMenuButton;
-	OVRFW::UIContainer *            HelpMenu;
-	OVRFW::UILabel *                   HelpText;
-
-	OVRFW::UIButton *               VRModeMenuButton;
-	OVRFW::UIContainer *            VRModeMenu;
 	OVRFW::UIButton *               ExitButton;
-
-	OVRFW::UILabel *                   LatencyScale;
-	OVRFW::UIImage *                   LatencySliderBackground;
-	OVRFW::UIImage *                   LatencySliderIndicator;
-	OVRFW::UILabel *                LatencyCurrentSetting;
-	OVRFW::UILabel *                LatencyNewSetting;
-	SliderComponent         LatencySlider;
-
-	OVRFW::UILabel *                   VRXScale;
-	OVRFW::UIImage *                   VRXSliderBackground;
-	OVRFW::UIImage *                   VRXSliderIndicator;
-	OVRFW::UILabel *                VRXCurrentSetting;
-	OVRFW::UILabel *                VRXNewSetting;
-	SliderComponent         VRXSlider;
-
-	OVRFW::UILabel *                   VRYScale;
-	OVRFW::UIImage *                   VRYSliderBackground;
-	OVRFW::UIImage *                   VRYSliderIndicator;
-	OVRFW::UILabel *                VRYCurrentSetting;
-	OVRFW::UILabel *                VRYNewSetting;
-	SliderComponent         VRYSlider;
-
 
 	float					settingsVersion;
 	std::string					defaultSettingsPath;
@@ -344,12 +310,10 @@ private:
 	float					VoidScreenDistanceMax;
 	float					VoidScreenScaleMin;
 	float					VoidScreenScaleMax;
-	//class OldScreenPose : public ListNode<OldScreenPose> {
-class OldScreenPose : public std::list<OldScreenPose> {
-	public: long time;
-	OVR::Matrix4f pose;
+	class OldScreenPose : public std::list<OldScreenPose> {
+		public: long time;
+		OVR::Matrix4f pose;
 	};
-	//List<OldScreenPose>        oldPoses;
 	std::list<OldScreenPose>        oldPoses;
 	int                        calibrationStage;
 	OVR::Matrix4f                lastPose;
@@ -357,14 +321,6 @@ class OldScreenPose : public std::list<OldScreenPose> {
 	float                    trackCalibrationPitch;
 	int                        latencyAddition;
 	bool                    screenMotionPaused;
-	float                    vrXscale;
-	float                    vrYscale;
-	int                        VRLatencyMax;
-	int                        VRLatencyMin;
-	float                    VRXScaleMax;
-	float                    VRXScaleMin;
-	float                    VRYScaleMax;
-	float                    VRYScaleMin;
 
 
 private:
@@ -385,10 +341,6 @@ private:
 	void            StreamMenuButtonPressed();
 	friend void        ScreenMenuButtonCallback( OVRFW::UIButton *button, void *object );
 	void            ScreenMenuButtonPressed();
-	friend void        VRModeMenuButtonCallback( OVRFW::UIButton *button, void *object );
-	void            VRModeMenuButtonPressed();
-	friend void        HelpMenuButtonCallback( OVRFW::UIButton *button, void *object );
-	void            HelpMenuButtonPressed();
 	friend void        ExitButtonCallback( OVRFW::UIButton *button, void *object );
 	void            ExitButtonPressed();
 
@@ -411,13 +363,6 @@ private:
 	void			Load2Pressed();
 	friend void		Load3Callback( OVRFW::UIButton *button, void *object );
 	void			Load3Pressed();
-
-
-
-
-	friend void     GazeOnFocusLost( OVRFW::UIButton *button, void *object );
-	void            GazeFocusLost();
-
 	friend void        GazeCallback( OVRFW::UIButton *button, void *object );
 	void            GazePressed();
 	friend void        TrackpadCallback( OVRFW::UIButton *button, void *object );
@@ -428,17 +373,6 @@ private:
 	void            GazeScalePressed(const float value);
 	friend void        TrackpadScaleCallback( SliderComponent *button, void *object, const float value );
 	void            TrackpadScalePressed(const float value);
-
-
-
-
-	friend bool		GazeActiveCallback( OVRFW::UIButton *button, void *object );
-    bool			GazeActive();
-	friend bool		TrackpadActiveCallback( OVRFW::UIButton *button, void *object );
-	bool			TrackpadActive();
-	friend bool		OffActiveCallback( OVRFW::UIButton *button, void *object );
-	bool			OffActive();
-
 	friend void     ButtonAspectRatio169Callback( OVRFW::UIButton *button, void *object );
 	void            ButtonAspectRatio169Pressed();
 	friend void     ButtonAspectRatio43Callback( OVRFW::UIButton *button, void *object );
@@ -466,17 +400,6 @@ private:
 	bool            ApplyVideoIsEnabled();
 	friend void        BitrateCallback( SliderComponent *button, void *object, const float value );
 	void            BitratePressed( const float value);
-
-
-	friend void        LatencyCallback( SliderComponent *button, void *object, const float value );
-	void            LatencyPressed(const float value);
-	friend void        VRXCallback( SliderComponent *button, void *object, const float value );
-	void            VRXPressed(const float value);
-	friend void        VRYCallback( SliderComponent *button, void *object, const float value );
-	void            VRYPressed(const float value);
-
-	friend void        SBSCallback( OVRFW::UIButton *button, void *object );
-	void            SBSPressed();
 	friend void        DistanceCallback( SliderComponent *button, void *object, const float value );
 	void            DistancePressed( const float value);
 	friend void        SizeCallback( SliderComponent *button, void *object, const float value );
