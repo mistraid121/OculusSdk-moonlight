@@ -742,10 +742,13 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 {
 	// disallow player movement
 	ovrApplFrameIn vrFrameWithoutMove = in;
-	vrFrameWithoutMove.LeftRemote.Joystick.x = 0.0f;
-	vrFrameWithoutMove.LeftRemote.Joystick.y = 0.0f;
+    vrFrameWithoutMove.LeftRemoteTracked = false;
+    vrFrameWithoutMove.RightRemoteTracked = false;
+    vrFrameWithoutMove.SingleHandRemoteTracked = false;
+    vrFrameWithoutMove.GamePadTracked = false;
+    vrFrameWithoutMove.HeadsetInputTracked = false;
 
-	// Suppress scene surfaces when Free Screen is active.
+    // Suppress scene surfaces when Free Screen is active.
 	Scene.Frame( vrFrameWithoutMove, SceneInfo.UseFreeScreen ? 0 : -1 );
 
 	// For some reason the void screen is placed in the wrong position when
