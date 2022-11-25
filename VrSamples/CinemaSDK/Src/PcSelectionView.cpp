@@ -408,7 +408,7 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	}
 
 	// reposition the buttons and set the background and border
-	float startX = categoryBarWidth * -0.5f;
+ 	float startX = categoryBarWidth * -0.5f;
 	for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
 	{
 		VRMenuSurfaceParms panelSurfParms( "",
@@ -638,7 +638,7 @@ void PcSelectionView::CloseAppButtonPressed()
 
 
 
-	Vector3f PcSelectionView::ScalePosition( const Vector3f &startPos, const float scale, const float menuOffset ) const
+Vector3f PcSelectionView::ScalePosition( const Vector3f &startPos, const float scale, const float menuOffset ) const
 {
 	const float eyeHieght = Cinema.SceneMgr.Scene.GetEyeHeight();
 
