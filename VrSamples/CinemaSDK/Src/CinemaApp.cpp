@@ -67,6 +67,7 @@ CinemaApp::CinemaApp(const int32_t mainThreadTid, const int32_t renderThreadTid,
 	LastMountState( true ),
 	UseSrgb( false )
 {
+	CenterEyeViewMatrix = ovrMatrix4f_CreateIdentity();
 }
 
 bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
@@ -189,7 +190,7 @@ bool CinemaApp::AppInit( const OVRFW::ovrAppContext * appContext ) {
 	ALOGV( "CinemaApp::AppInit: %3.1f seconds", GetTimeInSeconds() - StartTime );
 
 	// Clear cursor trails.
-	GetGuiSys().GetGazeCursor().HideCursorForFrames( 10 );
+	GuiSys->GetGazeCursor().HideCursorForFrames( 10 );
 	ViewMgr.EnteredVrMode();
 
 	return true;
@@ -481,13 +482,8 @@ ovrApplFrameOut CinemaApp::AppFrame( const ovrApplFrameIn & vrFrame )
 	ViewMgr.Frame( vrFrame );
 
 	// Update gui systems after the app frame, but before rendering anything.
-	GuiSys->Frame( vrFrame, FrameResult.FrameMatrices.CenterView );
-
-	//-------------------------------
-	// Rendering
-	//-------------------------------
-
-	GuiSys->AppendSurfaceList( FrameResult.FrameMatrices.CenterView, &FrameResult.Surfaces );
+    CenterEyeViewMatrix = vrapi_GetViewMatrixFromPose( &vrFrame.Tracking.HeadPose.Pose );
+	GuiSys->Frame( vrFrame, CenterEyeViewMatrix );
 
 	return ovrApplFrameOut();
 }

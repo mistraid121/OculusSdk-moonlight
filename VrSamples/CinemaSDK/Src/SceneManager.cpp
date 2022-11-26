@@ -901,7 +901,7 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 
 	Scene.GetFrameMatrices( Cinema.GetSuggestedEyeFovDegreesX(), Cinema.GetSuggestedEyeFovDegreesY(), out.FrameMatrices );
 	Scene.GenerateFrameSurfaceList( out.FrameMatrices, out.Surfaces );
-
+	Cinema.GetGuiSys().AppendSurfaceList( out.FrameMatrices.CenterView, &out.Surfaces );
 	//-------------------------------
 	// Rendering
 	//-------------------------------

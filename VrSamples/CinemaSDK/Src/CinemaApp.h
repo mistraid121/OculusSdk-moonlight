@@ -145,7 +145,7 @@ private:
 	OVRFW::OvrGuiSys::SoundEffectPlayer * SoundEffectPlayer;
 
 	OVRFW::ovrApplFrameIn			VrFrame;
-	OVRFW::ovrRendererOutput			FrameResult;
+    ovrMatrix4f						CenterEyeViewMatrix;
 
 	OVRFW::ovrFileSys *				FileSys;
 	OVRFW::OvrDebugLines *				DebugLines;
