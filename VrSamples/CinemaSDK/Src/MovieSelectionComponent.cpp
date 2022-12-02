@@ -51,14 +51,14 @@ eMsgStatus MovieSelectionComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFra
         case VRMENU_EVENT_TOUCH_DOWN:
        		Sound.PlaySoundEffect( guiSys, "touch_down", 0.1 );
        		return MSG_STATUS_CONSUMED;
-        case VRMENU_EVENT_TOUCH_UP:/*
-        	if ( !( vrFrame.AllTouches & BUTTON_TOUCH_WAS_SWIPE ) )
-			{
+        case VRMENU_EVENT_TOUCH_UP:
+        	//if ( !( vrFrame.AllTouches & BUTTON_TOUCH_WAS_SWIPE ) )
+			//{
         		Sound.PlaySoundEffect( guiSys, "touch_up", 0.1 );
         		CallbackView->Select();
         		return MSG_STATUS_CONSUMED;
-        	}*/
-            return MSG_STATUS_ALIVE;
+        	//}
+            //return MSG_STATUS_ALIVE;
         default:
             OVR_ASSERT( !"Event flags mismatch!" );
             return MSG_STATUS_ALIVE;
