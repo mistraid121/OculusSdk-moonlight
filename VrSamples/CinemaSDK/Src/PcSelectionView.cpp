@@ -841,6 +841,8 @@ void PcSelectionView::UpdateSelectionFrame( const ovrApplFrameIn & vrFrame )
     else
     {
         PcBrowser->CheckGamepad( Cinema.GetGuiSys(), vrFrame, PcRoot->GetMenuObject() );
+        float touchpadMinSwipe = 100.0f;
+        PcBrowser->CheckTouchpad( Cinema.GetGuiSys(), vrFrame,touchpadMinSwipe);
     }
 
     SelectionFrame->SetColor( Vector4f( static_cast<float>( SelectionFader.Value( now ) ) ) );

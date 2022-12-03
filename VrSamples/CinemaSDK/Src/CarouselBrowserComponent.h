@@ -33,7 +33,7 @@ public:
 	int			TextureHeight;
 	void *		UserData;
 
-				CarouselItem() : Texture( 0 ), TextureWidth( 0 ), TextureHeight( 0 ), UserData( NULL ) {}
+	CarouselItem() : Texture( 0 ), TextureWidth( 0 ), TextureHeight( 0 ), UserData( NULL ) {}
 };
 
 class PanelPose
@@ -43,9 +43,9 @@ public:
 	OVR::Vector3f 	Position;
 	OVR::Vector4f	Color;
 
-				PanelPose() {};
-				PanelPose( OVR::Quatf orientation, OVR::Vector3f position, OVR::Vector4f color ) :
-					Orientation( orientation ), Position( position ), Color( color ) {}
+	PanelPose() {};
+	PanelPose( OVR::Quatf orientation, OVR::Vector3f position, OVR::Vector4f color ) :
+	Orientation( orientation ), Position( position ), Color( color ) {}
 };
 
 class CarouselItemComponent : public OVRFW::VRMenuComponent
@@ -66,7 +66,6 @@ class CarouselBrowserComponent : public OVRFW::VRMenuComponent
 public:
 									CarouselBrowserComponent( const std::vector<CarouselItem *> &items, const std::vector<PanelPose> &panelPoses );
 
-	void							SetPanelPoses( OVRFW::OvrVRMenuMgr & menuMgr, OVRFW::VRMenuObject * self, const std::vector<PanelPose> &panelPoses );
 	void 							SetMenuObjects( const std::vector<OVRFW::VRMenuObject *> &menuObjs, const std::vector<CarouselItemComponent *> &menuComps );
 	void							SetItems( const std::vector<CarouselItem *> &items );
 	void							SetSelectionIndex( const int selectedIndex );
@@ -77,6 +76,8 @@ public:
 	bool							CanSwipeForward() const;
 
 	void 							CheckGamepad( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
+	void 							CheckTouchpad(OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, const float min_swipe_distance );
+
 
 private:
     virtual OVRFW::eMsgStatus 				OnEvent_Impl( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
@@ -84,21 +85,16 @@ private:
     void 							UpdatePanels( OVRFW::OvrVRMenuMgr & menuMgr, OVRFW::VRMenuObject * self );
 
     OVRFW::eMsgStatus 						Frame( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
-    OVRFW::eMsgStatus 						SwipeForward( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
-    OVRFW::eMsgStatus 						SwipeBack( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self );
-	OVRFW::eMsgStatus 						TouchDown( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
-	OVRFW::eMsgStatus 						TouchUp( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
+    OVRFW::eMsgStatus 						SwipeForward( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame );
+    OVRFW::eMsgStatus 						SwipeBack( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame );
 	OVRFW::eMsgStatus 						Opened( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 	OVRFW::eMsgStatus 						Closed( OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, OVRFW::VRMenuObject * self, OVRFW::VRMenuEvent const & event );
 
-public:
-    bool							SelectPressed;
 
 private:
 	OVR::Vector3f						PositionScale;
     float							Position;
-	double							TouchDownTime;			// the time in second when a down even was received, < 0 if touch is not down
-
+	
     std::vector<CarouselItem *> 			Items;
     std::vector<OVRFW::VRMenuObject *> 			MenuObjs;
     std::vector<CarouselItemComponent *> 	MenuComps;
@@ -111,6 +107,11 @@ private:
 
 	bool							Swiping;
 	bool							PanelsNeedUpdate;
+
+	double							lastTouchpadTime,touchpadTimer;
+	bool							lastTouchDown;
+	OVR::Vector2f					touchOrigin,touchRelative;
+	int								touchState;
 };
 
 } // namespace OculusCinema

@@ -29,11 +29,12 @@ namespace OculusCinema {
 //==============================================================
 // CarouselBrowserComponent
 CarouselBrowserComponent::CarouselBrowserComponent( const std::vector<CarouselItem *> &items, const std::vector<PanelPose> &panelPoses ) :
-	VRMenuComponent( VRMenuEventFlags_t( VRMENU_EVENT_FRAME_UPDATE ) | 	VRMENU_EVENT_TOUCH_DOWN | 
-		VRMENU_EVENT_SWIPE_FORWARD | VRMENU_EVENT_SWIPE_BACK | VRMENU_EVENT_TOUCH_UP | VRMENU_EVENT_OPENED | VRMENU_EVENT_CLOSED ),
-		SelectPressed( false ), PositionScale( 1.0f ), Position( 0.0f ), TouchDownTime( -1.0 ),
+	VRMenuComponent( VRMenuEventFlags_t( VRMENU_EVENT_FRAME_UPDATE )  |
+		 VRMENU_EVENT_OPENED | VRMENU_EVENT_CLOSED ),
+		PositionScale( 1.0f ), Position( 0.0f ),
 		Items(), MenuObjs(), MenuComps(), PanelPoses( panelPoses ),
-		StartTime( 0.0 ), EndTime( 0.0 ), PrevPosition( 0.0f ), NextPosition( 0.0f ), Swiping( false ), PanelsNeedUpdate( false )
+		StartTime( 0.0 ), EndTime( 0.0 ), PrevPosition( 0.0f ), NextPosition( 0.0f ), Swiping( false ), PanelsNeedUpdate( false ),
+		lastTouchpadTime( 0.0 ), touchpadTimer( 0.0 ), 	lastTouchDown( false ), touchState( 0 )
 
 {
 	SetItems( items );
@@ -48,28 +49,14 @@ eMsgStatus CarouselBrowserComponent::OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFr
 	{
 		case VRMENU_EVENT_FRAME_UPDATE:
 			return Frame( guiSys, vrFrame, self, event );
-		case VRMENU_EVENT_TOUCH_DOWN:
-			return TouchDown( guiSys, vrFrame, self, event);
-		case VRMENU_EVENT_TOUCH_UP:
-			return TouchUp( guiSys, vrFrame, self, event );
 		case VRMENU_EVENT_OPENED:
 			return Opened( guiSys, vrFrame, self, event );
 		case VRMENU_EVENT_CLOSED:
 			return Closed( guiSys, vrFrame, self, event );
-		case VRMENU_EVENT_SWIPE_FORWARD:
-			return SwipeForward( guiSys, vrFrame, self );
-		case VRMENU_EVENT_SWIPE_BACK:
-			return SwipeBack( guiSys, vrFrame, self );
 		default:
 			OVR_ASSERT( !"Event flags mismatch!" ); // the constructor is specifying a flag that's not handled
 			return MSG_STATUS_ALIVE;
 	}
-}
-
-void CarouselBrowserComponent::SetPanelPoses( OvrVRMenuMgr & menuMgr, VRMenuObject * self, const std::vector<PanelPose> &panelPoses )
-{
-	PanelPoses = panelPoses;
-	UpdatePanels( menuMgr, self );
 }
 
 void CarouselBrowserComponent::SetMenuObjects( const std::vector<VRMenuObject *> &menuObjs, const std::vector<CarouselItemComponent *> &menuComps )
@@ -233,10 +220,11 @@ eMsgStatus CarouselBrowserComponent::Frame( OvrGuiSys & guiSys, ovrApplFrameIn c
 		UpdatePanels( guiSys.GetVRMenuMgr(), self );
 	}
 
+
 	return MSG_STATUS_ALIVE;
 }
 
-eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self )
+eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame)
 {
 	if ( !Swiping )
 	{
@@ -255,7 +243,7 @@ eMsgStatus CarouselBrowserComponent::SwipeForward( OvrGuiSys & guiSys, ovrApplFr
 	return MSG_STATUS_CONSUMED;
 }
 
-eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self )
+eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame )
 {
 	if ( !Swiping )
 	{
@@ -274,50 +262,6 @@ eMsgStatus CarouselBrowserComponent::SwipeBack( OvrGuiSys & guiSys, ovrApplFrame
 	return MSG_STATUS_CONSUMED;
 }
 
-eMsgStatus CarouselBrowserComponent::TouchDown( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
-{
-	//OVR_LOG( "TouchDown" );
-
-	OVR_UNUSED( guiSys );
-	OVR_UNUSED( vrFrame );
-	OVR_UNUSED( self );
-
-	TouchDownTime = vrFrame.RealTimeInSeconds;
-
-	if ( Swiping )
-	{
-		return MSG_STATUS_CONSUMED;
-	}
-
-	return MSG_STATUS_ALIVE;	// don't consume -- we're just listening
-}
-
-eMsgStatus CarouselBrowserComponent::TouchUp( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
-{
-	//OVR_LOG( "TouchUp" );
-
-	OVR_UNUSED( guiSys );
-	OVR_UNUSED( vrFrame );
-	OVR_UNUSED( self );
-
-	float const timeTouchHasBeenDown = (float)( vrFrame.RealTimeInSeconds - TouchDownTime );
-	TouchDownTime = -1.0;
-
-	float dist = event.FloatValue.LengthSq();
-	if ( !Swiping && ( dist < 20.0f ) && ( timeTouchHasBeenDown < 1.0f ) )
-	{
-		OVR_LOG( "Selectmovie" );
-		SelectPressed = true;
-	}
-	else if ( Swiping )
-	{
-		return MSG_STATUS_CONSUMED;
-	}
-
-	//OVR_LOG( "Ignore: %f, %f", RotationalVelocity, ( float )timeTouchHasBeenDown );
-	return MSG_STATUS_ALIVE; // don't consume -- we are just listening
-}
-
 eMsgStatus CarouselBrowserComponent::Opened( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame, VRMenuObject * self, VRMenuEvent const & event )
 {
 	OVR_UNUSED( guiSys );
@@ -327,7 +271,6 @@ eMsgStatus CarouselBrowserComponent::Opened( OvrGuiSys & guiSys, ovrApplFrameIn 
 
 	Swiping = false;
 	Position = floorf( Position );
-	SelectPressed = false;
 	return MSG_STATUS_ALIVE;
 }
 
@@ -338,21 +281,128 @@ eMsgStatus CarouselBrowserComponent::Closed( OvrGuiSys & guiSys, ovrApplFrameIn 
 	OVR_UNUSED( self );
 	OVR_UNUSED( event );
 
-	SelectPressed = false;
 	return MSG_STATUS_ALIVE;
 }
 
 void CarouselBrowserComponent::SetItems( const std::vector<CarouselItem *> &items )
 {
 	Items = items;
-	SelectPressed = false;
 	Position = 0.0f;
-	TouchDownTime = -1.0;
 	StartTime = 0.0;
 	EndTime = 0.0;
 	PrevPosition = 0.0f;
 	NextPosition = 0.0f;
 	PanelsNeedUpdate = true;
 }
+
+
+void CarouselBrowserComponent::CheckTouchpad(OVRFW::OvrGuiSys & guiSys, OVRFW::ovrApplFrameIn const & vrFrame, const float min_swipe_distance )
+{
+	// 1) Down -> Up w/ Motion = Slide
+	// 1) Down -> Timeout w/o Motion = Long Press
+	// 2) Down -> Up w/out Motion -> Timeout = Single Tap
+	// 3) Down -> Up w/out Motion -> Down -> Timeout = Nothing
+	// 4) Down -> Up w/out Motion -> Down -> Up = Double Tap
+	const double currentTime = vrapi_GetTimeInSeconds();
+	static const double timer_finger_down = 0.3;
+	static const double timer_finger_up = 0.3;
+
+	const double deltaTime = currentTime - lastTouchpadTime;
+	lastTouchpadTime = currentTime;
+	touchpadTimer = touchpadTimer + deltaTime;
+	ovrInputStateTrackedRemote input=vrFrame.SingleHandRemote;
+
+	const bool currentTouchDown = ( input.TrackpadStatus ==1);
+
+	bool down = false;
+	if ( currentTouchDown && !lastTouchDown )
+	{
+		//OVR_LOG( "DOWN" );
+		down = true;
+		touchOrigin = input.TrackpadPosition;
+	}
+
+	bool up = false;
+	if ( !currentTouchDown && lastTouchDown )
+	{
+		//OVR_LOG( "UP" );
+		up = true;
+	}
+
+	lastTouchDown = currentTouchDown;
+
+	touchRelative.x = input.TrackpadPosition.x - touchOrigin.x;
+	touchRelative.y = input.TrackpadPosition.y - touchOrigin.y;
+	float touchMagnitude = touchRelative.Length();
+
+	switch ( touchState )
+	{
+		case 0:
+			if ( down )
+			{
+				touchState = 1;
+				touchpadTimer = 0.0;
+			}
+			break;
+		case 1:
+			if ( touchMagnitude >= min_swipe_distance )
+			{
+				if ( fabs( touchRelative.x ) > fabs( touchRelative.y ) )
+				{
+					if ( touchRelative.x < 0 )
+					{
+						//OVR_LOG( "SWIPE FORWARD" );
+						SwipeForward( guiSys, vrFrame );
+					}
+					else
+					{
+						//OVR_LOG( "SWIPE BACK" );
+						SwipeBack( guiSys, vrFrame );
+					}
+				}
+				touchState = 0;
+				touchpadTimer = 0.0;
+			}
+			else if ( up )
+			{
+				if ( touchpadTimer < timer_finger_down )
+				{
+					touchState = 2;
+					touchpadTimer = 0.0;
+				}
+				else
+				{
+					touchState = 0;
+					touchpadTimer = 0.0;
+				}
+			}
+			break;
+		case 2:
+			if ( touchpadTimer >= timer_finger_up )
+			{
+				touchState = 0;
+				touchpadTimer = 0.0;
+			}
+			else if ( down )
+			{
+				touchState = 3;
+				touchpadTimer = 0.0;
+			}
+			break;
+		case 3:
+			if ( touchpadTimer >= timer_finger_down )
+			{
+				touchState = 0;
+				touchpadTimer = 0.0;
+			}
+			else if ( up )
+			{
+				touchState = 0;
+				touchpadTimer = 0.0;
+			}
+			break;
+	}
+}
+
 
 } // namespace OculusCinema
