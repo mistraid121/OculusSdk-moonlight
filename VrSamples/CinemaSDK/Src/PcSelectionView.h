@@ -48,7 +48,7 @@ public:
 
 	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	void 				SetPcList( const std::vector<const PcDef *> &pcs);
+	void 				SetPcList( const std::vector<PcDef *> &pcs);
 
 	virtual void 				Select( void );
 	virtual void 				SelectionHighlighted( bool isHighlighted );
@@ -103,7 +103,7 @@ private:
 
 	std::vector<CarouselItemComponent *>	 	PcPosterComponents;
 	
-	std::vector<const PcDef *> 			PcList;
+	std::vector<PcDef *> 			PcList;
 	int									PcsIndex;
 
 	const PcDef *					LastPcDisplayed;

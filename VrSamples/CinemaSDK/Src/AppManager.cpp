@@ -172,20 +172,4 @@ void AppManager::LoadPosters()
 }
 
 
-std::vector<const AppDef *> AppManager::GetAppList( PcCategory category ) const
-{
-    std::vector<const AppDef *> result;
-
-    for( OVR::UPInt i = 0; i < Apps.size(); i++ )
-    {
-        OVR_LOG("App: %s Poster %i", Apps[i]->Name.c_str(), Apps[i]->Poster);
-        //if ( Apps[ i ]->Category == category && Apps[i]->Poster != 0)
-        {
-            result.push_back( Apps[ i ] );
-        }
-    }
-
-    return result;
-}
-
 } // namespace OculusCinema

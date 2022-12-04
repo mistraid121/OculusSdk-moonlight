@@ -18,7 +18,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CinemaApp.h"
 #include "GUI/VRMenuMgr.h"
 #include "GUI/GuiSys.h"
-#include "PcCategoryComponent.h"
 #include "MoviePosterComponent.h"
 #include "MovieSelectionComponent.h"
 #include "CarouselSwipeHintComponent.h"
@@ -50,7 +49,7 @@ static const char* Guuid;
             SelectionView("AppSelectionView"),
             Cinema(cinema),
             SelectionTexture(),
-            ShadowTexture(), BorderTexture(),
+            ShadowTexture(),
             SwipeIconLeftTexture(),
             SwipeIconRightTexture(),
             ResumeIconTexture(),
@@ -66,8 +65,6 @@ static const char* Guuid;
             SelectionFader(),
             AppPanelPositions(),
             AppPosterComponents(),
-            Categories(),
-            CurrentCategory(CATEGORY_LIMELIGHT),
             AppList(),
             AppIndex(0),
             RepositionScreen(false),
@@ -101,8 +98,6 @@ static const char* Guuid;
 
         CreateMenu(Cinema.GetGuiSys());
 
-//        SetCategory(CATEGORY_LIMELIGHT);
-
 
         OVR_LOG(
                 "AppSelectionView::OneTimeInit %3.1f seconds", vrapi_GetTimeInSeconds() - start);
@@ -114,8 +109,11 @@ static const char* Guuid;
     }
 
     void AppSelectionView::OnOpen(const double currTimeInSeconds ) {
-        SetCategory(CATEGORY_LIMELIGHT);
         OVR_LOG("OnOpen");
+
+        Cinema.AppMgr.LoadPosters();
+        SetAppList(Cinema.AppMgr.GetAppList());
+
         CurViewState = VIEWSTATE_OPEN;
 
         LastAppDisplayed = NULL;
@@ -138,12 +136,7 @@ static const char* Guuid;
 
         Menu->SetFlags(VRMENU_FLAG_SHORT_PRESS_HANDLED_BY_APP);
 
-        if (Cinema.InLobby) {
-            CategoryRoot->SetVisible(true);
-        } else {
-            CategoryRoot->SetVisible(false);
-
-
+        if (!Cinema.InLobby) {
             ResumeIcon->SetVisible(false);
             CenterRoot->SetVisible(true);
 
@@ -366,7 +359,6 @@ static const char* Guuid;
         //
         SelectionTexture.LoadTextureFromApplicationPackage("assets/selection.png");
         ShadowTexture.LoadTextureFromApplicationPackage("assets/shadow.png");
-        BorderTexture.LoadTextureFromApplicationPackage("assets/category_border.png");
         SwipeIconLeftTexture.LoadTextureFromApplicationPackage(
                 "assets/SwipeSuggestionArrowLeft.png");
         SwipeIconRightTexture.LoadTextureFromApplicationPackage(
@@ -395,10 +387,6 @@ static const char* Guuid;
         AppRoot = new UIContainer(Cinema.GetGuiSys());
         AppRoot->AddToMenu(Menu, CenterRoot);
         AppRoot->SetLocalPose(forward, Vector3f(0.0f, 0.0f, 0.0f));
-
-        CategoryRoot = new UIContainer(Cinema.GetGuiSys());
-        CategoryRoot->AddToMenu(Menu, CenterRoot);
-        CategoryRoot->SetLocalPose(forward, Vector3f(0.0f, 0.0f, 0.0f));
 
         TitleRoot = new UIContainer(Cinema.GetGuiSys());
         TitleRoot->AddToMenu(Menu, CenterRoot);
@@ -527,57 +515,6 @@ static const char* Guuid;
 
         AppBrowser->SetMenuObjects(menuObjs, AppPosterComponents);
 
-        // ==============================================================================
-        //
-        // category browser
-        //
-        Categories.push_back(AppCategoryButton(CATEGORY_LIMELIGHT,
-                                                Cinema.GetCinemaStrings().Category_LimeLight));
-
-
-        // create the buttons and calculate their size
-        const float itemWidth = 1.10f;
-        float categoryBarWidth = 0.0f;
-        for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-            Categories[i].Button = new UILabel(Cinema.GetGuiSys());
-            Categories[i].Button->AddToMenu(Menu, CategoryRoot);
-            Categories[i].Button->SetFontScale(2.2f);
-            Categories[i].Button->SetText(Categories[i].Text.c_str());
-            Categories[i].Button->AddComponent(
-                    new PcCategoryComponent(this, Categories[i].Category));
-
-            const Bounds3f &bounds = Categories[i].Button->GetTextLocalBounds(
-                    Cinema.GetGuiSys().GetDefaultFont());
-            Categories[i].Width = std::max(bounds.GetSize().x, itemWidth) +
-                                  80.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
-            Categories[i].Height =
-                    bounds.GetSize().y + 108.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
-            categoryBarWidth += Categories[i].Width;
-        }
-
-        // reposition the buttons and set the background and border
-        float startX = categoryBarWidth * -0.5f;
-        for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-            VRMenuSurfaceParms panelSurfParms("",
-                                              BorderTexture.Texture, BorderTexture.Width,
-                                              BorderTexture.Height, SURFACE_TEXTURE_ADDITIVE,
-                                              0, 0, 0, SURFACE_TEXTURE_MAX,
-                                              0, 0, 0, SURFACE_TEXTURE_MAX);
-
-            panelSurfParms.Border = Vector4f(14.0f);
-            panelSurfParms.Dims = Vector2f(Categories[i].Width * VRMenuObject::TEXELS_PER_METER,
-                                           Categories[i].Height *
-                                           VRMenuObject::TEXELS_PER_METER);
-
-            Categories[i].Button->SetImage(0, panelSurfParms);
-            Categories[i].Button->SetLocalPose(forward,
-                                               Vector3f(startX + Categories[i].Width * 0.5f,
-                                                        3.6f, -7.39f));
-            Categories[i].Button->SetLocalBoundsExpand(Vector3f(0.0f, 0.13f, 0.0f),
-                                                       Vector3f::ZERO);
-
-            startX += Categories[i].Width;
-        }
 
         // ==============================================================================
         //
@@ -1085,38 +1022,7 @@ void AppSelectionView::Select() {
     }
 }
 
-
-void AppSelectionView::SetCategory(const PcCategory category) {
-    // default to category in index 0
-    OVR::UPInt categoryIndex = 0;
-    for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-        if (category == Categories[i].Category) {
-            categoryIndex = i;
-            break;
-        }
-    }
-
-    OVR_LOG("SetCategory: %s", Categories[categoryIndex].Text.c_str());
-    CurrentCategory = Categories[categoryIndex].Category;
-    for (OVR::UPInt i = 0; i < Categories.size(); ++i) {
-        Categories[i].Button->SetHilighted(i == categoryIndex);
-    }
-
-    // reset all the swipe icons so they match the current poster
-    for (int i = 0; i < NumSwipeTrails; i++) {
-        CarouselSwipeHintComponent *compLeft = LeftSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-        compLeft->Reset(LeftSwipes[i]->GetMenuObject());
-        CarouselSwipeHintComponent *compRight = RightSwipes[i]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-        compRight->Reset(RightSwipes[i]->GetMenuObject());
-    }
-    Cinema.AppMgr.LoadPosters();
-    SetAppList(Cinema.AppMgr.GetAppList(CurrentCategory),  NULL);
-
-    OVR_LOG("%zu movies added", AppList.size());
-}
-
-void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
-                                  const AppDef *nextApp) {
+void AppSelectionView::SetAppList(const std::vector<AppDef *> &apps) {
     //OVR_LOG( "AppSelectionView::SetAppList: %d apps", apps.size());
 
     AppList = apps;
@@ -1124,7 +1030,7 @@ void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
     for (OVR::UPInt i = 0; i < AppList.size(); i++) {
         const AppDef *app = AppList[i];
 
-        OVR_LOG( "AddMovie: %s", app->Name.c_str());
+        OVR_LOG( "AddApp: %s", app->Name.c_str());
 
         CarouselItem *item = new CarouselItem();
         item->Texture = app->Poster;
@@ -1136,16 +1042,6 @@ void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
 
     AppTitle->SetText("");
     LastAppDisplayed = NULL;
-
-    //AppIndex = 0;
-    if (nextApp != NULL) {
-        for (OVR::UPInt i = 0; i < AppList.size(); i++) {
-            if (apps[i] == nextApp) {
-                AppIndex = i;
-                break;
-            }
-        }
-    }
 
     AppBrowser->SetSelectionIndex(AppIndex);
 

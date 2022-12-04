@@ -31,10 +31,6 @@ public:
 
 	void		OneTimeInit( CinemaApp &cinema );
 
-	std::string     Category_LimeLight;
-	std::string     Category_RemoteDesktop;
-
-
 	std::string		MovieSelection_Resume;
 	std::string		MovieSelection_Next;
 

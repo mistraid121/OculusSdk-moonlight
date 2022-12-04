@@ -299,7 +299,7 @@ bool CinemaApp::GetUseSrgb() const
 	return UseSrgb;// && app->GetFramebufferIsSrgb();
 }
 
-void CinemaApp::SetPlaylist( const std::vector<const AppDef *> &playList, const int nextMovie )
+void CinemaApp::SetPlaylist( const std::vector<AppDef *> &playList, const int nextMovie )
 {
 	PlayList = playList;
 

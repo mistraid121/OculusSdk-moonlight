@@ -18,7 +18,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CinemaApp.h"
 #include "GUI/VRMenuMgr.h"
 #include "GUI/GuiSys.h"
-#include "PcCategoryComponent.h"
 #include "MoviePosterComponent.h"
 #include "MovieSelectionComponent.h"
 #include "CarouselSwipeHintComponent.h"
@@ -99,8 +98,8 @@ void PcSelectionView::OneTimeInit( const char * launchIntent )
 	const double start = GetTimeInSeconds();
 
 	CreateMenu( Cinema.GetGuiSys() );
-	
-	SetPcList( Cinema.PcMgr.GetPcList( CATEGORY_LIMELIGHT ) );
+
+	SetPcList( Cinema.PcMgr.GetPcList() );
 
     Native::InitPcSelector();
 
@@ -650,7 +649,7 @@ const PcDef *PcSelectionView::GetSelectedPc() const
 	return NULL;
 }
 
-void PcSelectionView::SetPcList( const std::vector<const PcDef *> &pcs)
+void PcSelectionView::SetPcList( const std::vector<PcDef *> &pcs)
 {
 	OVR_LOG( "SetPcList: %zu Pcs", pcs.size() );
 
@@ -930,7 +929,7 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
     if (Cinema.PcMgr.updated)
     {
         Cinema.PcMgr.updated = false;
-        SetPcList( Cinema.PcMgr.GetPcList( CATEGORY_LIMELIGHT ) );
+        SetPcList( Cinema.PcMgr.GetPcList() );
     }
 
     //Cinema.SceneMgr.Frame( vrFrame );

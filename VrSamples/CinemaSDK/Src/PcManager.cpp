@@ -50,7 +50,7 @@ static void ReplaceExtension(std::string & s, const std::string & newExtension)
 //=======================================================================================
 
 PcManager::PcManager( CinemaApp &cinema ) :
-	Pcs(), updated(false), Cinema(cinema)
+	updated(false),Cinema(cinema),Pcs()
 {
 }
 
@@ -171,20 +171,5 @@ void PcManager::ReadMetaData( PcDef *pc )
 	}
 }
 
-std::vector<const PcDef *> PcManager::GetPcList(PcCategory category) const {
-	std::vector<const PcDef *> result;
-
-	for (OVR::UPInt i = 0; i < Pcs.size(); i++) {
-		if (Pcs[i]->Category == category) {
-			if (Pcs[i]->Poster != 0) {
-				result.push_back(Pcs[i]);
-			} else {
-				OVR_LOG("Skipping PC with empty poster!");
-			}
-		}
-	}
-
-	return result;
-}
 
 } // namespace OculusCinema

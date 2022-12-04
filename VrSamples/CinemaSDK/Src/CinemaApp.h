@@ -64,7 +64,7 @@ public:
 
 	const OVRFW::ovrApplFrameIn &	GetFrame() const { return VrFrame; }
 
-	void                    SetPlaylist( const std::vector<const AppDef *> &playList, const int nextApp );
+	void                    SetPlaylist( const std::vector<AppDef *> &playList, const int nextApp );
 	void                    SetApp( const AppDef * nextApp );
 	void                    SetPc( const PcDef * pc);
 
@@ -159,7 +159,7 @@ private:
 
 	const AppDef *            CurrentApp;
 	const PcDef *            CurrentPc;
-	std::vector<const AppDef *>    PlayList;
+	std::vector<AppDef *>    PlayList;
 
 	bool					MovieFinishedPlaying;
 

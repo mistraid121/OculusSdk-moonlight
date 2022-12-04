@@ -53,12 +53,10 @@ public:
 	void                    AddApp(const std::string &name, const std::string &posterFileName, int id, bool isRunning);
 	void					RemoveApp( int id);
 
-	std::vector<const AppDef *>	GetAppList( PcCategory category ) const;
-
-public:
-    std::vector<AppDef *> 		Apps;
+	std::vector<AppDef *>	GetAppList(void) const {return Apps;};
 
 private:
+	std::vector<AppDef *> 		Apps;
 	CinemaApp &				Cinema;
     GLuint					DefaultPoster;
     virtual void 			ReadMetaData( AppDef *app );

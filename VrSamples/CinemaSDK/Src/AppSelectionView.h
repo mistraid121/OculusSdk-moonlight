@@ -49,35 +49,19 @@ public:
 
 	virtual void 		Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
-	void                SetAppList( const std::vector<const AppDef *> &apps, const AppDef *nextApp );
+	void                SetAppList( const std::vector<AppDef *> &apps);
     void                PairSuccess();
 
 	void 				Select( void );
 	void 				SelectionHighlighted( bool isHighlighted );
-	void 				SetCategory( const PcCategory category );
 	void				SetError( const char *text, bool showErrorIcon );
 	void				ClearError();
-
-private:
-	class AppCategoryButton
-	{
-	public:
-		PcCategory      Category;
-		std::string			Text;
-		OVRFW::UILabel *		Button;
-		float			Width;
-		float			Height;
-
-					AppCategoryButton( const PcCategory category, const std::string &text ) :
-						Category( category ), Text( text ), Button( NULL ), Width( 0.0f ), Height( 0.0f ) {}
-	};
 
 private:
 	CinemaApp &							Cinema;
 
 	OVRFW::UITexture 							SelectionTexture;
 	OVRFW::UITexture							ShadowTexture;
-	OVRFW::UITexture							BorderTexture;
 	OVRFW::UITexture							SwipeIconLeftTexture;
 	OVRFW::UITexture							SwipeIconRightTexture;
 	OVRFW::UITexture							ResumeIconTexture;
@@ -99,7 +83,6 @@ private:
 	bool								ErrorMessageClicked;
 
 	OVRFW::UIContainer *						AppRoot;
-	OVRFW::UIContainer *						CategoryRoot;
 	OVRFW::UIContainer *						TitleRoot;
 
 	OVRFW::UILabel	*							AppTitle;
@@ -128,10 +111,7 @@ private:
 
 	std::vector<CarouselItemComponent *>	 	AppPosterComponents;
 
-	std::vector<AppCategoryButton>			Categories;
-	PcCategory			 			CurrentCategory;
-	
-	std::vector<const AppDef *> 				AppList;
+	std::vector<AppDef *> 				AppList;
 	int									AppIndex;
 
 	const AppDef *					LastAppDisplayed;

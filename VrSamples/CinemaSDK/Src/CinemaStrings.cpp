@@ -26,9 +26,6 @@ void ovrCinemaStrings::OneTimeInit( CinemaApp & cinema )
 {
 	OVR_LOG( "ovrCinemaStrings::OneTimeInit" );
 
-	cinema.GetLocale().GetLocalizedString( "@string/Category_LimeLight", 	"@string/Category_LimeLight", 		Category_LimeLight );
-	cinema.GetLocale().GetLocalizedString( "@string/Category_RemoteDesktop", 		"@string/Category_RemoteDesktop", 		Category_RemoteDesktop );
-
 	cinema.GetLocale().GetLocalizedString( "@string/MovieSelection_Resume",	"@string/MovieSelection_Resume",	MovieSelection_Resume );
 	cinema.GetLocale().GetLocalizedString( "@string/MovieSelection_Next", 	"@string/MovieSelection_Next", 		MovieSelection_Next );
 	cinema.GetLocale().GetLocalizedString( "@string/ResumeMenu_Title", 		"@string/ResumeMenu_Title", 		ResumeMenu_Title );

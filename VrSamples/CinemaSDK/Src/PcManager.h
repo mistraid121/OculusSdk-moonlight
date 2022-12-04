@@ -25,11 +25,6 @@ namespace OculusCinema {
 
 class CinemaApp;
 
-enum PcCategory {
-    CATEGORY_LIMELIGHT,
-    CATEGORY_REMOTEDESKTOP,
-    CATEGORY_VNC
-};
 
 class PcDef
 {
@@ -45,11 +40,8 @@ public:
 	GLuint			Poster;
 	int				PosterWidth;
 	int				PosterHeight;
-	PcCategory        Category;
 
-
-    PcDef() : Name(), PosterFileName(), UUID(), Binding(), Poster( 0 ), PosterWidth( 0 ), PosterHeight( 0 ),
-        Category( CATEGORY_LIMELIGHT ) {}
+    PcDef() : Name(), PosterFileName(), UUID(), Binding(), Poster( 0 ), PosterWidth( 0 ), PosterHeight( 0 ) {}
 
 
 };
@@ -67,14 +59,15 @@ public:
     AddPc(const char *name, const char *uuid, Native::PairState pairState, Native::Reachability reachability, const char *binding, const bool isRunning);
 
 	void                    RemovePc(const std::string &name);
-	std::vector<const PcDef *>    GetPcList( PcCategory category ) const;
+	std::vector<PcDef *>    GetPcList( void) const {return Pcs;};
 
 public:
-	std::vector<PcDef *> 		Pcs;
+
     bool                    updated;
 
 private:
 	CinemaApp &				Cinema;
+	std::vector<PcDef *> 		Pcs;
 
 	PcManager &			operator=( const PcManager & );
 
