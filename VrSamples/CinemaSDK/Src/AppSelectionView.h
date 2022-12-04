@@ -100,11 +100,11 @@ private:
 	
 	bool								ErrorMessageClicked;
 
-	OVRFW::UIContainer *						MovieRoot;
+	OVRFW::UIContainer *						AppRoot;
 	OVRFW::UIContainer *						CategoryRoot;
 	OVRFW::UIContainer *						TitleRoot;
 
-	OVRFW::UILabel	*							MovieTitle;
+	OVRFW::UILabel	*							AppTitle;
 
 	OVRFW::UIImage *							SelectionFrame;
 
@@ -124,11 +124,11 @@ private:
 
 	OVRFW::Lerp								SelectionFader;
 
-	CarouselBrowserComponent *			MovieBrowser;
-	std::vector<CarouselItem *> 				MovieBrowserItems;
-	std::vector<PanelPose>					MoviePanelPositions;
+	CarouselBrowserComponent *			AppBrowser;
+	std::vector<CarouselItem *> 				AppBrowserItems;
+	std::vector<PanelPose>					AppPanelPositions;
 
-	std::vector<CarouselItemComponent *>	 	MoviePosterComponents;
+	std::vector<CarouselItemComponent *>	 	AppPosterComponents;
 
 	std::vector<AppCategoryButton>			Categories;
 	PcCategory			 			CurrentCategory;

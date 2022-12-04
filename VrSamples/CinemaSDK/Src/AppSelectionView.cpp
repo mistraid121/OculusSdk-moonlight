@@ -64,8 +64,8 @@ static const char* Guuid;
             RightSwipes(),
             MoveScreenAlpha(),
             SelectionFader(),
-            MoviePanelPositions(),
-            MoviePosterComponents(),
+            AppPanelPositions(),
+            AppPosterComponents(),
             Categories(),
             CurrentCategory(CATEGORY_LIMELIGHT),
             AppList(),
@@ -88,7 +88,7 @@ static const char* Guuid;
     }
 
     AppSelectionView::~AppSelectionView() {
-        DeletePointerArray(MovieBrowserItems);
+        DeletePointerArray(AppBrowserItems);
     }
 
     void AppSelectionView::OneTimeInit(const char *launchIntent) {
@@ -150,7 +150,7 @@ static const char* Guuid;
             MoveScreenLabel->SetVisible(false);
 
 
-            MovieBrowser->SetSelectionIndex(AppIndex);
+            AppBrowser->SetSelectionIndex(AppIndex);
 
 
             RepositionScreen = false;
@@ -213,13 +213,13 @@ static const char* Guuid;
 
             if (!Cinema.InLobby && ErrorShown()) {
                 CarouselSwipeHintComponent::ShowSwipeHints = true;
-                if (vrFrame.AllTouches | ovrTouch_A) {
+                if (vrFrame.AllButtons & ovrButton_A) {
                     Cinema.GetGuiSys().GetSoundEffectPlayer().Play("touch_down");
-                } else if (vrFrame.LastFrameAllButtons | ovrTouch_A) {
+                } else if (vrFrame.LastFrameAllButtons & ovrButton_A) {
                     Cinema.GetGuiSys().GetSoundEffectPlayer().Play("touch_up");
                     ErrorMessageClicked = true;
                 } else if (ErrorMessageClicked &&
-                        (vrFrame.AllTouches | ovrTouch_A) == 0) {
+                        (vrFrame.AllButtons & ovrButton_A) == 0) {
                     Menu->Close();
                 }
             }
@@ -288,7 +288,7 @@ static const char* Guuid;
         }
 
     const AppDef *AppSelectionView::GetSelectedApp() const {
-        int selectedItem = MovieBrowser->GetSelection();
+        int selectedItem = AppBrowser->GetSelection();
         if ((selectedItem >= 0) && (selectedItem < static_cast<int>(AppList.size()))) {
             return AppList[selectedItem];
         }
@@ -297,15 +297,15 @@ static const char* Guuid;
     }
 
     void AppSelectionView::UpdateAppTitle() {
-        const AppDef * currentMovie = GetSelectedApp();
-        if (LastAppDisplayed != currentMovie) {
-            if (currentMovie != NULL) {
-                MovieTitle->SetText(currentMovie->Name.c_str());
+        const AppDef * currentApp = GetSelectedApp();
+        if (LastAppDisplayed != currentApp) {
+            if (currentApp != NULL) {
+                AppTitle->SetText(currentApp->Name.c_str());
             } else {
-                MovieTitle->SetText("");
+                AppTitle->SetText("");
             }
 
-            LastAppDisplayed = currentMovie;
+            LastAppDisplayed = currentApp;
         }
     }
 
@@ -386,15 +386,15 @@ static const char* Guuid;
         // create menu
         //
         Menu = new UIMenu(Cinema.GetGuiSys());
-        Menu->Create("MovieBrowser");
+        Menu->Create("AppBrowser");
 
         CenterRoot = new UIContainer(Cinema.GetGuiSys());
         CenterRoot->AddToMenu(Menu);
         CenterRoot->SetLocalPose(forward, Vector3f(0.0f, 0.0f, 0.0f));
 
-        MovieRoot = new UIContainer(Cinema.GetGuiSys());
-        MovieRoot->AddToMenu(Menu, CenterRoot);
-        MovieRoot->SetLocalPose(forward, Vector3f(0.0f, 0.0f, 0.0f));
+        AppRoot = new UIContainer(Cinema.GetGuiSys());
+        AppRoot->AddToMenu(Menu, CenterRoot);
+        AppRoot->SetLocalPose(forward, Vector3f(0.0f, 0.0f, 0.0f));
 
         CategoryRoot = new UIContainer(Cinema.GetGuiSys());
         CategoryRoot->AddToMenu(Menu, CenterRoot);
@@ -434,35 +434,35 @@ static const char* Guuid;
 
         // ==============================================================================
         //
-        // movie browser
+        // app browser
         //
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-5.59f, 1.76f, -12.55f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(-5.59f, 1.76f, -12.55f),
                                                Vector4f(0.0f, 0.0f, 0.0f, 0.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-3.82f, 1.76f, -10.97f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(-3.82f, 1.76f, -10.97f),
                                                Vector4f(0.1f, 0.1f, 0.1f, 1.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(-2.05f, 1.76f, -9.39f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(-2.05f, 1.76f, -9.39f),
                                                Vector4f(0.2f, 0.2f, 0.2f, 1.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(0.00f, 1.76f, -7.39f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(0.00f, 1.76f, -7.39f),
                                                Vector4f(1.0f, 1.0f, 1.0f, 1.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(2.05f, 1.76f, -9.39f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(2.05f, 1.76f, -9.39f),
                                                Vector4f(0.2f, 0.2f, 0.2f, 1.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(3.82f, 1.76f, -10.97f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(3.82f, 1.76f, -10.97f),
                                                Vector4f(0.1f, 0.1f, 0.1f, 1.0f)));
-        MoviePanelPositions.push_back(PanelPose(forward, Vector3f(5.59f, 1.76f, -12.55f),
+        AppPanelPositions.push_back(PanelPose(forward, Vector3f(5.59f, 1.76f, -12.55f),
                                                Vector4f(0.0f, 0.0f, 0.0f, 0.0f)));
 
-        CenterIndex = MoviePanelPositions.size() / 2;
-        CenterPosition = MoviePanelPositions[CenterIndex].Position;
+        CenterIndex = AppPanelPositions.size() / 2;
+        CenterPosition = AppPanelPositions[CenterIndex].Position;
 
-        MovieBrowser = new CarouselBrowserComponent(MovieBrowserItems, MoviePanelPositions);
-        MovieRoot->AddComponent(MovieBrowser);
+        AppBrowser = new CarouselBrowserComponent(AppBrowserItems, AppPanelPositions);
+        AppRoot->AddComponent(AppBrowser);
 
         // ==============================================================================
         //
         // selection rectangle
         //
         SelectionFrame = new UIImage(Cinema.GetGuiSys());
-        SelectionFrame->AddToMenu(Menu, MovieRoot);
+        SelectionFrame->AddToMenu(Menu, AppRoot);
         SelectionFrame->SetLocalPose(forward, CenterPosition + Vector3f(0.0f, 0.0f, 0.1f));
         SelectionFrame->SetLocalScale(PosterScale);
         SelectionFrame->SetImage(0, SURFACE_TEXTURE_DIFFUSE, SelectionTexture);
@@ -475,14 +475,14 @@ static const char* Guuid;
 
         // ==============================================================================
         //
-        // add shadow to movie poster panels
+        // add shadow to app poster panels
         //
         std::vector<VRMenuObject *> menuObjs;
-        for (OVR::UPInt i = 0; i < MoviePanelPositions.size(); ++i) {
+        for (OVR::UPInt i = 0; i < AppPanelPositions.size(); ++i) {
             UIContainer *posterContainer = new UIContainer(Cinema.GetGuiSys());
-            posterContainer->AddToMenu(Menu, MovieRoot);
-            posterContainer->SetLocalPose(MoviePanelPositions[i].Orientation,
-                                          MoviePanelPositions[i].Position);
+            posterContainer->AddToMenu(Menu, AppRoot);
+            posterContainer->SetLocalPose(AppPanelPositions[i].Orientation,
+                                          AppPanelPositions[i].Position);
             posterContainer->GetMenuObject()->AddFlags(VRMENUOBJECT_FLAG_NO_FOCUS_GAINED);
 
             //
@@ -522,10 +522,10 @@ static const char* Guuid;
             posterContainer->AddComponent(posterComp);
 
             menuObjs.push_back(posterContainer->GetMenuObject());
-            MoviePosterComponents.push_back(posterComp);
+            AppPosterComponents.push_back(posterComp);
         }
 
-        MovieBrowser->SetMenuObjects(menuObjs, MoviePosterComponents);
+        AppBrowser->SetMenuObjects(menuObjs, AppPosterComponents);
 
         // ==============================================================================
         //
@@ -581,13 +581,13 @@ static const char* Guuid;
 
         // ==============================================================================
         //
-        // movie title
+        // app title
         //
-        MovieTitle = new UILabel(Cinema.GetGuiSys());
-        MovieTitle->AddToMenu(Menu, TitleRoot);
-        MovieTitle->SetLocalPose(forward, Vector3f(0.0f, 0.045f, -7.37f));
-        MovieTitle->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
-        MovieTitle->SetFontScale(2.5f);
+        AppTitle = new UILabel(Cinema.GetGuiSys());
+        AppTitle->AddToMenu(Menu, TitleRoot);
+        AppTitle->SetLocalPose(forward, Vector3f(0.0f, 0.045f, -7.37f));
+        AppTitle->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
+        AppTitle->SetFontScale(2.5f);
 
         // ==============================================================================
         //
@@ -607,7 +607,7 @@ static const char* Guuid;
                     VRMenuObjectFlags_t(VRMENUOBJECT_FLAG_NO_DEPTH) |
                     VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
             LeftSwipes[i]->AddComponent(
-                    new CarouselSwipeHintComponent(MovieBrowser, false, 1.3333f,
+                    new CarouselSwipeHintComponent(AppBrowser, false, 1.3333f,
                                                    0.4f + (float) i * 0.13333f, 5.0f));
 
             swipeIconPos.x = ((PosterWidth + SwipeIconLeftTexture.Width * (i + 2)) * -0.5f) *
@@ -622,7 +622,7 @@ static const char* Guuid;
                     VRMenuObjectFlags_t(VRMENUOBJECT_FLAG_NO_DEPTH) |
                     VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
             RightSwipes[i]->AddComponent(
-                    new CarouselSwipeHintComponent(MovieBrowser, true, 1.3333f,
+                    new CarouselSwipeHintComponent(AppBrowser, true, 1.3333f,
                                                    0.4f + (float) i * 0.13333f, 5.0f));
 
             swipeIconPos.x = ((PosterWidth + SwipeIconRightTexture.Width * (i + 2)) * 0.5f) *
@@ -635,7 +635,7 @@ static const char* Guuid;
         // resume icon
         //
         ResumeIcon = new UILabel(Cinema.GetGuiSys());
-        ResumeIcon->AddToMenu(Menu, MovieRoot);
+        ResumeIcon->AddToMenu(Menu, AppRoot);
         ResumeIcon->SetLocalPose(forward, CenterPosition + Vector3f(0.0f, 0.0f, 0.5f));
         ResumeIcon->SetImage(0, SURFACE_TEXTURE_DIFFUSE, ResumeIconTexture);
         ResumeIcon->GetMenuObject()->AddFlags(VRMenuObjectFlags_t(VRMENUOBJECT_DONT_HIT_ALL));
@@ -652,7 +652,7 @@ static const char* Guuid;
         // close app button
         //
         CloseAppButton = new UIButton( Cinema.GetGuiSys() );
-        CloseAppButton->AddToMenu(  Menu, MovieRoot );
+        CloseAppButton->AddToMenu(  Menu, AppRoot );
         CloseAppButton->SetLocalPose( forward, CenterPosition + Vector3f( 0.8f, -1.28f, 0.5f ) );
         CloseAppButton->SetButtonImages( CloseIconTexture, CloseIconTexture, CloseIconTexture );
         CloseAppButton->SetLocalScale( 3.0f );
@@ -664,7 +664,7 @@ static const char* Guuid;
         // settings button
         //
         SettingsButton = new UIButton( Cinema.GetGuiSys() );
-        SettingsButton->AddToMenu(  Menu, MovieRoot );
+        SettingsButton->AddToMenu(  Menu, AppRoot );
         SettingsButton->SetLocalPose( forward, CenterPosition + Vector3f( -0.8f, -1.28f, 0.5f ) );
         SettingsButton->SetButtonImages( SettingsIconTexture, SettingsIconTexture, SettingsIconTexture );
         SettingsButton->SetLocalScale( 3.0f );
@@ -850,7 +850,7 @@ static const char* Guuid;
         const PcDef* pc = Cinema.GetCurrentPc();
         const AppDef* app = NULL;
 
-        int selected = MovieBrowser->GetSelection();
+        int selected = AppBrowser->GetSelection();
         if(selected <   static_cast< int >(AppList.size()))
         {
             app = AppList[selected];
@@ -863,7 +863,7 @@ static const char* Guuid;
 
     void AppSelectionView::SettingsButtonPressed()
     {
-        int appIndex = MovieBrowser->GetSelection();
+        int appIndex = AppBrowser->GetSelection();
 
         const AppDef* app = AppList[appIndex];
 
@@ -1046,8 +1046,8 @@ bool AppSelectionView::OnKeyEvent(const int keyCode, const int repeatCount,
                                   const UIKeyboard::KeyEventType eventType) {
     OVR_UNUSED(keyCode);
     OVR_UNUSED(repeatCount);
-    OVR_UNUSED(eventType);
-    switch ( keyCode ) {/*
+    OVR_UNUSED(eventType);/*
+    switch ( keyCode ) {
         case OVR_KEY_BACK: {
             switch (eventType) {
                 case KEY_EVENT_SHORT_PRESS:
@@ -1059,8 +1059,8 @@ bool AppSelectionView::OnKeyEvent(const int keyCode, const int repeatCount,
                     //OVR_LOG( "unexpected back key state %i", eventType );
                     break;
             }
-        }*/
-    }
+        }
+    }*/
     return false;
 }
 
@@ -1092,7 +1092,7 @@ void AppSelectionView::Select() {
     }
 
     int lastIndex = AppIndex;
-    AppIndex = MovieBrowser->GetSelection();
+    AppIndex = AppBrowser->GetSelection();
     Cinema.SetPlaylist(AppList, AppIndex);
 
     Cinema.InLobby = true;
@@ -1140,10 +1140,10 @@ void AppSelectionView::SetCategory(const PcCategory category) {
 
 void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
                                   const AppDef *nextApp) {
-    //OVR_LOG( "AppSelectionView::SetAppList: %d movies", movies.size());
+    //OVR_LOG( "AppSelectionView::SetAppList: %d apps", apps.size());
 
     AppList = apps;
-    DeletePointerArray(MovieBrowserItems);
+    DeletePointerArray(AppBrowserItems);
     for (OVR::UPInt i = 0; i < AppList.size(); i++) {
         const AppDef *app = AppList[i];
 
@@ -1153,11 +1153,11 @@ void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
         item->Texture = app->Poster;
         item->TextureWidth = app->PosterWidth;
         item->TextureHeight = app->PosterHeight;
-        MovieBrowserItems.push_back(item);
+        AppBrowserItems.push_back(item);
     }
-    MovieBrowser->SetItems(MovieBrowserItems);
+    AppBrowser->SetItems(AppBrowserItems);
 
-    MovieTitle->SetText("");
+    AppTitle->SetText("");
     LastAppDisplayed = NULL;
 
     //AppIndex = 0;
@@ -1170,10 +1170,10 @@ void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
         }
     }
 
-    MovieBrowser->SetSelectionIndex(AppIndex);
+    AppBrowser->SetSelectionIndex(AppIndex);
 
     if (AppList.size() == 0) {
-        SetError("error", false);
+        SetError("error, no apps!", false);
         ErrorMessageClicked = true;
     } else {
         ClearError();
@@ -1182,29 +1182,31 @@ void AppSelectionView::SetAppList(const std::vector<const AppDef *> &apps,
 
 void AppSelectionView::SelectionHighlighted(bool isHighlighted) {
     if (isHighlighted && !Cinema.InLobby &&
-        (AppIndex == MovieBrowser->GetSelection())) {
+        (AppIndex == AppBrowser->GetSelection())) {
         // dim the poster when the resume icon is up and the poster is highlighted
         CenterPoster->SetColor(Vector4f(0.55f, 0.55f, 0.55f, 1.0f));
-    } else if (MovieBrowser->HasSelection()) {
+    } else if (AppBrowser->HasSelection()) {
         CenterPoster->SetColor(Vector4f(1.0f));
     }
 }
 
 void AppSelectionView::UpdateSelectionFrame(const ovrApplFrameIn &vrFrame) {
     const double now = vrapi_GetTimeInSeconds();
-    if (!MovieBrowser->HasSelection()) {
+    if (!AppBrowser->HasSelection()) {
         SelectionFader.Set(now, 0, now + 0.1, 1.0f);
     }
 
     if (!SelectionFrame->GetMenuObject()->IsHilighted()) {
         SelectionFader.Set(now, 0, now + 0.1, 1.0f);
     } else {
-        MovieBrowser->CheckGamepad(Cinema.GetGuiSys(), vrFrame, MovieRoot->GetMenuObject());
+        AppBrowser->CheckGamepad(Cinema.GetGuiSys(), vrFrame, AppRoot->GetMenuObject());
+        float touchpadMinSwipe = 100.0f;
+        AppBrowser->CheckTouchpad( Cinema.GetGuiSys(), vrFrame,touchpadMinSwipe);
     }
 
     SelectionFrame->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
 
-    int selected = MovieBrowser->GetSelection();
+    int selected = AppBrowser->GetSelection();
     if ( selected >= 0 && static_cast<int>(AppList.size()) > selected && AppList[ selected ]->isRunning ){
         ResumeIcon->SetColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
         ResumeIcon->SetTextColor(Vector4f(static_cast<float>( SelectionFader.Value(now))));
@@ -1229,7 +1231,7 @@ void AppSelectionView::SetError(const char *text, bool showErrorIcon) {
                                               1.0f);
     }
     TitleRoot->SetVisible(false);
-    MovieRoot->SetVisible(false);
+    AppRoot->SetVisible(false);
 
     CarouselSwipeHintComponent::ShowSwipeHints = false;
 }
@@ -1240,7 +1242,7 @@ void AppSelectionView::ClearError() {
     ErrorMessage->SetVisible(false);
     PlainErrorMessage->SetVisible(false);
     TitleRoot->SetVisible(true);
-    MovieRoot->SetVisible(true);
+    AppRoot->SetVisible(true);
 
     CarouselSwipeHintComponent::ShowSwipeHints = true;
 }
