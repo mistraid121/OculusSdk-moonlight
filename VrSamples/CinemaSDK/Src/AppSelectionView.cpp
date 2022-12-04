@@ -120,7 +120,7 @@ static const char* Guuid;
         HadSelection = false;
 
         if (Cinema.InLobby) {
-            Cinema.SceneMgr.SetSceneModel(*Cinema.ModelMgr.BoxOffice);
+            Cinema.SceneMgr.SetSceneModel(*Cinema.ModelMgr.VoidScene);
 
             Vector3f size(PosterWidth * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.x,
                           PosterHeight * VRMenuObject::DEFAULT_TEXEL_SCALE * PosterScale.y, 0.0f);

@@ -62,7 +62,6 @@ public:
 	CinemaApp &			Cinema;
 
 	std::vector<SceneDef *>	Theaters;
-	SceneDef *			BoxOffice;
 	SceneDef *			VoidScene;
 
 private:

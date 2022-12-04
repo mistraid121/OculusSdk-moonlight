@@ -35,7 +35,6 @@ static const char * TheatersDirectory = "Oculus/Cinema/Theaters";
 ModelManager::ModelManager( CinemaApp &cinema ) :
 	Cinema( cinema ),
 	Theaters(),
-	BoxOffice( NULL ),
 	VoidScene( NULL )
 {
 }
@@ -71,9 +70,6 @@ void ModelManager::LoadModels(std::string launchIntent)
 	OVR_LOG( "ModelManager::LoadModels" );
 	const double start =  GetTimeInSeconds();
 
-	BoxOffice = LoadScene( "assets/scenes/BoxOffice.ovrscene", false, true );
-	BoxOffice->UseSeats = false;
-
 	if ( launchIntent.length() > 0 )
 	{
 		Theaters.push_back( LoadScene( launchIntent.c_str(), true, false ) );
@@ -88,7 +84,7 @@ void ModelManager::LoadModels(std::string launchIntent)
 		VoidScene->SceneModel = new ModelFile( "Void" );
 		VoidScene->UseSeats = false;
 		VoidScene->UseDynamicProgram = false;
-		VoidScene->UseFreeScreen = true;
+		VoidScene->UseFreeScreen = false;//true;//false for app selection
 
 		int width = 0, height = 0;
 		VoidScene->IconTexture = LoadTextureFromApplicationPackage( "assets/VoidTheater.png",
