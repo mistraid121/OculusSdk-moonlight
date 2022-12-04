@@ -30,7 +30,6 @@ public:
 
     virtual void 								Select( void ) = 0;
     virtual void 								SelectionHighlighted( bool isHighlighted ) = 0;
-    virtual void 								SetCategory( const PcCategory category ) = 0;
 };
 
 } // namespace OculusCinema

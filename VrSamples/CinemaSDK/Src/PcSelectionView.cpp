@@ -52,7 +52,6 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	Cinema( cinema ),
 	SelectionTexture(),
 	ShadowTexture(),
-	BorderTexture(),
 	SwipeIconLeftTexture(),
 	SwipeIconRightTexture(),
 	ResumeIconTexture(),
@@ -67,8 +66,6 @@ PcSelectionView::PcSelectionView( CinemaApp &cinema ) :
 	SelectionFader(),
 	PcPanelPositions(),
 	PcPosterComponents(),
-	Categories(),
-	CurrentCategory( CATEGORY_LIMELIGHT ),
 	PcList(),
 	PcsIndex( 0 ),
 	RepositionScreen( false ),
@@ -102,8 +99,8 @@ void PcSelectionView::OneTimeInit( const char * launchIntent )
 	const double start = GetTimeInSeconds();
 
 	CreateMenu( Cinema.GetGuiSys() );
-
-	SetCategory( CATEGORY_LIMELIGHT );
+	
+	SetPcList( Cinema.PcMgr.GetPcList( CATEGORY_LIMELIGHT ) );
 
     Native::InitPcSelector();
 
@@ -138,9 +135,7 @@ void PcSelectionView::OnOpen(const double currTimeInSeconds )
 	const double now = vrapi_GetTimeInSeconds();
 	SelectionFader.Set( now, 0, now + 0.1, 1.0f );
 
-	CategoryRoot->SetVisible( true );
 	Menu->SetFlags( VRMENU_FLAG_SHORT_PRESS_HANDLED_BY_APP );
-
 
 	ResumeIcon->SetVisible( false );
 	CenterRoot->SetVisible( true );
@@ -215,7 +210,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	//
 	SelectionTexture.LoadTextureFromApplicationPackage( "assets/selection.png" );
 	ShadowTexture.LoadTextureFromApplicationPackage( "assets/shadow.png" );
-	BorderTexture.LoadTextureFromApplicationPackage( "assets/category_border.png" );
 	SwipeIconLeftTexture.LoadTextureFromApplicationPackage( "assets/SwipeSuggestionArrowLeft.png" );
 	SwipeIconRightTexture.LoadTextureFromApplicationPackage( "assets/SwipeSuggestionArrowRight.png" );
 	ResumeIconTexture.LoadTextureFromApplicationPackage( "assets/resume.png" );
@@ -247,10 +241,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	PcRoot = new UIContainer( Cinema.GetGuiSys() );
 	PcRoot->AddToMenu( Menu, CenterRoot );
 	PcRoot->SetLocalPose( forward, Vector3f( 0.0f, 0.0f, 0.0f ) );
-
-	CategoryRoot = new UIContainer( Cinema.GetGuiSys() );
-	CategoryRoot->AddToMenu( Menu, CenterRoot );
-	CategoryRoot->SetLocalPose( forward, Vector3f( 0.0f, 0.0f, 0.0f ) );
 
 	TitleRoot = new UIContainer( Cinema.GetGuiSys() );
 	TitleRoot->AddToMenu( Menu, CenterRoot );
@@ -363,48 +353,6 @@ void PcSelectionView::CreateMenu( OvrGuiSys & guiSys )
 	}
 
 	PcBrowser->SetMenuObjects( menuObjs, PcPosterComponents );
-
-	// ==============================================================================
-	//
-	// category browser
-	//
-	Categories.push_back( PcCategoryButton( CATEGORY_LIMELIGHT, Cinema.GetCinemaStrings().Category_LimeLight ) );
-
-	// create the buttons and calculate their size
-	const float itemWidth = 1.10f;
-	float categoryBarWidth = 0.0f;
-	for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
-	{
-		Categories[ i ].Button = new UILabel( Cinema.GetGuiSys() );
-		Categories[ i ].Button->AddToMenu( Menu, CategoryRoot );
-		Categories[ i ].Button->SetFontScale( 2.2f );
-		Categories[ i ].Button->SetText( Categories[ i ].Text.c_str() );
-		Categories[ i ].Button->AddComponent( new PcCategoryComponent( this, Categories[ i ].Category ) );
-
-		const Bounds3f & bounds = Categories[ i ].Button->GetTextLocalBounds( Cinema.GetGuiSys().GetDefaultFont() );
-		Categories[ i ].Width = std::max( bounds.GetSize().x, itemWidth ) + 80.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
-		Categories[ i ].Height = bounds.GetSize().y + 108.0f * VRMenuObject::DEFAULT_TEXEL_SCALE;
-		categoryBarWidth += Categories[ i ].Width;
-	}
-
-	// reposition the buttons and set the background and border
- 	float startX = categoryBarWidth * -0.5f;
-	for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
-	{
-		VRMenuSurfaceParms panelSurfParms( "",
-				BorderTexture.Texture, BorderTexture.Width, BorderTexture.Height, SURFACE_TEXTURE_ADDITIVE,
-				0, 0, 0, SURFACE_TEXTURE_MAX,
-				0, 0, 0, SURFACE_TEXTURE_MAX );
-
-		panelSurfParms.Border = Vector4f( 14.0f );
-		panelSurfParms.Dims = Vector2f( Categories[ i ].Width * VRMenuObject::TEXELS_PER_METER, Categories[ i ].Height * VRMenuObject::TEXELS_PER_METER );
-
-		Categories[ i ].Button->SetImage( 0, panelSurfParms );
-		Categories[ i ].Button->SetLocalPose( forward, Vector3f( startX + Categories[ i ].Width * 0.5f, 3.6f, -7.39f ) );
-		Categories[ i ].Button->SetLocalBoundsExpand( Vector3f( 0.0f, 0.13f, 0.0f ), Vector3f::ZERO );
-
-    	startX += Categories[ i ].Width;
-	}
 
 	// ==============================================================================
 	//
@@ -740,40 +688,6 @@ void PcSelectionView::SetPcList( const std::vector<const PcDef *> &pcs)
 	if(PcsIndex > static_cast< int >(PcList.size())) PcsIndex = 0;
 }
 
-void PcSelectionView::SetCategory( const PcCategory category )
-{
-    // default to category in index 0
-    OVR::UPInt categoryIndex = 0;
-    for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
-    {
-        if ( category == Categories[ i ].Category )
-        {
-            categoryIndex = i;
-            break;
-        }
-    }
-
-    OVR_LOG( "SetCategory: %s", Categories[ categoryIndex ].Text.c_str() );
-    CurrentCategory = Categories[ categoryIndex ].Category;
-    for ( OVR::UPInt i = 0; i < Categories.size(); ++i )
-    {
-        Categories[ i ].Button->SetHilighted( i == categoryIndex );
-    }
-
-    // reset all the swipe icons so they match the current poster
-    for ( int i = 0; i < NumSwipeTrails; i++ )
-    {
-        CarouselSwipeHintComponent * compLeft = LeftSwipes[ i ]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-        compLeft->Reset( LeftSwipes[ i ]->GetMenuObject() );
-        CarouselSwipeHintComponent * compRight = RightSwipes[ i ]->GetMenuObject()->GetComponentByTypeName<CarouselSwipeHintComponent>();
-        compRight->Reset( RightSwipes[ i ]->GetMenuObject() );
-    }
-
-    SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ) );
-
-    OVR_LOG( "%zu Pcs added", PcList.size() );
-}
-
 void PcSelectionView::UpdatePcTitle()
 {
     const PcDef * currentPc = GetSelectedPc();
@@ -873,7 +787,6 @@ void PcSelectionView::ClearError()
     PlainErrorMessage->SetVisible( false );
     TitleRoot->SetVisible( true );
     PcRoot->SetVisible( true );
-	CategoryRoot->SetVisible( true );
 
     CarouselSwipeHintComponent::ShowSwipeHints = true;
 }
@@ -1017,7 +930,7 @@ void PcSelectionView::Frame( const ovrApplFrameIn & vrFrame )
     if (Cinema.PcMgr.updated)
     {
         Cinema.PcMgr.updated = false;
-        SetPcList( Cinema.PcMgr.GetPcList( CurrentCategory ) );
+        SetPcList( Cinema.PcMgr.GetPcList( CATEGORY_LIMELIGHT ) );
     }
 
     //Cinema.SceneMgr.Frame( vrFrame );

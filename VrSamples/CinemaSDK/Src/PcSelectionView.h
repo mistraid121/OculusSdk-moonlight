@@ -52,30 +52,14 @@ public:
 
 	virtual void 				Select( void );
 	virtual void 				SelectionHighlighted( bool isHighlighted );
-	virtual void 				SetCategory( const PcCategory category );
 	virtual void				SetError( const char *text, bool showErrorIcon );
 	virtual void				ClearError();
-
-private:
-	class PcCategoryButton
-	{
-	public:
-		PcCategory 	Category;
-		std::string			Text;
-		OVRFW::UILabel *		Button;
-		float			Width;
-		float			Height;
-
-		PcCategoryButton( const PcCategory category, const std::string &text ) :
-						Category( category ), Text( text ), Button( NULL ), Width( 0.0f ), Height( 0.0f ) {}
-	};
 
 private:
 	CinemaApp &							Cinema;
 
 	OVRFW::UITexture 							SelectionTexture;
 	OVRFW::UITexture							ShadowTexture;
-	OVRFW::UITexture							BorderTexture;
 	OVRFW::UITexture							SwipeIconLeftTexture;
 	OVRFW::UITexture							SwipeIconRightTexture;
 	OVRFW::UITexture							ResumeIconTexture;
@@ -92,7 +76,6 @@ private:
 	bool								ErrorMessageClicked;
 
 	OVRFW::UIContainer *						PcRoot;
-	OVRFW::UIContainer *						CategoryRoot;
 	OVRFW::UIContainer *						TitleRoot;
 
 	OVRFW::UILabel	*							PcTitle;
@@ -119,9 +102,6 @@ private:
 	std::vector<PanelPose>					PcPanelPositions;
 
 	std::vector<CarouselItemComponent *>	 	PcPosterComponents;
-
-	std::vector<PcCategoryButton>			Categories;
-	PcCategory			 			CurrentCategory;
 	
 	std::vector<const PcDef *> 			PcList;
 	int									PcsIndex;
@@ -146,8 +126,6 @@ private:
 	int                                 IPoctets[4];
 	int                                    currentOctet;
 	std::string                                IPString;
-
-
 
 private:
 	PcSelectionView &				operator=( const PcSelectionView & );
