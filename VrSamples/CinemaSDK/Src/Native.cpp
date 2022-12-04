@@ -37,14 +37,14 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeSetVideoSize( JNIEnv *jni, jcl
 {
 	OVR_LOG( "nativeSetVideoSizes: width=%i height=%i", width, height);
 
-	OculusCinema::CinemaApp * cinema = appPtr;//static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
+	OculusCinema::CinemaApp * cinema = appPtr;
 	cinema->GetMessageQueue().PostPrintf( "video %i %i", width, height);
 
 }
 
 jobject Java_com_oculus_cinemasdk_MainActivity_nativePrepareNewVideo( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
-	OculusCinema::CinemaApp * cinema = appPtr;//static_cast< OculusCinema::CinemaApp * >( ( (App *)interfacePtr )->GetAppInterface() );
+	OculusCinema::CinemaApp * cinema = appPtr;
 
 	// set up a message queue to get the return message
 	// TODO: make a class that encapsulates this work
@@ -64,7 +64,7 @@ jobject Java_com_oculus_cinemasdk_MainActivity_nativePrepareNewVideo( JNIEnv *jn
 void Java_com_oculus_cinemasdk_MainActivity_nativeDisplayMessage( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring text, int time, bool isError ) {}
 void Java_com_oculus_cinemasdk_MainActivity_nativeAddPc( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name, jstring uuid, int psi, int reach, jstring binding, bool isRunning)
 {
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     JavaUTFChars utfName( jni, name );
     JavaUTFChars utfUUID( jni, uuid );
     JavaUTFChars utfBind( jni, binding );
@@ -77,14 +77,13 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeAddPc( JNIEnv *jni, jclass cla
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeRemovePc( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name)
 {
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     JavaUTFChars utfName( jni, name );
     cinema->PcMgr.RemovePc(utfName.ToStr());
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeAddApp( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring name, jstring posterfilename, int id, bool isRunning)
 {
-
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     JavaUTFChars utfName( jni, name );
     JavaUTFChars utfPosterFileName( jni, posterfilename );
     cinema->AppMgr.AddApp(utfName.ToStr(), utfPosterFileName.ToStr(), id, isRunning);
@@ -93,16 +92,15 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeAddApp( JNIEnv *jni, jclass cl
 void Java_com_oculus_cinemasdk_MainActivity_nativeRemoveApp( JNIEnv *jni, jclass clazz, jlong interfacePtr, int id)
 {
 
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     cinema->AppMgr.RemoveApp( id);
-
 }
 
 
 void Java_com_oculus_cinemasdk_MainActivity_nativeShowPair( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring message )
 {
 
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     JavaUTFChars utfMessage( jni, message );
     cinema->ShowPair(utfMessage.ToStr());
 
@@ -110,14 +108,14 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeShowPair( JNIEnv *jni, jclass 
 void Java_com_oculus_cinemasdk_MainActivity_nativePairSuccess( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
 
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     cinema->PairSuccess();
 
 }
 void Java_com_oculus_cinemasdk_MainActivity_nativeShowError( JNIEnv *jni, jclass clazz, jlong interfacePtr, jstring message )
 {
 
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     JavaUTFChars utfMessage( jni, message );
     cinema->ShowError(utfMessage.ToStr());
 
@@ -125,7 +123,7 @@ void Java_com_oculus_cinemasdk_MainActivity_nativeShowError( JNIEnv *jni, jclass
 void Java_com_oculus_cinemasdk_MainActivity_nativeClearError( JNIEnv *jni, jclass clazz, jlong interfacePtr )
 {
 
-    OculusCinema::CinemaApp *cinema =  appPtr;//( OculusCinema::CinemaApp * )( ( (App *)interfacePtr )->GetAppInterface() );
+    OculusCinema::CinemaApp *cinema =  appPtr;
     cinema->ClearError();
 
 }
