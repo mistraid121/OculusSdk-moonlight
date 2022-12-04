@@ -76,8 +76,7 @@ void ModelManager::LoadModels(std::string launchIntent)
 	}
 	else
 	{
-		// we want our theaters to show up first
-		Theaters.push_back( LoadScene( "assets/scenes/home_theater.ovrscene", true, true ) );
+        // we want our theaters to show up first
 
 		// create void scene
 		VoidScene = new SceneDef();
@@ -95,6 +94,9 @@ void ModelManager::LoadModels(std::string launchIntent)
 		MakeTextureClamped( GlTexture( VoidScene->IconTexture, width, height ) );
 
 		Theaters.push_back( VoidScene );
+
+		//use seats have a problem on this scene, gaze cursor does not move to the position of the seat
+        Theaters.push_back( LoadScene( "assets/scenes/home_theater.ovrscene", true, true ) );
 
 		// load all scenes on startup, so there isn't a delay when switching theaters
 		ScanDirectoryForScenes( Cinema.ExternalRetailDir( TheatersDirectory ), true, Theaters );
