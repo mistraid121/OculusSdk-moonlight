@@ -27,7 +27,6 @@ LOCAL_SRC_FILES	:= 	../../../Src/CinemaApp.cpp \
 					../../../Src/TheaterSelectionView.cpp \
 					../../../Src/TheaterSelectionComponent.cpp \
 					../../../Src/CarouselBrowserComponent.cpp \
-					../../../Src/PcCategoryComponent.cpp \
 					../../../Src/MoviePosterComponent.cpp \
 					../../../Src/MovieSelectionComponent.cpp \
 					../../../Src/CarouselSwipeHintComponent.cpp \
