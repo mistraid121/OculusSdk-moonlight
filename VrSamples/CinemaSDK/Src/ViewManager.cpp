@@ -86,18 +86,6 @@ void ViewManager::LeavingVrMode()
 	}
 }
 
-bool ViewManager::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
-{
-	if ( ( CurrentView != NULL ) && !CurrentView->IsClosed() )
-	{
-		return CurrentView->OnKeyEvent( keyCode, repeatCount, eventType );
-	}
-	else
-	{
-		return false;
-	}
-}
-
 void ViewManager::Frame( const ovrApplFrameIn & vrFrame )
 {
 	if ( ( NextView != NULL ) && ( CurrentView != NULL ) && !ClosedCurrent )

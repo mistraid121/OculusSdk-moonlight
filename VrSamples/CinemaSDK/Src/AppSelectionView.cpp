@@ -1041,29 +1041,6 @@ bool AppSelectionView::BackPressed()
 }
 
 
-
-bool AppSelectionView::OnKeyEvent(const int keyCode, const int repeatCount,
-                                  const UIKeyboard::KeyEventType eventType) {
-    OVR_UNUSED(keyCode);
-    OVR_UNUSED(repeatCount);
-    OVR_UNUSED(eventType);/*
-    switch ( keyCode ) {
-        case OVR_KEY_BACK: {
-            switch (eventType) {
-                case KEY_EVENT_SHORT_PRESS:
-                    OVR_LOG("KEY_EVENT_SHORT_PRESS");
-                    BackPressed();
-                    return true;
-                    break;
-                default:
-                    //OVR_LOG( "unexpected back key state %i", eventType );
-                    break;
-            }
-        }
-    }*/
-    return false;
-}
-
 void AppSelectionView::UpdateMenuPosition() {
     // scale down when in a theater
     const float scale = Cinema.InLobby ? 1.0f : 0.55f;

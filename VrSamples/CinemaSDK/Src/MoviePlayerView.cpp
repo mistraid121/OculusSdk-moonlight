@@ -855,46 +855,6 @@ void MoviePlayerView::BackPressedDouble()
     }
 }
 
-bool MoviePlayerView::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
-{
-	OVR_UNUSED( repeatCount );
-
-	switch ( keyCode )
-	{/*
-		case OVR_KEY_BACK:
-		{
-			switch ( eventType )
-			{
-				case KEY_EVENT_SHORT_PRESS:
-                    OVR_LOG( "KEY_EVENT_SHORT_PRESS" );
-                    BackPressed();
-                    return true;
-                    break;
-                default:
-				    //OVR_LOG( "unexpected back key state %i", eventType );
-				    break;
-			}
-		}
-		break;
-		case OVR_KEY_MENU:
-		{
-			switch ( eventType )
-			{
-				case KEY_EVENT_SHORT_PRESS:
-					OVR_LOG( "KEY_EVENT_SHORT_PRESS" );
-					BackPressed();
-					return true;
-					break;
-				default:
-					//OVR_LOG( "unexpected back key state %i", eventType );
-					break;
-			}
-		}
-		break;*/
-	}
-	return false;
-}
-
 //=========================================================================================
 
 static bool InsideUnit( const Vector2f v )

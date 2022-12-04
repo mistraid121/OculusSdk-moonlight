@@ -54,8 +54,6 @@ public:
     virtual bool            AppInit( const OVRFW::ovrAppContext * appContext ) override;
 
 	//virtual void			Configure( ovrSettings & settings );
-	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
-	//virtual OVRFW::ovrRendererOutput	Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 	// Called once per frame when the VR session is active.
 	virtual OVRFW::ovrApplFrameOut	AppFrame( const OVRFW::ovrApplFrameIn & vrFrame ) override;
 	// Called once per frame to allow the application to render eye buffers.

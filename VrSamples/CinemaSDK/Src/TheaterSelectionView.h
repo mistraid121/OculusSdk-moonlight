@@ -38,7 +38,6 @@ public:
 
 	virtual void 				OnOpen( const double currTimeInSeconds );
 	virtual void 				OnClose();
-	virtual bool 				OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	void 						SelectPressed( const double currTimeInSeconds );

@@ -38,7 +38,6 @@ public:
 	void				EnteredVrMode();
 	void 				LeavingVrMode();
 
-	bool 				OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	void 				Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 private:

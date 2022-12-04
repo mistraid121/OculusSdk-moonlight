@@ -190,26 +190,6 @@ bool PcSelectionView::BackPressed()
 	return false;
 }
 
-
-bool PcSelectionView::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
-{
-	switch ( keyCode )
-	{
-		case AKEYCODE_BACK:
-		{
-			switch ( eventType )
-			{/*
-				case KEY_EVENT_SHORT_PRESS:
-					return BackPressed();
-					break;*/
-				default:
-					break;
-			}
-		}
-	}
-	return false;
-}
-
 //=======================================================================================
 
 void NewPCIPButtonCallback( UIButton *button, void *object )

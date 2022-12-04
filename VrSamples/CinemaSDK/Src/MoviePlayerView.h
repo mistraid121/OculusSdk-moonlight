@@ -131,7 +131,6 @@ public:
 	virtual void			EnteredVrMode();
 	virtual void 			LeavingVrMode();
 
-	virtual bool 			OnKeyEvent( const int keyCode, const int repeatCount, const OVRFW::UIKeyboard::KeyEventType eventType );
 	virtual void 			Frame( const OVRFW::ovrApplFrameIn & vrFrame );
 
 	virtual void            SetError( const char *text, bool showErrorIcon );

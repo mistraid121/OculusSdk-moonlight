@@ -387,16 +387,6 @@ const SceneDef & CinemaApp::GetCurrentTheater() const
 	return ModelMgr.GetTheater( TheaterSelectionMenu.GetSelectedTheater() );
 }
 
-bool CinemaApp::OnKeyEvent( const int keyCode, const int repeatCount, const UIKeyboard::KeyEventType eventType )
-{
-	if ( GuiSys->OnKeyEvent( keyCode, repeatCount ) )
-	{
-		return true;
-	}
-
-	return ViewMgr.OnKeyEvent( keyCode, repeatCount,eventType );
-}
-
 void CinemaApp::ShowPair( const std::string& msg )
 {
     AppSelectionMenu.SetError(msg.c_str(),false);
@@ -430,28 +420,6 @@ void CinemaApp::Command( const char * msg )
 
 ovrApplFrameOut CinemaApp::AppFrame( const ovrApplFrameIn & vrFrame )
 {
-	//FrameResult = ovrFrameResult();
-
-	// process input events first because this mirrors the behavior when OnKeyEvent was
-	// a virtual function on VrAppInterface and was called by VrAppFramework.
-	/*
-	for ( int i = 0; i < vrFrame.Input.NumKeyEvents; i++ )
-	{
-		const int keyCode = vrFrame.Input.KeyEvents[i].KeyCode;
-		const int repeatCount = vrFrame.Input.KeyEvents[i].RepeatCount;
-		const UIKeyboard::KeyEventType eventType = vrFrame.Input.KeyEvents[i].EventType;
-
-		if ( OnKeyEvent( keyCode, repeatCount, eventType ) )
-		{
-			continue;   // consumed the event
-		}
-		// If nothing consumed the key and it's a short-press of the back key, then exit the application to OculusHome.
-		if ( keyCode == OVR_KEY_BACK && eventType == KEY_EVENT_SHORT_PRESS )
-		{
-			app->ShowConfirmQuitSystemUI();
-			continue;
-		}           
-	}*/
 	// Process incoming messages until the queue is empty.
 	for ( ; ; )
 	{
