@@ -381,6 +381,8 @@ void TheaterSelectionView::Frame( const ovrApplFrameIn & vrFrame )
 	if ( SelectionObject->IsHilighted() )
 	{
 		TheaterBrowser->CheckGamepad( Cinema.GetGuiSys(), vrFrame, CenterRoot );
+		float touchpadMinSwipe = 100.0f;
+		TheaterBrowser->CheckTouchpad( Cinema.GetGuiSys(), vrFrame,touchpadMinSwipe);
 	}
 
 	int selectedItem = TheaterBrowser->GetSelection();
