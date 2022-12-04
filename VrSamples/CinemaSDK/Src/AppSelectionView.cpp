@@ -1005,21 +1005,11 @@ void AppSelectionView::Select() {
         return;
     }
 
-    int lastIndex = AppIndex;
     AppIndex = AppBrowser->GetSelection();
     Cinema.SetPlaylist(AppList, AppIndex);
 
     Cinema.InLobby = true;
-    if (!Cinema.InLobby) {
-        if (lastIndex == AppIndex) {
-            // selected the poster we were just watching
-            Cinema.PlayOrResumeOrRestartApp();
-        } else {
-            Cinema.PlayOrResumeOrRestartApp();
-        }
-    } else {
-        Cinema.TheaterSelection();
-    }
+    Cinema.TheaterSelection();
 }
 
 void AppSelectionView::SetAppList(const std::vector<AppDef *> &apps) {

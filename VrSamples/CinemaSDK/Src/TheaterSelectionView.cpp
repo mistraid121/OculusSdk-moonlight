@@ -23,7 +23,6 @@ of patent rights can be found in the PATENTS file in the same directory.
 #include "CarouselSwipeHintComponent.h"
 #include "PackageFiles.h"
 #include "CinemaStrings.h"
-#include "Native.h"
 
 using namespace OVRFW;
 using OVR::Vector4f;
