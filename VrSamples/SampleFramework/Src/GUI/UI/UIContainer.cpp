@@ -15,38 +15,42 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "GUI/GuiSys.h"
 #include "Appl.h"
 
+using OVR::Bounds3f;
 using OVR::Matrix4f;
+using OVR::Posef;
+using OVR::Quatf;
 using OVR::Vector2f;
 using OVR::Vector3f;
 using OVR::Vector4f;
-using OVR::Bounds3f;
-using OVR::Quatf;
-using OVR::Posef;
 
 namespace OVRFW {
 
-UIContainer::UIContainer( OvrGuiSys &guiSys ) :
-	UIObject( guiSys )
+UIContainer::UIContainer(OvrGuiSys& guiSys)
+    : UIObject(guiSys)
 
-{
-}
+{}
 
-UIContainer::~UIContainer()
-{
-}
+UIContainer::~UIContainer() {}
 
-void UIContainer::AddToMenu( UIMenu *menu, UIObject *parent )
-{
-	const Posef pose( Quatf( Vector3f( 0.0f, 1.0f, 0.0f ), 0.0f ), Vector3f( 0.0f, 0.0f, 0.0f ) );
+void UIContainer::AddToMenu(UIMenu* menu, UIObject* parent) {
+    const Posef pose(Quatf(Vector3f(0.0f, 1.0f, 0.0f), 0.0f), Vector3f(0.0f, 0.0f, 0.0f));
 
-	Vector3f defaultScale( 1.0f );
-	VRMenuFontParms fontParms( HORIZONTAL_CENTER, VERTICAL_CENTER, false, false, false, 1.0f );
-	
-	VRMenuObjectParms parms( VRMENU_CONTAINER, std::vector< VRMenuComponent* >(), VRMenuSurfaceParms(),
-			"Container", pose, defaultScale, fontParms, menu->AllocId(),
-			VRMenuObjectFlags_t(), VRMenuObjectInitFlags_t( VRMENUOBJECT_INIT_FORCE_POSITION ) );
+    Vector3f defaultScale(1.0f);
+    VRMenuFontParms fontParms(HORIZONTAL_CENTER, VERTICAL_CENTER, false, false, false, 1.0f);
 
-	AddToMenuWithParms( menu, parent, parms );
+    VRMenuObjectParms parms(
+        VRMENU_CONTAINER,
+        std::vector<VRMenuComponent*>(),
+        VRMenuSurfaceParms(),
+        "Container",
+        pose,
+        defaultScale,
+        fontParms,
+        menu->AllocId(),
+        VRMenuObjectFlags_t(),
+        VRMenuObjectInitFlags_t(VRMENUOBJECT_INIT_FORCE_POSITION));
+
+    AddToMenuWithParms(menu, parent, parms);
 }
 
 } // namespace OVRFW

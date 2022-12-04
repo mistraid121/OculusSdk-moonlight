@@ -12,7 +12,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include "Reflection.h"
 
-#define MEMBER_SIZE( type_, member_ ) sizeof( ((type_*)0)->member_ )
+#define MEMBER_SIZE(type_, member_) sizeof(((type_*)0)->member_)
 
 namespace OVRFW {
 
@@ -23,4 +23,3 @@ namespace OVRFW {
 extern ovrTypeInfo TypeInfoList[];
 
 } // namespace OVRFW
-

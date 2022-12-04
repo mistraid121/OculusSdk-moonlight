@@ -18,10 +18,10 @@ namespace OVRFW {
 //==============================================================
 // ovrUri
 //
-// Parses URIs for validity and returns component pieces. The URI is considered valid 
-// even if it is only a partial URI. It is up to the caller to determine if it has 
-// enough of a URI to locate a resource. This is because we only want to validate 
-// structure with this class. This leaves a client of this class able to compose URIs 
+// Parses URIs for validity and returns component pieces. The URI is considered valid
+// even if it is only a partial URI. It is up to the caller to determine if it has
+// enough of a URI to locate a resource. This is because we only want to validate
+// structure with this class. This leaves a client of this class able to compose URIs
 // from multiple sources and still able to use this class for validation of each
 // piece.
 //
@@ -37,7 +37,7 @@ namespace OVRFW {
 //
 // Which seems incorrect for the drive letter case. But is correct according to parse
 // examples here: https://en.wikipedia.org/wiki/URI_scheme where the path does include
-// the first slash after the host section. 
+// the first slash after the host section.
 // file://windows_machine_name/temp/readme.txt results in:
 // scheme: file
 // host: windows_machine_name
@@ -59,31 +59,38 @@ namespace OVRFW {
 //
 // TODO: support escaped characters (%20), etc.
 
-class ovrUri
-{
-public:
-	static const int MAX_URI_SIZE = 1024;
+class ovrUri {
+   public:
+    static const int MAX_URI_SIZE = 1024;
 
-	// if any of the out pointers are NULL, that part of the Uri will not be returned
-	static bool		ParseUri( char const * uri, 
-							char * outScheme, size_t const outSchemeSize,
-							char * outUsername, size_t const outUsernameSize, 
-							char * outPassword, size_t const outPasswordSize,
-							char * outHost, size_t const outHostSize,
-							int & outPort,
-							char * outPath, size_t const outPathSize,
-							char * outQuery, size_t outQuerySize,
-							char * outFragment, size_t outFragmentSize );
+    // if any of the out pointers are NULL, that part of the Uri will not be returned
+    static bool ParseUri(
+        char const* uri,
+        char* outScheme,
+        size_t const outSchemeSize,
+        char* outUsername,
+        size_t const outUsernameSize,
+        char* outPassword,
+        size_t const outPasswordSize,
+        char* outHost,
+        size_t const outHostSize,
+        int& outPort,
+        char* outPath,
+        size_t const outPathSize,
+        char* outQuery,
+        size_t outQuerySize,
+        char* outFragment,
+        size_t outFragmentSize);
 
-	// Parses out just the scheme. This will fail if the URI is not properly formed (i.e. if it's
-	// only a scheme without a path.
-	static bool		ParseScheme( char const * uri, char * outScheme, size_t const outSchemeSize );
+    // Parses out just the scheme. This will fail if the URI is not properly formed (i.e. if it's
+    // only a scheme without a path.
+    static bool ParseScheme(char const* uri, char* outScheme, size_t const outSchemeSize);
 
-	static bool		IsValidUri( char const * uri );
+    static bool IsValidUri(char const* uri);
 
-	static void		DoUnitTest();
+    static void DoUnitTest();
 
-	static bool		InUnitTest;
+    static bool InUnitTest;
 };
 
-} // namespace OVR
+} // namespace OVRFW

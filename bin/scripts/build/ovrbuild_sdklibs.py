@@ -27,7 +27,6 @@ ovrbuild.init()
 # command_options.
 ovrbuild.command_options.use_gradle_daemon = False
 ovrbuild.command_options.should_install = False
-ovrbuild.command_options.disable_sig_check = True
 
 def build_sdk_libs():
     try:

@@ -18,48 +18,49 @@ namespace OVRFW {
 
 class VrAppInterface;
 
-class UILabel : public UIObject
-{
-public:
-										UILabel( OvrGuiSys &guiSys );
-										~UILabel();
+class UILabel : public UIObject {
+   public:
+    UILabel(OvrGuiSys& guiSys);
+    ~UILabel();
 
-	void 								AddToMenu( UIMenu *menu, UIObject *parent = NULL );
+    void AddToMenu(UIMenu* menu, UIObject* parent = NULL);
 
-	void								SetAlign( const HorizontalJustification horiz, const VerticalJustification vert );
-	void								SetHorizontalAlign( const HorizontalJustification horiz );
-	HorizontalJustification 			GetHorizontalAlign() const;
-	void								SetVerticalAlign( const VerticalJustification vert );
-	VerticalJustification				GetVerticalAlign() const;
+    void SetAlign(const HorizontalJustification horiz, const VerticalJustification vert);
+    void SetHorizontalAlign(const HorizontalJustification horiz);
+    HorizontalJustification GetHorizontalAlign() const;
+    void SetVerticalAlign(const VerticalJustification vert);
+    VerticalJustification GetVerticalAlign() const;
 
-	void								SetText( const char *text );
-	void								SetText( const std::string &text );
-	void								SetTextWordWrapped( char const * text, class BitmapFont const & font, float const widthInMeters );
-	const std::string & 				GetText() const;
+    void SetText(const char* text);
+    void SetText(const std::string& text);
+    void
+    SetTextWordWrapped(char const* text, class BitmapFont const& font, float const widthInMeters);
+    const std::string& GetText() const;
 
-	void 								CalculateTextDimensions();
+    void CalculateTextDimensions();
 
-	void								SetFontScale( float const scale );
-	float 								GetFontScale() const;
+    void SetFontScale(float const scale);
+    float GetFontScale() const;
 
-	const VRMenuFontParms & 			GetFontParms() const { return FontParms; }
-	void								SetFontParms( const VRMenuFontParms &parms );
+    const VRMenuFontParms& GetFontParms() const {
+        return FontParms;
+    }
+    void SetFontParms(const VRMenuFontParms& parms);
 
-	void     				           	SetTextOffset( OVR::Vector3f const & pos );
-    OVR::Vector3f const &    			GetTextOffset() const;
+    void SetTextOffset(OVR::Vector3f const& pos);
+    OVR::Vector3f const& GetTextOffset() const;
 
-	OVR::Vector4f const &				GetTextColor() const;
-	void								SetTextColor( OVR::Vector4f const & c );
+    OVR::Vector4f const& GetTextColor() const;
+    void SetTextColor(OVR::Vector4f const& c);
 
-	OVR::Bounds3f            			GetTextLocalBounds( BitmapFont const & font ) const;
+    OVR::Bounds3f GetTextLocalBounds(BitmapFont const& font) const;
 
-private:
-	VRMenuFontParms 					FontParms;
-	OVR::Vector3f						TextOffset;
-	OVR::Vector3f						JustificationOffset;
+   private:
+    VRMenuFontParms FontParms;
+    OVR::Vector3f TextOffset;
+    OVR::Vector3f JustificationOffset;
 
-	void 								CalculateTextOffset();
+    void CalculateTextOffset();
 };
 
 } // namespace OVRFW
-

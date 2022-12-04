@@ -21,32 +21,36 @@ namespace OVRFW {
 
 class VrAppInterface;
 
-class UIProgressBar: public UIObject
-{
-public:
-						UIProgressBar( OvrGuiSys &guiSys );
+class UIProgressBar : public UIObject {
+   public:
+    UIProgressBar(OvrGuiSys& guiSys);
 
-	void 				AddToMenu( UIMenu *menu, bool showDescriptionLabel, bool showCancelButton, UIObject *parent = NULL );
-	void 				SetProgress( const float progress );
-	void 				SetDescription( const std::string & description );
-	void				SetOnCancel( void ( *callback )( UIButton *, void * ), void *object );
-	float				GetProgress() const { return Progress; }
-	void				SetProgressImageZOffset( float offset );
+    void AddToMenu(
+        UIMenu* menu,
+        bool showDescriptionLabel,
+        bool showCancelButton,
+        UIObject* parent = NULL);
+    void SetProgress(const float progress);
+    void SetDescription(const std::string& description);
+    void SetOnCancel(void (*callback)(UIButton*, void*), void* object);
+    float GetProgress() const {
+        return Progress;
+    }
+    void SetProgressImageZOffset(float offset);
 
-private:
-	UILabel				DescriptionLabel;
+   private:
+    UILabel DescriptionLabel;
 
-	UITexture			CancelButtonTexture;
-	UIButton			CancelButton;
+    UITexture CancelButtonTexture;
+    UIButton CancelButton;
 
-	UITexture			ProgressBarTexture;
-	UIImage				ProgressImage;
+    UITexture ProgressBarTexture;
+    UIImage ProgressImage;
 
-	UITexture			ProgressBarBackgroundTexture;
-	UIImage				ProgressBackground;
+    UITexture ProgressBarBackgroundTexture;
+    UIImage ProgressBackground;
 
-	float				Progress;
+    float Progress;
 };
 
 } // namespace OVRFW
-

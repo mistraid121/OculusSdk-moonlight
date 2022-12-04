@@ -18,12 +18,11 @@ namespace OVRFW {
 
 class VrAppInterface;
 
-class UIImage : public UIObject
-{
-public:
-			UIImage( OvrGuiSys &guiSys );
-			~UIImage();
-	void	AddToMenu( UIMenu *menu, UIObject *parent = NULL );
+class UIImage : public UIObject {
+   public:
+    UIImage(OvrGuiSys& guiSys);
+    ~UIImage();
+    void AddToMenu(UIMenu* menu, UIObject* parent = NULL);
 };
 
 } // namespace OVRFW

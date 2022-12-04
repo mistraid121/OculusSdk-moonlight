@@ -18,15 +18,12 @@ namespace OVRFW {
 
 class VrAppInterface;
 
-class UIContainer : public UIObject
-{
-public:
-										UIContainer( OvrGuiSys &guiSys );
-	virtual 							~UIContainer();
+class UIContainer : public UIObject {
+   public:
+    UIContainer(OvrGuiSys& guiSys);
+    virtual ~UIContainer();
 
-	void 								AddToMenu( UIMenu *menu, UIObject *parent = NULL );
+    void AddToMenu(UIMenu* menu, UIObject* parent = NULL);
 };
 
 } // namespace OVRFW
-
-

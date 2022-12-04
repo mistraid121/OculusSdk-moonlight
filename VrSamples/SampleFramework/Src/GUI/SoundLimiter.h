@@ -18,21 +18,21 @@ class OvrGuiSys;
 
 //==============================================================
 // ovrSoundLimiter
-class ovrSoundLimiter
-{
-public:
-	ovrSoundLimiter() :
-		LastPlayTime( 0.0 )
-	{
-	}
+class ovrSoundLimiter {
+   public:
+    ovrSoundLimiter() : LastPlayTime(0.0) {}
 
-	void			PlaySoundEffect( OvrGuiSys & guiSys, char const * soundName, double const limitSeconds );
-	// Checks if menu specific sounds exists before playing the default vrappframework sound passed in.
-	void			PlayMenuSound( OvrGuiSys & guiSys,  char const * menuName, char const * soundName, double const limitSeconds );
+    void PlaySoundEffect(OvrGuiSys& guiSys, char const* soundName, double const limitSeconds);
+    // Checks if menu specific sounds exists before playing the default vrappframework sound passed
+    // in.
+    void PlayMenuSound(
+        OvrGuiSys& guiSys,
+        char const* menuName,
+        char const* soundName,
+        double const limitSeconds);
 
-private:
-	double			LastPlayTime;
+   private:
+    double LastPlayTime;
 };
 
 } // namespace OVRFW
-

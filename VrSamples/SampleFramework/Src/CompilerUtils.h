@@ -16,5 +16,5 @@ Copyright:	Copyright (c) Facebook Technologies, LLC and its affiliates. All righ
 #include <assert.h>
 
 #ifndef OVR_UNUSED
-#define OVR_UNUSED(a)   (void)(a)
+#define OVR_UNUSED(a) (void)(a)
 #endif

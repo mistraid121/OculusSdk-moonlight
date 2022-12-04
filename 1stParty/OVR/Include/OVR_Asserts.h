@@ -40,65 +40,75 @@ limitations under the License.
 //     OVR_ASSERT(count < 100);
 //
 //--------------------------------------------------------------------------------------------------
-#ifndef OVR_BUILD_DEBUG
-#if defined(OVR_ASSERT_CLIENT) || defined(OVR_ASSERT_SERVER)
-// Global functions used to submit assert Logs:
-// Sends Client side assert logs.
-void SendAssertLogsClient( const char* filePath, const char* funcName, const unsigned int lineNo, const char* condition );
-// Sends Server side assert logs.
-void SendAssertLogsServer( const char* filePath, const char* funcName, const unsigned int lineNo, const char* condition );
-#endif
-#endif
 
-//--------------------------------------------------------------------------------------------------
 #ifndef OVR_BUILD_DEBUG
-	#define OVR_DEBUG_BREAK  ((void)0)
-	#if defined(OVR_ASSERT_CLIENT) || defined(OVR_ASSERT_SERVER)
-		#if defined(OVR_ASSERT_CLIENT)
-			#define OVR_ASSERT(p) \
-				if (!(p)) { \
-					SendAssertLogsClient( __FILE__, __FUNCTION__, __LINE__, #p ); }
-		#elif defined(OVR_ASSERT_SERVER)
-			#define OVR_ASSERT(p) \
-				if (!(p)) { \
-					SendAssertLogsServer( __FILE__, __FUNCTION__, __LINE__, #p ); }
-		#endif
-	#else
-		#define OVR_DEBUG_BREAK  ((void)0)
-		#define OVR_ASSERT(p)    ((void)0)
-	#endif
+#define OVR_DEBUG_BREAK ((void)0)
+#define OVR_ASSERT(p) ((void)0)
 #else
 
 // Microsoft Win32 specific debugging support
 #if defined(OVR_OS_WIN32)
-#  ifdef OVR_CPU_X86
-#    if defined(__cplusplus_cli)
-#      define OVR_DEBUG_BREAK   do { __debugbreak(); } while(0)
-#    elif defined(OVR_CC_GNU)
-#      define OVR_DEBUG_BREAK   do { OVR_ASM("int $3\n\t"); } while(0)
-#    else
-#      define OVR_DEBUG_BREAK   do { OVR_ASM int 3 } while (0)
-#    endif
-#  else
-#    define OVR_DEBUG_BREAK     do { __debugbreak(); } while(0)
-#  endif
+#ifdef OVR_CPU_X86
+#if defined(__cplusplus_cli)
+#define OVR_DEBUG_BREAK \
+    do {                \
+        __debugbreak(); \
+    } while (0)
+#elif defined(OVR_CC_GNU)
+#define OVR_DEBUG_BREAK        \
+    do {                       \
+        OVR_ASM("int $3\n\t"); \
+    } while (0)
+#else
+#define OVR_DEBUG_BREAK \
+    do {                \
+        OVR_ASM int 3   \
+    } while (0)
+#endif
+#else
+#define OVR_DEBUG_BREAK \
+    do {                \
+        __debugbreak(); \
+    } while (0)
+#endif
 // Android specific debugging support
 #elif defined(OVR_OS_ANDROID)
-#  include <android/log.h>
-#  define OVR_EXPAND1( s )		#s
-#  define OVR_EXPAND( s ) OVR_EXPAND1( s )
-#  define OVR_DEBUG_BREAK		do { __builtin_trap(); } while(0)
-#  define OVR_ASSERT(p)			do { if (!(p)) { __android_log_write( ANDROID_LOG_WARN, "OVR", "ASSERT@ " __FILE__ "(" OVR_EXPAND( __LINE__ ) "): " #p ); OVR_DEBUG_BREAK; } } while(0)
+#include <android/log.h>
+#define OVR_EXPAND1(s) #s
+#define OVR_EXPAND(s) OVR_EXPAND1(s)
+#define OVR_DEBUG_BREAK   \
+    do {                  \
+        __builtin_trap(); \
+    } while (0)
+#define OVR_ASSERT(p)                                                                            \
+    do {                                                                                         \
+        if (!(p)) {                                                                              \
+            __android_log_write(                                                                 \
+                ANDROID_LOG_WARN, "OVR", "ASSERT@ " __FILE__ "(" OVR_EXPAND(__LINE__) "): " #p); \
+            OVR_DEBUG_BREAK;                                                                     \
+        }                                                                                        \
+    } while (0)
 // Unix specific debugging support
 #elif defined(OVR_CPU_X86) || defined(OVR_CPU_X86_64)
-#  define OVR_DEBUG_BREAK       do { OVR_ASM("int $3\n\t"); } while(0)
+#define OVR_DEBUG_BREAK        \
+    do {                       \
+        OVR_ASM("int $3\n\t"); \
+    } while (0)
 #else
-#  define OVR_DEBUG_BREAK       do { *((int *) 0) = 1; } while(0)
+#define OVR_DEBUG_BREAK \
+    do {                \
+        *((int*)0) = 1; \
+    } while (0)
 #endif
 
-#if !defined( OVR_ASSERT ) // Android currently defines its own version of OVR_ASSERT() with logging
+#if !defined(OVR_ASSERT) // Android currently defines its own version of OVR_ASSERT() with logging
 // This will cause compiler breakpoint
-#define OVR_ASSERT(p)			do { if (!(p))  { OVR_DEBUG_BREAK; } } while(0)
+#define OVR_ASSERT(p)        \
+    do {                     \
+        if (!(p)) {          \
+            OVR_DEBUG_BREAK; \
+        }                    \
+    } while (0)
 #endif
 
 #endif // OVR_DEBUG_BUILD

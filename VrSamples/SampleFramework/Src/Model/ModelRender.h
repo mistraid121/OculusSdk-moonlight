@@ -16,17 +16,16 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include <vector>
 
-namespace OVRFW
-{
+namespace OVRFW {
 // The model surfaces are culled and added to the sorted surface list.
 // Application specific surfaces from the emit list are also added to the sorted surface list.
 // The surface list is sorted such that opaque surfaces come first, sorted front-to-back,
 // and transparent surfaces come last, sorted back-to-front.
-void BuildModelSurfaceList(	std::vector<ovrDrawSurface> & surfaceList,
-							const std::vector<ModelNodeState *> & emitNodes,
-							const std::vector<ovrDrawSurface> & emitSurfaces,
-							const OVR::Matrix4f & viewMatrix,
-							const OVR::Matrix4f & projectionMatrix );
+void BuildModelSurfaceList(
+    std::vector<ovrDrawSurface>& surfaceList,
+    const std::vector<ModelNodeState*>& emitNodes,
+    const std::vector<ovrDrawSurface>& emitSurfaces,
+    const OVR::Matrix4f& viewMatrix,
+    const OVR::Matrix4f& projectionMatrix);
 
 } // namespace OVRFW
-

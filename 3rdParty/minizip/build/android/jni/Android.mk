@@ -22,6 +22,9 @@ LOCAL_SRC_FILES := \
   src/mztools.c \
   src/unzip.c \
   src/zip.c
+  
+  	
+LOCAL_CFLAGS	+= -Wno-shadow
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/src
 

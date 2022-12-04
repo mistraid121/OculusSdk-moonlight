@@ -1,9 +1,9 @@
 /************************************************************************************
 
 Filename    :   UINotification.h
-Content     :   A pop up Notification object, intended to be re-usable by many apps.   Lets you queue up and display info / warning messages
-Created     :   Apr 23, 2015
-Authors     :   Clint Brewer
+Content     :   A pop up Notification object, intended to be re-usable by many apps.   Lets you
+queue up and display info / warning messages Created     :   Apr 23, 2015 Authors     :   Clint
+Brewer
 
 Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
@@ -26,73 +26,79 @@ namespace OVRFW {
 class VrAppInterface;
 class UINotification;
 
-typedef std::deque< std::string > NotificationsDequeue;
+typedef std::deque<std::string> NotificationsDequeue;
 
 //==============================================================
 // UINotificationComponent
-class UINotificationComponent : public VRMenuComponent
-{
-public:
-	static const int TYPE_ID = 439493;
+class UINotificationComponent : public VRMenuComponent {
+   public:
+    static const int TYPE_ID = 439493;
 
-	UINotificationComponent( UINotification &notification );
+    UINotificationComponent(UINotification& notification);
 
-	virtual int		GetTypeId() const { return TYPE_ID; }
+    virtual int GetTypeId() const {
+        return TYPE_ID;
+    }
 
+   private:
+    UINotification& Notification;
 
-private:
-	UINotification &		Notification;
+   private:
+    // private assignment operator to prevent copying
+    UINotificationComponent& operator=(UINotificationComponent&);
 
-private:
-	// private assignment operator to prevent copying
-	UINotificationComponent &	operator = ( UINotificationComponent & );
+    virtual eMsgStatus OnEvent_Impl(
+        OvrGuiSys& guiSys,
+        ovrApplFrameIn const& vrFrame,
+        VRMenuObject* self,
+        VRMenuEvent const& event);
 
-    virtual eMsgStatus      OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
-                                    VRMenuObject * self, VRMenuEvent const & event );
-
-    eMsgStatus 				Frame( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
-                                        VRMenuObject * self, VRMenuEvent const & event );
+    eMsgStatus Frame(
+        OvrGuiSys& guiSys,
+        ovrApplFrameIn const& vrFrame,
+        VRMenuObject* self,
+        VRMenuEvent const& event);
 };
-
 
 //==============================================================
 // UINotification
 
-class UINotification : public UIObject
-{
-	friend class UINotificationComponent;
-public:
-						UINotification( OvrGuiSys &guiSys );
-						~UINotification();
+class UINotification : public UIObject {
+    friend class UINotificationComponent;
 
-	void 				AddToMenu( UIMenu *menu, const char* iconTextureName,  const char* backgroundTintTextureName, UIObject *parent = NULL );
-	void				QueueNotification( const std::string& description, bool showImmediately = false );//will interrupt any currently displaying notice
+   public:
+    UINotification(OvrGuiSys& guiSys);
+    ~UINotification();
 
+    void AddToMenu(
+        UIMenu* menu,
+        const char* iconTextureName,
+        const char* backgroundTintTextureName,
+        UIObject* parent = NULL);
+    void QueueNotification(
+        const std::string& description,
+        bool showImmediately = false); // will interrupt any currently displaying notice
 
-private:
+   private:
+    void SetDescription(const std::string& description);
+    void Update(float deltaSeconds);
 
-	void 				SetDescription( const std::string &description );
-	void 				Update( float deltaSeconds );
+    NotificationsDequeue NotificationsQueue;
+    UINotificationComponent* NotificationComponent;
 
-	NotificationsDequeue		NotificationsQueue;
-	UINotificationComponent *	NotificationComponent;
+    UITexture BackgroundTintTexture;
+    UIImage BackgroundImage;
 
+    UITexture IconTexture;
+    UIImage IconImage;
 
-	UITexture			BackgroundTintTexture;
-	UIImage				BackgroundImage;
+    UILabel DescriptionLabel;
 
-	UITexture			IconTexture;
-	UIImage				IconImage;
+    float VisibleDuration; // how long should this notification be shown
+    float FadeInDuration; // how long does it take to fade in
+    float FadeOutDuration; // how long does it take to fade out
 
-	UILabel				DescriptionLabel;
-
-
-	float				VisibleDuration; //how long should this notification be shown
-	float				FadeInDuration; //how long does it take to fade in
-	float				FadeOutDuration; //how long does it take to fade out
-
-	float				TimeLeft; //how long until this notification is gone
+    float TimeLeft; // how long until this notification is gone
 };
 
-}
-
+} // namespace OVRFW

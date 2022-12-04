@@ -15,6 +15,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../Src \
   					$(LOCAL_PATH)/../../../../../1stParty/utilities/include \
   					$(LOCAL_PATH)/../../../../../3rdParty/stb/src \
 
+LOCAL_CFLAGS += -Wno-invalid-offsetof
 
 
 LOCAL_SRC_FILES		:= 	../../../Src/Appl.cpp \
@@ -43,6 +44,13 @@ LOCAL_SRC_FILES		:= 	../../../Src/Appl.cpp \
 						../../../Src/Render/BitmapFont.cpp \
 						../../../Src/Render/DebugLines.cpp \
 						../../../Src/Render/TextureManager.cpp \
+						../../../Src/Render/EaseFunctions.cpp \
+						../../../Src/Render/TextureAtlas.cpp \
+						../../../Src/Render/ParticleSystem.cpp	\
+						../../../Src/Render/PointList.cpp \
+						../../../Src/Render/Ribbon.cpp \
+						../../../Src/Render/BeamRenderer.cpp \
+						../../../Src/Render/PanelRenderer.cpp \
 						../../../Src/Model/ModelCollision.cpp \
 						../../../Src/Model/ModelTrace.cpp \
 						../../../Src/Model/ModelRender.cpp \
@@ -89,9 +97,9 @@ LOCAL_SRC_FILES		:= 	../../../Src/Appl.cpp \
  						../../../Src/GUI/UI/UIDiscreteSlider.cpp \
  						../../../Src/GUI/UI/UIKeyboard.cpp \
  						../../../Src/GUI/UI/UITextBox.cpp \
- 						../../../Src/Sound/SoundAssetMapping.cpp \
+					 	../../../Src/Sound/SoundAssetMapping.cpp \
 						../../../Src/Sound/SoundEffectContext.cpp \
-                    	../../../Src/Sound/SoundPool.cpp
+						../../../Src/Sound/SoundPool.cpp
 
 
 LOCAL_STATIC_LIBRARIES += minizip stb android_native_app_glue

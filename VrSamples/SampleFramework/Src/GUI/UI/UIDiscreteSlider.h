@@ -22,124 +22,130 @@ class UIDiscreteSliderComponent;
 
 //==============================================================
 // UICellComponent
-class UICellComponent : public VRMenuComponent
-{
-public:
-	static const char * TYPE_NAME;
+class UICellComponent : public VRMenuComponent {
+   public:
+    static const char* TYPE_NAME;
 
-	UICellComponent( UIDiscreteSliderComponent & sliderComponent, unsigned int val );
-	virtual ~UICellComponent() {}
+    UICellComponent(UIDiscreteSliderComponent& sliderComponent, unsigned int val);
+    virtual ~UICellComponent() {}
 
-	virtual const char *	GetTypeName() const
-	{
-		return TYPE_NAME;
-	}
+    virtual const char* GetTypeName() const {
+        return TYPE_NAME;
+    }
 
-	unsigned int			GetValue() const { return Value; }
+    unsigned int GetValue() const {
+        return Value;
+    }
 
-private:
-	UIDiscreteSliderComponent & SliderComponent;
-	unsigned int				Value;
+   private:
+    UIDiscreteSliderComponent& SliderComponent;
+    unsigned int Value;
 
-	// make a private assignment operator to prevent warning C4512: assignment operator could not be generated
-	UICellComponent &			operator=( const UICellComponent & );
+    // make a private assignment operator to prevent warning C4512: assignment operator could not be
+    // generated
+    UICellComponent& operator=(const UICellComponent&);
 
-	virtual eMsgStatus      OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
-		VRMenuObject * self, VRMenuEvent const & event );
+    virtual eMsgStatus OnEvent_Impl(
+        OvrGuiSys& guiSys,
+        ovrApplFrameIn const& vrFrame,
+        VRMenuObject* self,
+        VRMenuEvent const& event);
 
-	void	( UIDiscreteSliderComponent::*OnClickFunction )( UICellComponent & cell );
-	void	( UIDiscreteSliderComponent::*OnFocusGainedFunction )( UICellComponent & cell );
-	void	( UIDiscreteSliderComponent::*OnFocusLostFunction )( UICellComponent & cell );
+    void (UIDiscreteSliderComponent::*OnClickFunction)(UICellComponent& cell);
+    void (UIDiscreteSliderComponent::*OnFocusGainedFunction)(UICellComponent& cell);
+    void (UIDiscreteSliderComponent::*OnFocusLostFunction)(UICellComponent& cell);
 };
 
 class UIDiscreteSlider;
 
-class UICell : public UIObject
-{
-	friend class UIDiscreteSlider;
-public:
-	UICell( OvrGuiSys &guiSys );
-	virtual ~UICell() {}
+class UICell : public UIObject {
+    friend class UIDiscreteSlider;
 
-	void AddToDiscreteSlider( UIMenu *menu, UIObject *parent, VRMenuObjectParms & cellParms );
+   public:
+    UICell(OvrGuiSys& guiSys);
+    virtual ~UICell() {}
+
+    void AddToDiscreteSlider(UIMenu* menu, UIObject* parent, VRMenuObjectParms& cellParms);
 };
 
 //==============================================================
 // UIDiscreteSliderComponent
-class UIDiscreteSliderComponent : public VRMenuComponent
-{
-	friend class UICellComponent;
-public:
-	static const char * TYPE_NAME;
+class UIDiscreteSliderComponent : public VRMenuComponent {
+    friend class UICellComponent;
 
-	UIDiscreteSliderComponent( UIDiscreteSlider & discreteSlider, unsigned int startValue );
-	virtual ~UIDiscreteSliderComponent() {}
+   public:
+    static const char* TYPE_NAME;
 
-	virtual const char *	GetTypeName() const
-	{
-		return TYPE_NAME;
-	}
+    UIDiscreteSliderComponent(UIDiscreteSlider& discreteSlider, unsigned int startValue);
+    virtual ~UIDiscreteSliderComponent() {}
 
-	void				AddCell( UIObject * cellObject );
-	void				HighlightCells( unsigned int stopIndex );
-	void				SetCurrentValue( unsigned int value );
-	unsigned int		GetCellsCount() const { return static_cast<unsigned int>( Cells.size() ); }
+    virtual const char* GetTypeName() const {
+        return TYPE_NAME;
+    }
 
-private:
-	void				OnCellSelect( UICellComponent & cell );
-	void				OnCellFocusOn( UICellComponent & cell );
-	void				OnCellFocusOff( UICellComponent & cell );
+    void AddCell(UIObject* cellObject);
+    void HighlightCells(unsigned int stopIndex);
+    void SetCurrentValue(unsigned int value);
+    unsigned int GetCellsCount() const {
+        return static_cast<unsigned int>(Cells.size());
+    }
 
-private:
-	UIDiscreteSlider &	DiscreteSlider;
+   private:
+    void OnCellSelect(UICellComponent& cell);
+    void OnCellFocusOn(UICellComponent& cell);
+    void OnCellFocusOff(UICellComponent& cell);
 
-	std::vector< UIObject * >	Cells;
+   private:
+    UIDiscreteSlider& DiscreteSlider;
 
-	unsigned int		CurrentValue;
+    std::vector<UIObject*> Cells;
 
+    unsigned int CurrentValue;
 
-private:
-	// prevent copying
-	UIDiscreteSliderComponent &	operator = ( UIDiscreteSliderComponent & );
-	UIDiscreteSliderComponent( UIDiscreteSliderComponent & );
+   private:
+    // prevent copying
+    UIDiscreteSliderComponent& operator=(UIDiscreteSliderComponent&);
+    UIDiscreteSliderComponent(UIDiscreteSliderComponent&);
 
-	virtual eMsgStatus      OnEvent_Impl( OvrGuiSys & guiSys, ovrApplFrameIn const & vrFrame,
-		VRMenuObject * self, VRMenuEvent const & event );
+    virtual eMsgStatus OnEvent_Impl(
+        OvrGuiSys& guiSys,
+        ovrApplFrameIn const& vrFrame,
+        VRMenuObject* self,
+        VRMenuEvent const& event);
 };
 
 //==============================================================
 // UIDiscreteSlider
 
-class UIDiscreteSlider : public UIObject
-{
-	friend class UIDiscreteSliderComponent;
-public:
-	UIDiscreteSlider( OvrGuiSys &guiSys );
-	virtual ~UIDiscreteSlider();
+class UIDiscreteSlider : public UIObject {
+    friend class UIDiscreteSliderComponent;
 
-	void							AddToMenu( UIMenu *menu, UIObject *parent );
-	void 							AddSliderToMenu( UIMenu *menu, UIObject *parent = NULL );
-	void							AddCells( unsigned int maxValue, unsigned int startValue, float cellSpacing ); 
-	void							ScaleCurrentValue( const float scale );
-	void							SetOnRelease( void( *callback )( UIDiscreteSlider *, void *, float ), void *object );
-	void							SetCellTextures( const UITexture & cellOnTexture, const UITexture & cellOffTexture );
-	void							SetCellColors( const OVR::Vector4f & cellOnColor, const OVR::Vector4f & cellOffColor );
+   public:
+    UIDiscreteSlider(OvrGuiSys& guiSys);
+    virtual ~UIDiscreteSlider();
 
-private:
-	unsigned int					MaxValue;
-	unsigned int					StartValue;
-	UIDiscreteSliderComponent *		DiscreteSliderComponent;
+    void AddToMenu(UIMenu* menu, UIObject* parent);
+    void AddSliderToMenu(UIMenu* menu, UIObject* parent = NULL);
+    void AddCells(unsigned int maxValue, unsigned int startValue, float cellSpacing);
+    void ScaleCurrentValue(const float scale);
+    void SetOnRelease(void (*callback)(UIDiscreteSlider*, void*, float), void* object);
+    void SetCellTextures(const UITexture& cellOnTexture, const UITexture& cellOffTexture);
+    void SetCellColors(const OVR::Vector4f& cellOnColor, const OVR::Vector4f& cellOffColor);
 
+   private:
+    unsigned int MaxValue;
+    unsigned int StartValue;
+    UIDiscreteSliderComponent* DiscreteSliderComponent;
 
-	UITexture 						CellOnTexture;
-	UITexture 						CellOffTexture;
+    UITexture CellOnTexture;
+    UITexture CellOffTexture;
 
-	OVR::Vector4f					CellOnColor;
-	OVR::Vector4f 					CellOffColor;
+    OVR::Vector4f CellOnColor;
+    OVR::Vector4f CellOffColor;
 
-	void							( *OnReleaseFunction )( UIDiscreteSlider *slider, void * object, const float value );
-	void *							OnReleaseObject;
-	void							OnRelease( unsigned int currentValue );
+    void (*OnReleaseFunction)(UIDiscreteSlider* slider, void* object, const float value);
+    void* OnReleaseObject;
+    void OnRelease(unsigned int currentValue);
 };
 
-}
+} // namespace OVRFW
