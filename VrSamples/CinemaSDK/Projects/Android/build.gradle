@@ -30,7 +30,7 @@ android {
     // will replace an older one.
     applicationId "com.oculus." + project.archivesBaseName
 
-    minSdkVersion 21
+    minSdkVersion 23
     targetSdkVersion 21
 
     // override app plugin abiFilters for both 32 and 64-bit support
