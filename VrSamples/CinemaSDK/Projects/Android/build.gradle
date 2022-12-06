@@ -31,7 +31,7 @@ android {
     applicationId "com.oculus." + project.archivesBaseName
 
     minSdkVersion 23
-    targetSdkVersion 21
+    targetSdkVersion 23
 
     // override app plugin abiFilters for both 32 and 64-bit support
     externalNativeBuild {
