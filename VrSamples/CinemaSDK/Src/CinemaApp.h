@@ -123,6 +123,15 @@ public:
         ovrAppl::AppEyeGLStateSetup( in,  fb, eye );
     }
 
+	// Called when app loses focus
+	virtual void AppLostFocus() override {
+		//PauseVideo();
+	}
+	// Called when app re-gains focus
+	virtual void AppGainedFocus() override {
+		//ResumeVideo();
+	}
+
 public:
 	OVRFW::OvrGuiSys *				GuiSys;
 	OVRFW::ovrLocale *				Locale;

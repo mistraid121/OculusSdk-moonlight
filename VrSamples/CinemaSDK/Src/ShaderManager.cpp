@@ -87,7 +87,7 @@ static const char * SceneBlackFragmentShaderSrc =
 	"{\n"
 	"	gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );\n"
 	"}\n";
-
+/*
 static const char * SceneStaticFragmentShaderSrc =
 	"uniform sampler2D Texture0;\n"
 	"varying highp vec2 oTexCoord;\n"
@@ -97,7 +97,7 @@ static const char * SceneStaticFragmentShaderSrc =
 	"	gl_FragColor.xyz = oColor.w * texture2D(Texture0, oTexCoord).xyz;\n"
 	"	gl_FragColor.w = 1.0;\n"
 	"}\n";
-
+*/
 static const char * SceneStaticAndDynamicFragmentShaderSrc =
 	"uniform sampler2D Texture0;\n"
 	"uniform sampler2D Texture1;\n"
@@ -108,7 +108,7 @@ static const char * SceneStaticAndDynamicFragmentShaderSrc =
 	"	gl_FragColor.xyz = oColor.w * texture2D(Texture0, oTexCoord).xyz + (1.0 - oColor.w) * oColor.xyz * texture2D(Texture1, oTexCoord).xyz;\n"
 	"	gl_FragColor.w = 1.0;\n"
 	"}\n";
-
+/*
 static const char * SceneDynamicFragmentShaderSrc =
 	"uniform sampler2D Texture0;\n"
 	"varying highp vec2 oTexCoord;\n"
@@ -118,7 +118,7 @@ static const char * SceneDynamicFragmentShaderSrc =
 	"	gl_FragColor.xyz = (1.0 - oColor.w) * oColor.xyz * texture2D(Texture0, oTexCoord).xyz;\n"
 	"	gl_FragColor.w = 1.0;\n"
 	"}\n";
-
+*/
 static const char * SceneAdditiveFragmentShaderSrc =
 	"uniform sampler2D Texture0;\n"
 	"varying highp vec2 oTexCoord;\n"
@@ -144,26 +144,91 @@ void ShaderManager::OneTimeInit( const char * launchIntent )
 
 	const double start = GetTimeInSeconds();
 
-	CopyMovieProgram = BuildProgramNoMultiview( NULL, copyMovieVertexShaderSrc, ImageExternalDirectives, copyMovieFragmentShaderSource );
+	/// Init Shaders
+	{
+		/// Disable multi-view for this ...
+		OVRFW::GlProgram::MultiViewScope(false);
 
-	ScenePrograms[SCENE_PROGRAM_BLACK]			= BuildProgram( SceneStaticVertexShaderSrc, SceneBlackFragmentShaderSrc );
-	ScenePrograms[SCENE_PROGRAM_STATIC_ONLY]	= BuildProgram( SceneStaticVertexShaderSrc, SceneStaticFragmentShaderSrc );
-	ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC]	= BuildProgram( SceneDynamicVertexShaderSrc, SceneStaticAndDynamicFragmentShaderSrc );
-	ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY]	= BuildProgram( SceneDynamicVertexShaderSrc, SceneDynamicFragmentShaderSrc );
-	ScenePrograms[SCENE_PROGRAM_ADDITIVE]		= BuildProgram( SceneStaticVertexShaderSrc, SceneAdditiveFragmentShaderSrc );
+		static OVRFW::ovrProgramParm uniformParms[] = {
+				/// Vertex
+				/// Fragment
+				{"Texture0", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+				{"Texture1", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+		};
+		CopyMovieProgram = OVRFW::GlProgram::Build(
+				nullptr,
+				copyMovieVertexShaderSrc,
+				ImageExternalDirectives,
+				copyMovieFragmentShaderSource,
+				uniformParms,
+				sizeof(uniformParms) / sizeof(OVRFW::ovrProgramParm));
+	}
+
+	{
+		static OVRFW::ovrProgramParm uniformParms[] = {
+				/// Vertex
+				{"UniformColor", OVRFW::ovrProgramParmType::FLOAT_VECTOR4},
+				/// Fragment
+		};
+		const int uniformCount = sizeof(uniformParms) / sizeof(OVRFW::ovrProgramParm);
+		ScenePrograms[SCENE_PROGRAM_BLACK] = OVRFW::GlProgram::Build(
+				SceneStaticVertexShaderSrc, SceneBlackFragmentShaderSrc, uniformParms, uniformCount);
+	}
+	//ScenePrograms[SCENE_PROGRAM_STATIC_ONLY]	= BuildProgram( SceneStaticVertexShaderSrc, SceneStaticFragmentShaderSrc );
+	{
+		static OVRFW::ovrProgramParm uniformParms[] = {
+				/// Vertex
+				{"UniformColor", OVRFW::ovrProgramParmType::FLOAT_VECTOR4},
+				{"Texture2", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+				/// Fragment
+				{"Texture0", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+				{"Texture1", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+		};
+		const int uniformCount = sizeof(uniformParms) / sizeof(OVRFW::ovrProgramParm);
+		ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC] = OVRFW::GlProgram::Build(
+				SceneDynamicVertexShaderSrc,
+				SceneStaticAndDynamicFragmentShaderSrc,
+				uniformParms,
+				uniformCount);
+	}
+	//ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY]	= BuildProgram( SceneDynamicVertexShaderSrc, SceneDynamicFragmentShaderSrc );
+	{
+		static OVRFW::ovrProgramParm uniformParms[] = {
+				/// Vertex
+				{"UniformColor", OVRFW::ovrProgramParmType::FLOAT_VECTOR4},
+				/// Fragment
+				{"Texture0", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+		};
+		const int uniformCount = sizeof(uniformParms) / sizeof(OVRFW::ovrProgramParm);
+		ScenePrograms[SCENE_PROGRAM_ADDITIVE] = OVRFW::GlProgram::Build(
+				SceneStaticVertexShaderSrc, SceneAdditiveFragmentShaderSrc, uniformParms, uniformCount);
+	}
 
 	// NOTE: make sure to load with SCENE_PROGRAM_STATIC_DYNAMIC because the textures are initially not swapped
 	DynamicPrograms = ModelGlPrograms( &ScenePrograms[ SCENE_PROGRAM_STATIC_DYNAMIC ] );
 
-	ProgVertexColor				= BuildProgram( VertexColorVertexShaderSrc, VertexColorFragmentShaderSrc );
-	ProgSingleTexture			= BuildProgram( SingleTextureVertexShaderSrc, SingleTextureFragmentShaderSrc );
+	//ProgVertexColor				= BuildProgram( VertexColorVertexShaderSrc, VertexColorFragmentShaderSrc );
+	{
+		OVRFW::ovrProgramParm uniformParms[] = {
+				/// Vertex
+				/// Fragment
+				{"Texture0", OVRFW::ovrProgramParmType::TEXTURE_SAMPLED},
+		};
+		const int uniformCount = sizeof(uniformParms) / sizeof(OVRFW::ovrProgramParm);
+		ProgSingleTexture = OVRFW::GlProgram::Build(
+				OVRFW::SingleTextureVertexShaderSrc,
+				OVRFW::SingleTextureFragmentShaderSrc,
+				uniformParms,
+				uniformCount);
+	}
+	/*
 	ProgLightMapped				= BuildProgram( LightMappedVertexShaderSrc, LightMappedFragmentShaderSrc );
 	ProgReflectionMapped		= BuildProgram( ReflectionMappedVertexShaderSrc, ReflectionMappedFragmentShaderSrc );
 	ProgSkinnedVertexColor		= BuildProgram( VertexColorSkinned1VertexShaderSrc, VertexColorFragmentShaderSrc );
 	ProgSkinnedSingleTexture	= BuildProgram( SingleTextureSkinned1VertexShaderSrc, SingleTextureFragmentShaderSrc );
 	ProgSkinnedLightMapped		= BuildProgram( LightMappedSkinned1VertexShaderSrc, LightMappedFragmentShaderSrc );
 	ProgSkinnedReflectionMapped	= BuildProgram( ReflectionMappedSkinned1VertexShaderSrc, ReflectionMappedFragmentShaderSrc );
-
+*/
 	DefaultPrograms.ProgVertexColor				= & ProgVertexColor;
 	DefaultPrograms.ProgSingleTexture			= & ProgSingleTexture;
 	DefaultPrograms.ProgLightMapped				= & ProgLightMapped;
@@ -180,24 +245,24 @@ void ShaderManager::OneTimeShutdown()
 {
 	OVR_LOG( "ShaderManager::OneTimeShutdown" );
 
-	DeleteProgram( CopyMovieProgram );
+	OVRFW::GlProgram::Free( CopyMovieProgram );
 
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_BLACK] );
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_STATIC_ONLY] );
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC] );
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY] );
-	DeleteProgram( ScenePrograms[SCENE_PROGRAM_ADDITIVE] );
+	OVRFW::GlProgram::Free( ScenePrograms[SCENE_PROGRAM_BLACK] );
+	OVRFW::GlProgram::Free( ScenePrograms[SCENE_PROGRAM_STATIC_ONLY] );
+	OVRFW::GlProgram::Free( ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC] );
+	OVRFW::GlProgram::Free( ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY] );
+	OVRFW::GlProgram::Free( ScenePrograms[SCENE_PROGRAM_ADDITIVE] );
 
 	//TODO: Review DynamicPrograms
 
-	DeleteProgram( ProgVertexColor );
-	DeleteProgram( ProgSingleTexture );
-	DeleteProgram( ProgLightMapped );
-	DeleteProgram( ProgReflectionMapped );
-	DeleteProgram( ProgSkinnedVertexColor );
-	DeleteProgram( ProgSkinnedSingleTexture	);
-	DeleteProgram( ProgSkinnedLightMapped );
-	DeleteProgram( ProgSkinnedReflectionMapped );
+	OVRFW::GlProgram::Free( ProgVertexColor );
+	OVRFW::GlProgram::Free( ProgSingleTexture );
+	OVRFW::GlProgram::Free( ProgLightMapped );
+	OVRFW::GlProgram::Free( ProgReflectionMapped );
+	OVRFW::GlProgram::Free( ProgSkinnedVertexColor );
+	OVRFW::GlProgram::Free( ProgSkinnedSingleTexture	);
+	OVRFW::GlProgram::Free( ProgSkinnedLightMapped );
+	OVRFW::GlProgram::Free( ProgSkinnedReflectionMapped );
 }
 
 } // namespace OculusCinema

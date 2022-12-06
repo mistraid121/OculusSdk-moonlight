@@ -137,6 +137,7 @@ private:
     void				CheckForbufferResize();
 	GLuint 				BuildScreenVignetteTexture( const int horizontalTile ) const;
 	int 				BottomMipLevel( const int width, const int height ) const;
+	OVR::Vector4f LightsColor;
 };
 
 } // namespace OculusCinema

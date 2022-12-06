@@ -361,13 +361,13 @@ void SceneManager::SetSceneProgram( const sceneProgram_t opaqueProgram, const sc
 		return;
 	}
 
-	const GlProgram & dynamicOnlyProg = Cinema.ShaderMgr.ScenePrograms[SCENE_PROGRAM_DYNAMIC_ONLY];
 	const GlProgram & opaqueProg = Cinema.ShaderMgr.ScenePrograms[opaqueProgram];
 	const GlProgram & additiveProg = Cinema.ShaderMgr.ScenePrograms[additiveProgram];
 	const GlProgram & diffuseProg = Cinema.ShaderMgr.ProgSingleTexture;
 
 	OVR_LOG( "SetSceneProgram: %d(%d), %d(%d)", opaqueProgram, opaqueProg.Program, additiveProgram, additiveProg.Program );
 
+	LightsColor = OVR::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 	// Override the material on the background scene to allow the model to fade during state transitions.
 	{
 		const ModelFile * modelFile = Scene.GetWorldModel()->Definition;
@@ -380,37 +380,33 @@ void SceneManager::SetSceneProgram( const sceneProgram_t opaqueProgram, const sc
 					continue;
 				}
 
-				// FIXME: provide better solution for material overrides
-				ovrGraphicsCommand & graphicsCommand = *const_cast< ovrGraphicsCommand * >( &modelFile->Models[i].surfaces[j].surfaceDef.graphicsCommand );
-				
-				if ( graphicsCommand.GpuState.blendSrc == GL_ONE && graphicsCommand.GpuState.blendDst == GL_ONE )
-				{
-					// Non-modulated additive material.
-					if ( graphicsCommand.uniformTextures[1] != 0 )
-					{
-						graphicsCommand.uniformTextures[0] = graphicsCommand.uniformTextures[1];
-						graphicsCommand.uniformTextures[1] = GlTexture();
-					}
+                // FIXME: provide better solution for material overrides
+                OVRFW::ovrGraphicsCommand& graphicsCommand =
+                        *const_cast<OVRFW::ovrGraphicsCommand*>(
+                                &modelFile->Models[i].surfaces[j].surfaceDef.graphicsCommand);
 
-					graphicsCommand.Program = additiveProg;
-				}
-				else if ( graphicsCommand.uniformTextures[1] != 0 )
-				{
-					// Modulated material.
-					if ( graphicsCommand.Program.Program != opaqueProg.Program &&
-						( graphicsCommand.Program.Program == dynamicOnlyProg.Program ||
-							opaqueProg.Program == dynamicOnlyProg.Program ) )
-					{
-						std::swap( graphicsCommand.uniformTextures[0], graphicsCommand.uniformTextures[1] );
-					}
+                if (graphicsCommand.GpuState.blendSrc == GL_ONE &&
+                    graphicsCommand.GpuState.blendDst == GL_ONE) {
+                    // Non-modulated additive material.
+                    if (graphicsCommand.Textures[1] != 0) {
+                        graphicsCommand.Textures[0] = graphicsCommand.Textures[1];
+                        graphicsCommand.Textures[1] = OVRFW::GlTexture();
+                    }
 
-					graphicsCommand.Program = opaqueProg;
-				}
-				else
-				{
-					// Non-modulated diffuse material.
-					graphicsCommand.Program = diffuseProg;
-				}
+                    graphicsCommand.Program =  additiveProg;
+                    graphicsCommand.UniformData[0].Data = &LightsColor;
+                    graphicsCommand.UniformData[1].Data = &graphicsCommand.Textures[0];
+                } else if (graphicsCommand.Textures[1] != 0) {
+                    graphicsCommand.Program = opaqueProg;
+                    graphicsCommand.UniformData[0].Data = &LightsColor;
+                    graphicsCommand.UniformData[1].Data = &graphicsCommand.Textures[2];
+                    graphicsCommand.UniformData[2].Data = &graphicsCommand.Textures[0];
+                    graphicsCommand.UniformData[3].Data = &graphicsCommand.Textures[1];
+                } else {
+                    // Non-modulated diffuse material.
+                    graphicsCommand.Program = diffuseProg;
+                    graphicsCommand.UniformData[0].Data = &graphicsCommand.Textures[0];
+                }
 			}
 		}
 	}
@@ -745,8 +741,6 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
     vrFrameWithoutMove.LeftRemoteTracked = false;
     vrFrameWithoutMove.RightRemoteTracked = false;
     vrFrameWithoutMove.SingleHandRemoteTracked = false;
-    vrFrameWithoutMove.GamePadTracked = false;
-    vrFrameWithoutMove.HeadsetInputTracked = false;
 
     // Suppress scene surfaces when Free Screen is active.
 	Scene.Frame( vrFrameWithoutMove, SceneInfo.UseFreeScreen ? 0 : -1 );
@@ -871,29 +865,27 @@ void SceneManager::AppRenderFrame( const ovrApplFrameIn & in, ovrRendererOutput 
 		// Override the material on the background scene to allow the model to fade during state transitions.
 		{
 			const ModelFile * modelFile = Scene.GetWorldModel()->Definition;
+            LightsColor = OVR::Vector4f(1.0f, 1.0f, 1.0f, cinemaLights);
 			for ( int i = 0; i < static_cast< int >( modelFile->Models.size() ); i++ )
 			{
 				for ( int j = 0; j < static_cast< int >( modelFile->Models[i].surfaces.size() ); j++ )
 				{
-					if ( &modelFile->Models[i].surfaces[j].surfaceDef == SceneScreenSurface )
-					{
-						continue;
-					}
+                    if (&modelFile->Models[i].surfaces[j].surfaceDef == SceneScreenSurface) {
+                        continue;
+                    }
 
-					// FIXME: provide better solution for material overrides
-					ovrGraphicsCommand & graphicsCommand = *const_cast< ovrGraphicsCommand * >( &modelFile->Models[i].surfaces[j].surfaceDef.graphicsCommand );
-					graphicsCommand.uniformSlots[0] = graphicsCommand.Program.uColor;
-					graphicsCommand.uniformValues[0][0] = 1.0f;
-					graphicsCommand.uniformValues[0][1] = 1.0f;
-					graphicsCommand.uniformValues[0][2] = 1.0f;
-					graphicsCommand.uniformValues[0][3] = cinemaLights;
+                    // FIXME: provide better solution for material overrides
+                    OVRFW::ovrGraphicsCommand& graphicsCommand =
+                            *const_cast<OVRFW::ovrGraphicsCommand*>(
+                                    &modelFile->Models[i].surfaces[j].surfaceDef.graphicsCommand);
 
-					// Do not try to apply the scene lighting texture if it is not valid.
-					if ( lightingTexId != 0 )
-					{
-						graphicsCommand.numUniformTextures = 3;
-						graphicsCommand.uniformTextures[2] = GlTexture( lightingTexId, 0, 0 );
-					}
+                    if (graphicsCommand.Program.Program ==  Cinema.ShaderMgr.ScenePrograms[SCENE_PROGRAM_STATIC_DYNAMIC].Program) {
+                        // Do not try to apply the scene lighting texture if it is not valid.
+                        if (lightingTexId != 0) {
+                            graphicsCommand.Textures[2] = OVRFW::GlTexture(lightingTexId, 0, 0);
+                            graphicsCommand.UniformData[1].Data = &graphicsCommand.Textures[2];
+                        }
+                    }
 				}
 			}
 		}
